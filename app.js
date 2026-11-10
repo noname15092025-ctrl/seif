@@ -12,7 +12,7 @@ if (self !== top) { try { top.location = self.location.href; } catch { document.
    ===================================================================== */
 
 const STORE = "seif.v2";
-const KDF = { alg: "argon2id", m: 32768, t: 3, p: 1 }; // 32 МиБ, 3 прохода — дороже перебор, чем базовые 19 МиБ/2
+const KDF = { alg: "argon2id", m: 19456, t: 2, p: 1 }; // рекомендация OWASP: сильно и при этом быстро (~1 с); дальше KDF усиливать невыгодно
 const LOCK_IDLE_MS = 5 * 60 * 1000, LOCK_HIDDEN_MS = 60 * 1000;
 const enc = new TextEncoder(), dec = new TextDecoder();
 const C = crypto.subtle;
