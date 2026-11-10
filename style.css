@@ -92,8 +92,8 @@ label.chk { display:flex; align-items:center; color:var(--text); font-size:14px;
 .l-nav { display:flex; gap:36px; font-size:15px; }
 .l-actions { display:flex; gap:8px; align-items:center; }
 .hero { position:relative; padding:110px 32px 140px; text-align:center; overflow:hidden; }
-.hero-glow { position:absolute; left:50%; top:70px; width:520px; height:520px; margin-left:-260px; border-radius:50%;
-  background:radial-gradient(circle, var(--accent-soft) 0%, transparent 65%); animation:pulse 4s ease-in-out infinite; pointer-events:none; }
+.hero-glow { position:absolute; left:50%; top:40px; width:640px; height:640px; margin-left:-320px; border-radius:50%;
+  background:radial-gradient(circle, var(--accent-soft) 0%, transparent 60%); animation:pulse 4s ease-in-out infinite; pointer-events:none; }
 .badge { position:relative; margin:0 0 28px; display:inline-flex; gap:10px; align-items:center; padding:8px 16px; border:1px solid var(--line2);
   border-radius:999px; font-size:13px; color:var(--soft); letter-spacing:.04em; }
 .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); }
@@ -277,3 +277,49 @@ label.chk { display:flex; align-items:center; color:var(--text); font-size:14px;
   .side-foot .who { display:none; }
 }
 ::selection { background:var(--accent); color:#fff; }
+
+/* ===== Анимации сейфа ===== */
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes click { 0% { transform:rotate(0); } 20% { transform:rotate(90deg); } 40% { transform:rotate(45deg); } 60% { transform:rotate(200deg); } 80% { transform:rotate(160deg); } 100% { transform:rotate(360deg); } }
+.door { position:absolute; left:50%; top:20px; width:600px; height:600px; margin-left:-300px; opacity:.22; pointer-events:none; }
+.door-line { fill:none; stroke:var(--text); stroke-width:1; }
+.door-line.dashed { stroke-dasharray:2 10; }
+.door-line.thick { stroke-width:1.5; }
+.door-accent { fill:none; stroke:var(--accent); stroke-width:2; }
+.door-accent.knob, .ld-accent.knob { stroke-width:3; stroke-linecap:round; }
+.dial { transform-origin:200px 200px; animation:click 14s cubic-bezier(.6,0,.2,1) infinite; }
+@supports (animation-timeline: scroll()) { .dial { animation:spin linear both; animation-timeline:scroll(); } }
+.hero .badge, .hero-h, .hero-sub, .hero-btns { position:relative; z-index:1; }
+
+@keyframes dialTurn { 0% { transform:rotate(0); } 25% { transform:rotate(70deg); } 45% { transform:rotate(30deg); } 70% { transform:rotate(160deg); } 100% { transform:rotate(360deg); } }
+@keyframes ringFill { 0%,30% { stroke-dashoffset:352; stroke:var(--accent); } 85% { stroke-dashoffset:0; stroke:var(--accent); } 100% { stroke-dashoffset:0; stroke:var(--text); } }
+.lock-dial { display:flex; justify-content:center; margin:0 auto 32px; width:120px; }
+.ring { fill:none; stroke:var(--accent); stroke-width:2; stroke-dasharray:352; stroke-dashoffset:352; transform-origin:60px 60px; transform:rotate(-90deg); animation:ringFill 6s ease-in-out infinite; }
+.ldial-turn { transform-origin:60px 60px; transition:transform .6s cubic-bezier(.2,.7,.2,1); }
+.ldial { transform-origin:60px 60px; animation:dialTurn 6s cubic-bezier(.6,0,.2,1) infinite; }
+.panel:focus-within .ldial { animation-duration:2.4s; }
+.ld-face { fill:var(--panel); stroke:var(--line2); stroke-width:1.5; }
+.ld-ticks { stroke:var(--faint); stroke-width:1.5; }
+.ld-accent { fill:none; stroke:var(--accent); stroke-width:2; }
+.corner-brand { position:absolute; top:24px; left:24px; font-size:18px; gap:10px; }
+.corner-brand .ic.accent { width:22px; height:22px; }
+
+/* Посимвольная «расшифровка» пароля */
+@keyframes decrypt { 0% { opacity:0; filter:blur(6px); transform:translateY(-4px); } 60% { opacity:1; color:var(--accent); } 100% { opacity:1; filter:none; transform:none; color:var(--text); } }
+.dc { display:inline-block; white-space:pre; animation:decrypt .5s cubic-bezier(.2,.7,.2,1) both; }
+.revealed { letter-spacing:.12em; font-family:"Space Grotesk", ui-monospace, monospace; }
+
+/* Плашка «скопировано» с таймером */
+@keyframes drain { to { stroke-dashoffset:50.3; } }
+.copied { display:flex; align-items:center; gap:10px; margin:0 0 18px; padding:10px 14px; border-radius:10px; background:#160B0B; border:1px solid #3A1515; font-size:13px; color:var(--text); animation:rise .4s cubic-bezier(.2,.7,.2,1) both; }
+[data-theme="light"] .copied { background:#FEF2F2; border-color:#FECACA; }
+.copied .t-bg { fill:none; stroke:#3A1515; stroke-width:2; }
+[data-theme="light"] .copied .t-bg { stroke:#FECACA; }
+.timer { fill:none; stroke:var(--accent); stroke-width:2; stroke-dasharray:50.3; stroke-dashoffset:0; transform-origin:10px 10px; transform:rotate(-90deg); }
+.timer.run { animation:drain 30s linear forwards; }
+
+@media (max-width:760px) { .door { width:420px; height:420px; margin-left:-210px; top:30px; } .corner-brand { top:16px; left:16px; } }
+@media (prefers-reduced-motion:reduce) {
+  .dial, .hero-glow, .rise, .row, .ldial, .ring, .dc, .timer.run, .l-card, button { animation:none !important; transition:none !important; }
+  .ring { stroke-dashoffset:0; }
+}

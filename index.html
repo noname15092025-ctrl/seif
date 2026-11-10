@@ -44,6 +44,16 @@
 
   <div class="hero">
     <div class="hero-glow" aria-hidden="true"></div>
+    <svg class="door" aria-hidden="true" viewBox="0 0 400 400">
+      <circle cx="200" cy="200" r="190" class="door-line"/>
+      <circle cx="200" cy="200" r="160" class="door-line dashed"/>
+      <g class="dial">
+        <circle cx="200" cy="200" r="120" class="door-line thick"/>
+        <path d="M200 80v24M200 296v24M80 200h24M296 200h24M115 115l17 17M268 268l17 17M285 115l-17 17M132 268l-17 17" class="door-line thick"/>
+        <circle cx="200" cy="200" r="46" class="door-accent"/>
+        <path d="M200 154v-20" class="door-accent knob"/>
+      </g>
+    </svg>
     <p class="badge rise"><span class="dot"></span><span data-en="ZERO-KNOWLEDGE ENCRYPTION">ZERO-KNOWLEDGE ШИФРОВАНИЕ</span></p>
     <h1 class="hero-h rise d1" data-en-html="Only &lt;span class=&quot;accent-text&quot;&gt;you&lt;/span&gt; know&lt;br&gt;your passwords.">Ваши пароли знаете<br>только <span class="accent-text">вы</span>.</h1>
     <p class="hero-sub rise d2" data-en="Everything is encrypted on your device. Access can only be restored with a 12-word secret phrase — even we can't look inside.">Всё шифруется на вашем устройстве. Восстановить доступ можно только по секретной фразе из 12 слов — даже мы не сможем заглянуть внутрь.</p>
@@ -81,11 +91,22 @@
 
 <!-- ============ Вход ============ -->
 <section id="v-unlock" class="center-page hidden">
+  <a class="brand corner-brand" data-home><svg class="ic accent"><use href="#i-logo"/></svg>Vault</a>
   <div class="corner"><button class="pill ghost small" data-lang-toggle>EN</button><button class="pill ghost small" data-theme-toggle>☀</button></div>
   <div class="panel rise">
-    <button class="icon-tile" data-home aria-label="Vault"><svg class="ic accent big"><use href="#i-logo"/></svg></button>
+    <a class="lock-dial" data-home aria-label="Vault">
+      <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
+        <circle class="ring" cx="60" cy="60" r="56"/>
+        <g class="ldial-turn" id="ldial-turn"><g class="ldial">
+          <circle cx="60" cy="60" r="40" class="ld-face"/>
+          <path d="M60 24v8M60 88v8M24 60h8M88 60h8" class="ld-ticks"/>
+          <circle cx="60" cy="60" r="14" class="ld-accent"/>
+          <path d="M60 46v-8" class="ld-accent knob"/>
+        </g></g>
+      </svg>
+    </a>
     <h1 class="p-title" data-en="Welcome back">С возвращением</h1>
-    <p class="p-sub" data-en="Choose a profile and unlock the safe">Выберите профиль и разблокируйте сейф</p>
+    <p class="p-sub" data-en="Every character turns the dial. The safe opens only for you.">Каждый символ — поворот диска. Сейф откроется только вам.</p>
     <div id="profiles" class="profiles"></div>
     <label for="unlock-pw" data-en="Master password">Мастер-пароль</label>
     <input type="password" id="unlock-pw" class="field" placeholder="••••••••••••" autocomplete="current-password">
@@ -198,6 +219,10 @@
   <section class="detail" id="detail">
     <!-- Просмотр записи -->
     <div id="detail-view"></div>
+    <div class="copied hidden" id="copied" role="status">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" class="t-bg"/><circle class="timer" id="copy-timer" cx="10" cy="10" r="8"/></svg>
+      <span data-en="Copied. Clipboard clears in 30 s">Скопировано. Буфер очистится через 30 с</span>
+    </div>
 
     <!-- Форма записи -->
     <div id="form-card" class="hidden">

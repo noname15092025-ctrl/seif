@@ -348,7 +348,7 @@ $("b-unlock").onclick = async e => {
     s.fails = 0; s.lockUntil = 0; s.lastLogin = Date.now(); try { localStorage.setItem("vault.last", s.id); } catch {}
     if (!s.kdf || s.kdf.alg !== "argon2id") Object.assign(s, await wrapVaultKey(vaultKey, pw), { iters: undefined }); // переход на Argon2id
     store.set(s);
-    $("unlock-pw").value = ""; $("unlock-err").textContent = "";
+    $("unlock-pw").value = ""; $("unlock-err").textContent = ""; $("ldial-turn").style.transform = "";
     openVaultView();
   } catch {
     s.fails = (s.fails || 0) + 1;
@@ -359,6 +359,7 @@ $("b-unlock").onclick = async e => {
   busy(e.target, false, "");
 };
 $("unlock-pw").addEventListener("keydown", e => { if (e.key === "Enter") $("b-unlock").click(); });
+$("unlock-pw").addEventListener("input", e => { $("ldial-turn").style.transform = "rotate(" + (e.target.value.length * 37) + "deg)"; });
 
 /* ---------------- Генератор ---------------- */
 function randInt(n) { const lim = Math.floor(4294967296 / n) * n, r = new Uint32Array(1); do crypto.getRandomValues(r); while (r[0] >= lim); return r[0] % n; }
@@ -569,16 +570,26 @@ function renderDetail() {
   if (x.note) h += field(T("Заметки", "Notes"), esc(x.note), "", "note");
   if (x.category) h += `<span class="d-tag">${esc(x.category)}</span>`;
   h += `<div class="d-btns"><button class="ghost" data-act="edit">${T("Изменить", "Edit")}</button><button class="ghost" data-act="fav">${x.fav ? T("Убрать из избранного", "Unfavorite") : T("В избранное", "Favorite")}</button><button class="danger" data-act="del">${T("Удалить", "Delete")}</button></div>`;
+  const cp = $("copied"); $("detail").appendChild(cp); cp.classList.add("hidden");
   box.innerHTML = h;
   // таймер TOTP пишет в .code и .left: привязываем элемент обратного отсчёта
   const t = box.querySelector("[data-totp]"); if (t) { t.appendChild(box.querySelector("[data-totp-left]")); }
   tickTotp();
 }
+function decryptInto(el, text) {
+  el.innerHTML = ""; el.classList.add("revealed");
+  [...text].forEach((ch, i) => { const sp = document.createElement("span"); sp.className = "dc"; sp.textContent = ch; sp.style.animationDelay = Math.min(i, 24) * 0.05 + "s"; el.appendChild(sp); });
+}
 async function copySecret(text) {
   try { await navigator.clipboard.writeText(text); } catch { toast(T("Не удалось скопировать", "Copy failed")); return; }
-  toast(T("Скопировано. Буфер очистится через 30 с", "Copied. Clipboard clears in 30 s"));
+  const box = $("copied"), tm = $("copy-timer");
+  if (!$("v-vault").classList.contains("hidden") && !$("detail-view").classList.contains("hidden")) {
+    // плашка с таймером над карточкой
+    $("detail-view").querySelector(".d-head")?.after(box);
+    box.classList.remove("hidden"); tm.classList.remove("run"); void tm.getBoundingClientRect(); tm.classList.add("run");
+  } else toast(T("Скопировано. Буфер очистится через 30 с", "Copied. Clipboard clears in 30 s"));
   clearTimeout(copySecret.t);
-  copySecret.t = setTimeout(() => navigator.clipboard.writeText("").catch(() => {}), 30000);
+  copySecret.t = setTimeout(() => { navigator.clipboard.writeText("").catch(() => {}); box.classList.add("hidden"); tm.classList.remove("run"); }, 30000);
 }
 async function markUsed(x) { x.used = Date.now(); await persist(); }
 $("detail-view").onclick = async e => {
@@ -589,9 +600,9 @@ $("detail-view").onclick = async e => {
   if (act === "show") {
     const box = btn.closest(".d-field"), s = box.querySelector("[data-secret]");
     const open = s.dataset.open === "1"; s.dataset.open = open ? "" : "1";
-    if (s.dataset.secret === "pass") s.innerHTML = open ? '<span class="dots">••••••••••••</span>' : esc(x.pass);
+    if (s.dataset.secret === "pass") { if (open) s.innerHTML = '<span class="dots">••••••••••••</span>'; else decryptInto(s, x.pass); }
     if (s.dataset.secret === "number") {
-      s.textContent = open ? maskCard(x.number) : x.number;
+      if (open) s.textContent = maskCard(x.number); else decryptInto(s, x.number);
       const c = $("detail-view").querySelector('[data-secret="cvv"]'); if (c) c.textContent = open ? "•••" : x.cvv;
     }
   }
