@@ -43,34 +43,31 @@
     </div>
   </header>
 
-  <div class="hero">
-    <div class="hero-glow" aria-hidden="true"></div>
-    <svg class="door" aria-hidden="true" viewBox="0 0 400 400">
-      <circle cx="200" cy="200" r="190" class="door-line"/>
-      <circle cx="200" cy="200" r="160" class="door-line dashed"/>
-      <g class="dial">
-        <circle cx="200" cy="200" r="120" class="door-line thick"/>
-        <path d="M200 80v24M200 296v24M80 200h24M296 200h24M115 115l17 17M268 268l17 17M285 115l-17 17M132 268l-17 17" class="door-line thick"/>
-        <circle cx="200" cy="200" r="46" class="door-accent"/>
-        <path d="M200 154v-20" class="door-accent knob"/>
-      </g>
-    </svg>
-    <p class="badge rise"><span class="dot"></span><span data-en="ZERO-KNOWLEDGE ENCRYPTION">ZERO-KNOWLEDGE ШИФРОВАНИЕ</span></p>
-    <h1 class="hero-h rise d1" data-en-html="Only &lt;span class=&quot;accent-text&quot;&gt;you&lt;/span&gt; know&lt;br&gt;your passwords.">Ваши пароли знаете<br>только <span class="accent-text">вы</span>.</h1>
-    <p class="hero-sub rise d2" data-en="Everything is encrypted on your device. Access can only be restored with a 12-word secret phrase — even we can't look inside.">Всё шифруется на вашем устройстве. Восстановить доступ можно только по секретной фразе из 12 слов — даже мы не сможем заглянуть внутрь.</p>
-    <div class="hero-btns rise d3">
-      <button class="pill big glow-btn" id="b-new" data-en="Create vault">Создать хранилище</button>
-      <button class="pill big ghost" id="b-restore" data-en="Restore with phrase">Восстановить по фразе</button>
+  <section class="hero herog">
+    <div class="hero-left">
+      <p class="badge rise"><span class="dot blink"></span><span data-en="On-device encryption">Шифрование прямо на устройстве</span></p>
+      <h1 class="hero-h rise d1" data-en-html="A vault whose<br>key is only<br><span class=&quot;hl&quot;>yours</span>">Сейф, ключ<br>от которого<br>только <span class="hl">у вас</span></h1>
+      <p class="hero-sub rise d2" data-en="Passwords, cards and notes behind a lock of 12 words. We keep no keys — so we can neither peek nor lose them.">Пароли, карты и заметки под замком из 12 слов. Мы не храним ключей — поэтому не можем ни подсмотреть, ни потерять.</p>
+      <div class="hero-btns rise d3">
+        <button class="pill big dark-btn" id="b-new" data-en="Create vault free">Создать сейф бесплатно</button>
+        <button class="pill big outline" id="b-restore" data-en="I have a phrase">У меня есть фраза</button>
+      </div>
     </div>
-  </div>
+    <div class="hero-art rise d2" aria-hidden="true">
+      <svg class="rot" viewBox="0 0 200 200"><defs><path id="cp" d="M100 100 m-82 0 a82 82 0 1 1 164 0 a82 82 0 1 1 -164 0"/></defs><text class="circ"><textPath href="#cp">ZERO-KNOWLEDGE · 12 СЛОВ · AES-256 · ТОЛЬКО ВЫ · </textPath></text></svg>
+      <svg class="hero-dial" viewBox="0 0 400 400"><circle cx="200" cy="200" r="150" class="hd-bg"/><g class="dial"><circle cx="200" cy="200" r="118" class="hd-ring"/><circle cx="200" cy="200" r="78" class="hd-core"/><rect x="192" y="96" width="16" height="44" rx="8" class="hd-knob"/></g><circle cx="200" cy="200" r="22" class="hd-hub"/></svg>
+    </div>
+  </section>
+
+  <div class="marquee-wrap"><div class="marquee"><span data-en="No backdoors">Никаких бэкдоров</span><i>✦</i><span data-en="No email reset">Никакого сброса по почте</span><i>✦</i><span data-en="Only your phrase">Только ваша фраза</span><i>✦</i><span data-en="Multiple profiles">Несколько профилей</span><i>✦</i><span data-en="No backdoors">Никаких бэкдоров</span><i>✦</i><span data-en="No email reset">Никакого сброса по почте</span><i>✦</i><span data-en="Only your phrase">Только ваша фраза</span><i>✦</i><span data-en="Multiple profiles">Несколько профилей</span><i>✦</i></div></div>
 
   <section id="how" class="l-sec">
-    <p class="eyebrow" data-en="HOW IT WORKS">КАК ЭТО РАБОТАЕТ</p>
-    <h2 class="l-h2" data-en="Three steps and the safe is yours forever">Три шага — и сейф ваш навсегда</h2>
-    <div class="grid3">
-      <div class="l-card"><p class="num">01</p><h3 data-en="Master password">Мастер-пароль</h3><p data-en="Come up with one password. It never leaves your browser.">Придумайте один пароль. Он никогда не покидает ваш браузер.</p></div>
-      <div class="l-card"><p class="num">02</p><h3 data-en="Secret phrase">Секретная фраза</h3><p data-en="Write 12 words on paper. It's the only key to recovery.">Запишите 12 слов на бумаге. Это единственный ключ к восстановлению.</p></div>
-      <div class="l-card"><p class="num">03</p><h3 data-en="Store with peace of mind">Храните спокойно</h3><p data-en="Passwords, notes and cards — encrypted, with multiple profiles.">Пароли, заметки и карты — в зашифрованном виде, с несколькими профилями.</p></div>
+    <h2 class="l-h2" data-en="Three steps — and the safe is yours forever">Три шага — и сейф ваш навсегда</h2>
+    <div class="bento">
+      <div class="tile t-accent"><span class="big12">12</span><div><h3 data-en="words — your only key">слов — ваш единственный ключ</h3><p data-en="Write the phrase on paper. Lose it and your password — nobody opens the safe. Not even us.">Запишите фразу на бумаге. Потеряете её и пароль — сейф не откроет никто. Даже мы.</p></div></div>
+      <div class="tile t-white"><span class="t-tag" data-en="01 — MASTER PASSWORD">01 — МАСТЕР-ПАРОЛЬ</span><h3 data-en="One password that never leaves the browser">Один пароль, который никогда не покидает браузер</h3></div>
+      <div class="tile t-dark"><span class="t-tag" data-en="02 — PROFILES">02 — ПРОФИЛИ</span><div class="dots3"><i></i><i></i><i></i></div><h3 data-en="Personal and work — kept apart">Личное и рабочее — раздельно</h3></div>
+      <div class="tile t-mut"><svg class="ic lockbig"><use href="#i-lock"/></svg></div>
     </div>
   </section>
 
@@ -96,46 +93,51 @@
 
   <section id="security" class="l-sec">
     <div class="sec-block">
-      <div>
-        <h2 class="l-h2 dark" data-en="Lost the phrase and the password — the data can't be recovered. That is the protection.">Потеряли фразу и пароль — данные не вернуть. Это и есть защита.</h2>
-        <p data-en="There's no backdoor, no email reset and no copy of your keys. Not even the app's creator can see your passwords.">У нас нет «бэкдора», нет сброса по почте и нет копии ваших ключей. Даже создатель приложения не видит ваши пароли.</p>
-      </div>
-      <div class="tiles" id="sec-tiles"></div>
+      <p class="eyebrow accent-eye" data-en="AN HONEST WARNING">ЧЕСТНОЕ ПРЕДУПРЕЖДЕНИЕ</p>
+      <h2 class="l-h2 big" data-en-html="Forgot the phrase and password? The data is gone. <span class=&quot;muted2&quot;>Not a bug — it's protection.</span>">Забыли фразу и пароль? Данные не вернуть. <span class="muted2">Это не баг — это защита.</span></h2>
+      <button class="pill big accent-btn" id="b-new3" data-en="Got it, let's create a safe">Понятно, создаём сейф</button>
     </div>
   </section>
 
   <footer class="l-foot">
-    <span data-en="© Vault — storage">© Vault — хранилище</span>
-    <span data-en="Open source · AES-256 and Argon2id on your device">Открытый код · AES-256 и Argon2id на устройстве</span>
+    <span class="wordmark">vault</span>
+    <span class="foot-meta" data-en="Open source · AES-256 · © Vault">Открытый код · AES-256 · © Vault</span>
   </footer>
 </section>
 
 <!-- ============ Вход ============ -->
-<section id="v-unlock" class="center-page hidden">
-  <a class="brand corner-brand" data-home><svg class="ic accent"><use href="#i-logo"/></svg><span data-en="Vault — storage">Vault — хранилище</span></a>
+<section id="v-unlock" class="center-page cream split hidden">
   <div class="corner"><button class="pill ghost small" data-lang-toggle>EN</button><button class="pill ghost small" data-theme-toggle>☀</button></div>
-  <div class="panel rise">
-    <a class="lock-dial" data-home aria-label="Vault">
-      <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
-        <circle class="ring" cx="60" cy="60" r="56"/>
+  <div class="art-panel" aria-hidden="true">
+    <span class="wordmark-sm" data-home>vault</span>
+    <div class="art-dial">
+      <svg viewBox="0 0 220 220">
+        <circle cx="110" cy="110" r="96" class="ap-bg"/>
+        <circle class="ring" cx="110" cy="110" r="96"/>
+        <circle cx="110" cy="110" r="74" class="ap-face"/>
         <g class="ldial-turn" id="ldial-turn"><g class="ldial">
-          <circle cx="60" cy="60" r="40" class="ld-face"/>
-          <path d="M60 24v8M60 88v8M24 60h8M88 60h8" class="ld-ticks"/>
-          <circle cx="60" cy="60" r="14" class="ld-accent"/>
-          <path d="M60 46v-8" class="ld-accent knob"/>
+          <circle cx="110" cy="110" r="58" class="ap-ticks"/>
+          <circle cx="110" cy="110" r="36" class="ap-core"/>
+          <rect x="105" y="52" width="10" height="28" rx="5" class="ap-knob"/>
         </g></g>
+        <circle cx="110" cy="110" r="10" class="ap-hub"/>
       </svg>
-    </a>
-    <h1 class="p-title" data-en="Welcome back">С возвращением</h1>
-    <p class="p-sub" data-en="Every character turns the dial. The safe opens only for you.">Каждый символ — поворот диска. Сейф откроется только вам.</p>
-    <div id="profiles" class="profiles"></div>
-    <label for="unlock-pw" data-en="Master password">Мастер-пароль</label>
-    <input type="password" id="unlock-pw" class="field" placeholder="••••••••••••" autocomplete="current-password">
-    <div class="err" id="unlock-err"></div>
-    <button class="wide" id="b-unlock" data-en="Unlock">Разблокировать</button>
-    <div class="p-links">
-      <a id="b-forgot" data-en="Restore with phrase">Восстановить по фразе</a>
-      <a id="b-new2" data-en="+ New profile">+ Новый профиль</a>
+    </div>
+    <p class="art-cap" data-en-html="Every character —<br>a turn of the dial.">Каждый символ —<br>поворот диска.</p>
+  </div>
+  <div class="auth-side">
+    <div class="panel rise">
+      <h1 class="p-title big" data-en="Welcome back">С возвращением</h1>
+      <p class="p-sub" data-en="Choose a profile and open the safe">Выберите профиль и откройте сейф</p>
+      <div id="profiles" class="profiles"></div>
+      <label for="unlock-pw" data-en="Master password">Мастер-пароль</label>
+      <input type="password" id="unlock-pw" class="field" placeholder="••••••••••••" autocomplete="current-password">
+      <div class="err" id="unlock-err"></div>
+      <button class="wide pill accent-btn" id="b-unlock" data-en="Open the safe">Открыть сейф</button>
+      <div class="p-links">
+        <a id="b-forgot" data-en="Restore with phrase">Восстановить по фразе</a>
+        <a id="b-new2" data-en="+ New profile">+ Новый профиль</a>
+      </div>
     </div>
   </div>
 </section>

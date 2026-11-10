@@ -262,10 +262,11 @@ $("profiles").onclick = e => {
   currentId = b.dataset.pid; renderProfiles(); $("unlock-err").textContent = ""; $("unlock-pw").focus();
 };
 $("b-signin").onclick = gotoUnlock;
+$("b-new3") && ($("b-new3").onclick = () => $("b-new").click());
 $("b-new2").onclick = () => $("b-new").click();
 document.querySelectorAll("[data-home]").forEach(a => a.onclick = () => { if (WORDS) { cancelToHome(true); } });
 document.querySelectorAll("[data-home-lock]").forEach(a => a.onclick = () => lock());
-$("sec-tiles").innerHTML = Array.from({ length: 12 }, (_, i) => `<span><i>${i + 1}</i>••••</span>`).join("");
+if ($("sec-tiles")) $("sec-tiles").innerHTML = Array.from({ length: 12 }, (_, i) => `<span><i>${i + 1}</i>••••</span>`).join("");
 
 function cancelToHome(toLanding) {
   pendingPhrase = null; pendingKey = null; verifyIdx = [];
