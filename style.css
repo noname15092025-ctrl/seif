@@ -111,12 +111,12 @@ label.chk { display:flex; align-items:center; color:var(--text); font-size:14px;
 .l-card .num { margin:0 0 48px; font-size:15px; color:var(--muted); }
 .l-card h3 { margin:0 0 12px; font-size:22px; font-weight:600; }
 .l-card p { margin:0; color:var(--soft); line-height:1.6; }
-.sec-block { padding:64px; border-radius:28px; background:var(--block); color:var(--block-text); display:grid; grid-template-columns:1.2fr 1fr; gap:48px; align-items:center; }
-.sec-block .l-h2 { margin:0 0 20px; color:var(--block-text); }
-.sec-block p { margin:0; font-size:17px; line-height:1.6; color:var(--block-soft); }
+.sec-block { padding:64px; border-radius:28px; background:var(--panel); border:1px solid var(--line); color:var(--text); display:grid; grid-template-columns:1.2fr 1fr; gap:48px; align-items:center; }
+.sec-block .l-h2 { margin:0 0 20px; color:var(--text); }
+.sec-block p { margin:0; font-size:17px; line-height:1.6; color:var(--soft); }
 .tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; font-family:"Space Grotesk", Inter, system-ui, sans-serif; font-size:15px; }
-.tiles span { padding:14px; border:1px solid var(--block-line); border-radius:12px; }
-.tiles i { font-style:normal; color:#A8A29E; margin-right:4px; }
+.tiles span { padding:14px; border:1px solid var(--line2); border-radius:12px; background:var(--tile); }
+.tiles i { font-style:normal; color:var(--accent); margin-right:4px; }
 .l-foot { padding:40px 32px 60px; border-top:1px solid var(--line); display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; font-size:14px; color:var(--muted); margin:0 32px; padding-left:0; padding-right:0; }
 
 /* ===== Центрированные экраны (вход, создание, настройки) ===== */
