@@ -358,3 +358,25 @@ label.chk { display:flex; align-items:center; color:var(--text); font-size:14px;
 .ex-item input { margin:0; flex:0 0 auto; }
 .ex-item .t { flex:1; min-width:0; line-height:1.35; } .ex-item small { display:block; color:var(--muted); font-size:12px; }
 .ex-item .k { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); }
+
+/* Сравнение на лендинге */
+.compare { border:1px solid var(--line); border-radius:20px; overflow:hidden; background:var(--panel); }
+.crow { display:grid; grid-template-columns:1.1fr 1.3fr 1.3fr; gap:0; align-items:center; border-top:1px solid var(--line); }
+.crow:first-child { border-top:0; }
+.crow > span { padding:16px 20px; font-size:15px; line-height:1.4; }
+.crow .cf { color:var(--soft); }
+.crow .them { color:var(--muted); border-left:1px solid var(--line); }
+.crow .us { color:var(--text); border-left:1px solid var(--line); background:rgba(229,37,42,.05); font-weight:500; }
+.crow.chead > span { font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); padding-top:18px; padding-bottom:18px; }
+.crow.chead .us { color:var(--text); display:flex; align-items:center; gap:8px; }
+.crow.chead .us .ic.accent { width:18px; height:18px; }
+.compare-note { margin:20px 0 0; font-size:14px; color:var(--muted); line-height:1.6; max-width:760px; }
+@media (max-width:760px) {
+  .crow { grid-template-columns:1fr 1fr; }
+  .crow .cf { grid-column:1 / -1; padding-bottom:4px; color:var(--text); font-weight:500; border-bottom:0; }
+  .crow .them, .crow .us { border-left:0; padding-top:6px; font-size:14px; }
+  .crow .us { background:transparent; }
+  .crow .them::before { content:"✕ "; color:var(--muted); }
+  .crow .us::before { content:"✓ "; color:var(--accent); }
+  .crow.chead { display:none; }
+}
