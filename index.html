@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; worker-src 'self'; manifest-src 'self'; connect-src 'self' https://api.pwnedpasswords.com; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#070707">
+<meta name="theme-color" content="#0A0A0A">
 <title>Vault — хранилище паролей</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -16,143 +16,225 @@
 <script src="app.js" defer></script>
 </head>
 <body>
-<main>
-  <header class="top">
-    <h1 class="logo" id="logo" title="На главную"><img src="icon.svg" alt="" width="52" height="52"><span>Vault</span></h1>
-    <div class="toggles">
-      <button class="ghost small" id="b-install" hidden data-en="Install app">Установить</button>
-      <button class="ghost small" id="b-lang" title="Язык / Language">EN</button>
-      <button class="ghost small" id="b-theme" title="Тема">☀</button>
+<svg width="0" height="0" class="sprite" aria-hidden="true">
+  <symbol id="i-logo" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="12" cy="12" r="4"/><path d="M12 8v1M12 15v1M8 12h1M15 12h1"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></symbol>
+</svg>
+
+<!-- ============ Лендинг ============ -->
+<section id="v-start" class="landing hidden">
+  <header class="l-head">
+    <a class="brand" data-home><svg class="ic accent"><use href="#i-logo"/></svg>Vault</a>
+    <nav class="l-nav">
+      <a href="#how" data-en="How it works">Как это работает</a>
+      <a href="#security" data-en="Security">Безопасность</a>
+      <a data-guide data-en="Guide">Инструкция</a>
+    </nav>
+    <div class="l-actions">
+      <button class="pill ghost small" data-lang-toggle>EN</button>
+      <button class="pill ghost small" data-theme-toggle aria-label="Тема">☀</button>
+      <button class="pill ghost" id="b-signin" data-en="Sign in">Войти</button>
     </div>
   </header>
-  <p class="sub" data-en="Passwords are encrypted right in your browser. Nothing is sent to a server. Without your phrase and password, access cannot be recovered.">Пароли шифруются прямо в браузере. Ничего не отправляется на сервер. Без фразы и пароля восстановить доступ невозможно.</p>
 
-  <!-- Главная -->
-  <section id="v-start" class="hidden">
-    <div class="card about">
-      <h2 data-en="What is Vault">Что такое Vault</h2>
-      <p class="lead" data-en-html="A password manager where the key is held &lt;b&gt;only by you&lt;/b&gt;. Nobody can see your passwords: not a server, not hackers, not even the app's creator.">Менеджер паролей, где ключ есть <b>только у вас</b>. Ваши пароли не видит никто: ни сервер, ни хакеры, ни даже создатель приложения.</p>
-      <div class="feats">
-        <div><i>01</i><b data-en="On-device encryption">Шифрование на устройстве</b><span data-en="Passwords are encrypted with AES-256 in the browser before they go anywhere.">Пароли шифруются AES-256 прямо в браузере, до того как куда-либо попасть.</span></div>
-        <div><i>02</i><b data-en="No server, no accounts">Без сервера и аккаунтов</b><span data-en="No email, logins or database. Nothing to hack and nothing to hand over.">Нет email, логинов и базы данных. Нечего взламывать и нечего передавать третьим лицам.</span></div>
-        <div><i>03</i><b data-en="The creator has no access">Создатель не имеет доступа</b><span data-en="The developer does not know your passwords or phrase and physically cannot learn them.">Разработчик не знает ваших паролей и секретной фразы и физически не может их узнать.</span></div>
-        <div><i>04</i><b data-en="Recovery only by phrase">Восстановление только по фразе</b><span data-en="12 words are your only key. Lose the phrase and the password, and nobody can restore access.">12 слов — ваш единственный ключ. Потеряли фразу и пароль — доступ не восстановит никто.</span></div>
+  <div class="hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <p class="badge rise"><span class="dot"></span><span data-en="ZERO-KNOWLEDGE ENCRYPTION">ZERO-KNOWLEDGE ШИФРОВАНИЕ</span></p>
+    <h1 class="hero-h rise d1" data-en-html="Only &lt;span class=&quot;accent-text&quot;&gt;you&lt;/span&gt; know&lt;br&gt;your passwords.">Ваши пароли знаете<br>только <span class="accent-text">вы</span>.</h1>
+    <p class="hero-sub rise d2" data-en="Everything is encrypted on your device. Access can only be restored with a 12-word secret phrase — even we can't look inside.">Всё шифруется на вашем устройстве. Восстановить доступ можно только по секретной фразе из 12 слов — даже мы не сможем заглянуть внутрь.</p>
+    <div class="hero-btns rise d3">
+      <button class="pill big glow-btn" id="b-new" data-en="Create vault">Создать хранилище</button>
+      <button class="pill big ghost" id="b-restore" data-en="Restore with phrase">Восстановить по фразе</button>
+    </div>
+  </div>
+
+  <section id="how" class="l-sec">
+    <p class="eyebrow" data-en="HOW IT WORKS">КАК ЭТО РАБОТАЕТ</p>
+    <h2 class="l-h2" data-en="Three steps and the safe is yours forever">Три шага — и сейф ваш навсегда</h2>
+    <div class="grid3">
+      <div class="l-card"><p class="num">01</p><h3 data-en="Master password">Мастер-пароль</h3><p data-en="Come up with one password. It never leaves your browser.">Придумайте один пароль. Он никогда не покидает ваш браузер.</p></div>
+      <div class="l-card"><p class="num">02</p><h3 data-en="Secret phrase">Секретная фраза</h3><p data-en="Write 12 words on paper. It's the only key to recovery.">Запишите 12 слов на бумаге. Это единственный ключ к восстановлению.</p></div>
+      <div class="l-card"><p class="num">03</p><h3 data-en="Store with peace of mind">Храните спокойно</h3><p data-en="Passwords, notes and cards — encrypted, with multiple profiles.">Пароли, заметки и карты — в зашифрованном виде, с несколькими профилями.</p></div>
+    </div>
+  </section>
+
+  <section id="security" class="l-sec">
+    <div class="sec-block">
+      <div>
+        <h2 class="l-h2 dark" data-en="Lost the phrase and the password — the data can't be recovered. That is the protection.">Потеряли фразу и пароль — данные не вернуть. Это и есть защита.</h2>
+        <p data-en="There's no backdoor, no email reset and no copy of your keys. Not even the app's creator can see your passwords.">У нас нет «бэкдора», нет сброса по почте и нет копии ваших ключей. Даже создатель приложения не видит ваши пароли.</p>
       </div>
-    </div>
-    <div class="card">
-      <h2 data-en="Profiles">Профили</h2>
-      <div id="profiles"></div>
-      <button id="b-new" data-en="Create new profile">Создать новый профиль</button>
-      <button class="ghost" id="b-restore" data-en="Restore with secret phrase">Восстановить по секретной фразе</button>
-      <button class="ghost" data-guide data-en="Guide">Инструкция</button>
+      <div class="tiles" id="sec-tiles"></div>
     </div>
   </section>
 
-  <!-- Показ фразы -->
-  <section id="v-phrase" class="card hidden">
-    <h2 data-en="Your secret phrase">Ваша секретная фраза</h2>
-    <div class="warn" data-en="Write these 12 words on paper in order and keep them somewhere safe. This is the only way to restore the vault. Nobody, including the developer, can help if you lose them.">Запишите эти 12 слов на бумагу по порядку и храните в надёжном месте. Это единственный способ восстановить хранилище. Никто, включая разработчика, не сможет помочь, если вы их потеряете.</div>
+  <footer class="l-foot">
+    <span>© Vault</span>
+    <span data-en="Open source · AES-256 and Argon2id on your device">Открытый код · AES-256 и Argon2id на устройстве</span>
+  </footer>
+</section>
+
+<!-- ============ Вход ============ -->
+<section id="v-unlock" class="center-page hidden">
+  <div class="corner"><button class="pill ghost small" data-lang-toggle>EN</button><button class="pill ghost small" data-theme-toggle>☀</button></div>
+  <div class="panel rise">
+    <button class="icon-tile" data-home aria-label="Vault"><svg class="ic accent big"><use href="#i-logo"/></svg></button>
+    <h1 class="p-title" data-en="Welcome back">С возвращением</h1>
+    <p class="p-sub" data-en="Choose a profile and unlock the safe">Выберите профиль и разблокируйте сейф</p>
+    <div id="profiles" class="profiles"></div>
+    <label for="unlock-pw" data-en="Master password">Мастер-пароль</label>
+    <input type="password" id="unlock-pw" class="field" placeholder="••••••••••••" autocomplete="current-password">
+    <div class="err" id="unlock-err"></div>
+    <button class="wide" id="b-unlock" data-en="Unlock">Разблокировать</button>
+    <div class="p-links">
+      <a id="b-forgot" data-en="Restore with phrase">Восстановить по фразе</a>
+      <a id="b-new2" data-en="+ New profile">+ Новый профиль</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Показ фразы ============ -->
+<section id="v-phrase" class="center-page hidden">
+  <div class="panel wide-panel rise">
+    <p class="step">1 / 3</p>
+    <h1 class="p-title" data-en="Your secret phrase">Ваша секретная фраза</h1>
+    <p class="p-sub" data-en="Write these 12 words on paper in order and keep them somewhere safe. It's the only way to restore the vault. Nobody, including the developer, can help if you lose them.">Запишите эти 12 слов на бумагу по порядку и храните в надёжном месте. Это единственный способ восстановить хранилище. Никто, включая разработчика, не сможет помочь, если вы их потеряете.</p>
     <div class="words" id="words"></div>
-    <button id="b-phrase-ok" data-en="I wrote it down">Я записал(а)</button>
-    <button class="ghost" data-cancel data-en="Cancel">Отмена</button>
-  </section>
+    <button class="wide" id="b-phrase-ok" data-en="I wrote it down">Я записал(а)</button>
+    <div class="p-links center"><a data-cancel data-en="Cancel">Отмена</a></div>
+  </div>
+</section>
 
-  <!-- Проверка фразы -->
-  <section id="v-verify" class="card hidden">
-    <h2 data-en="Check">Проверка</h2>
-    <p class="sub" data-en="Enter the words with these numbers.">Введите слова с указанными номерами.</p>
+<!-- ============ Проверка фразы ============ -->
+<section id="v-verify" class="center-page hidden">
+  <div class="panel rise">
+    <p class="step">2 / 3</p>
+    <h1 class="p-title" data-en="Check">Проверка</h1>
+    <p class="p-sub" data-en="Enter the words with these numbers.">Введите слова с указанными номерами.</p>
     <div id="verify-fields"></div>
     <div class="err" id="verify-err"></div>
-    <button id="b-verify" data-en="Check">Проверить</button>
-    <button class="ghost" id="b-back-phrase" data-en="Show phrase again">Показать фразу снова</button>
-    <button class="ghost" data-cancel data-en="Cancel">Отмена</button>
-  </section>
+    <button class="wide" id="b-verify" data-en="Check">Проверить</button>
+    <div class="p-links"><a id="b-back-phrase" data-en="Show phrase again">Показать фразу снова</a><a data-cancel data-en="Cancel">Отмена</a></div>
+  </div>
+</section>
 
-  <!-- Установка пароля -->
-  <section id="v-setpw" class="card hidden">
-    <h2 data-en="Master password">Мастер-пароль</h2>
-    <p class="sub" data-en="Used to sign in on this device. If you forget it, sign in with the secret phrase.">Нужен для входа на этом устройстве. Если забудете, войдите по секретной фразе.</p>
-    <label data-en="Profile name">Название профиля</label>
-    <input id="p-name" maxlength="40" data-en-ph="For example: Personal" placeholder="Например: Личное">
-    <label data-en="Password (at least 10 characters)">Пароль (минимум 10 символов)</label>
-    <input type="password" id="pw1" autocomplete="new-password">
+<!-- ============ Установка пароля ============ -->
+<section id="v-setpw" class="center-page hidden">
+  <div class="panel rise">
+    <p class="step">3 / 3</p>
+    <h1 class="p-title" data-en="Master password">Мастер-пароль</h1>
+    <p class="p-sub" data-en="Used to sign in on this device. If you forget it, sign in with the secret phrase.">Нужен для входа на этом устройстве. Если забудете, войдите по секретной фразе.</p>
+    <label for="p-name" data-en="Profile name">Название профиля</label>
+    <input id="p-name" class="field" maxlength="40" data-en-ph="For example: Personal" placeholder="Например: Личный">
+    <label for="pw1" data-en="Password (at least 10 characters)">Пароль (минимум 10 символов)</label>
+    <input type="password" id="pw1" class="field" autocomplete="new-password">
     <div class="meter"><div class="meter-bar" id="pw1-bar"></div></div>
     <div class="meter-text" id="pw1-text"></div>
-    <label data-en="Repeat password">Повторите пароль</label>
-    <input type="password" id="pw2" autocomplete="new-password">
+    <label for="pw2" data-en="Repeat password">Повторите пароль</label>
+    <input type="password" id="pw2" class="field" autocomplete="new-password">
     <div class="err" id="setpw-err"></div>
-    <button id="b-setpw" data-en="Save">Сохранить</button>
-    <button class="ghost" data-cancel data-en="Cancel">Отмена</button>
-  </section>
+    <button class="wide" id="b-setpw" data-en="Create vault">Создать сейф</button>
+    <div class="p-links center"><a data-cancel data-en="Cancel">Отмена</a></div>
+  </div>
+</section>
 
-  <!-- Восстановление -->
-  <section id="v-restore" class="card hidden">
-    <h2 data-en="Restore">Восстановление</h2>
-    <label data-en="Secret phrase (12 words) separated by spaces">Секретная фраза (12 слов) через пробел</label>
-    <textarea id="restore-words" autocomplete="off" spellcheck="false"></textarea>
-    <label data-en="Backup file (optional if the vault is already in this browser)">Файл резервной копии (необязательно, если хранилище уже есть в этом браузере)</label>
-    <input type="file" id="restore-file" accept=".json,application/json">
+<!-- ============ Восстановление ============ -->
+<section id="v-restore" class="center-page hidden">
+  <div class="panel rise">
+    <h1 class="p-title" data-en="Restore">Восстановление</h1>
+    <p class="p-sub" data-en="Enter your 12-word secret phrase.">Введите секретную фразу из 12 слов.</p>
+    <label for="restore-words" data-en="Secret phrase, separated by spaces">Секретная фраза через пробел</label>
+    <textarea id="restore-words" class="field mono" autocomplete="off" spellcheck="false"></textarea>
+    <label for="restore-file" data-en="Backup file (optional if the vault is already in this browser)">Файл резервной копии (необязательно, если сейф уже есть в этом браузере)</label>
+    <input type="file" id="restore-file" class="field" accept=".json,application/json">
     <div class="err" id="restore-err"></div>
-    <button id="b-restore-go" data-en="Restore">Восстановить</button>
-    <button class="ghost" data-cancel data-en="Back">Назад</button>
-  </section>
+    <button class="wide" id="b-restore-go" data-en="Restore">Восстановить</button>
+    <div class="p-links center"><a data-cancel data-en="Back">Назад</a></div>
+  </div>
+</section>
 
-  <!-- Вход -->
-  <section id="v-unlock" class="card hidden">
-    <h2><span data-en="Sign in:">Вход:</span> <span id="unlock-name"></span></h2>
-    <label data-en="Master password">Мастер-пароль</label>
-    <input type="password" id="unlock-pw" autocomplete="current-password">
-    <div class="err" id="unlock-err"></div>
-    <button id="b-unlock" data-en="Open">Открыть</button>
-    <button class="ghost" id="b-forgot" data-en="Forgot password (use secret phrase)">Забыл пароль (войти по секретной фразе)</button>
-    <button class="ghost" id="b-other" data-en="← Another profile">← Другой профиль</button>
-  </section>
-
-  <!-- Хранилище -->
-  <section id="v-vault" class="hidden">
-    <div class="card bar">
-      <h2 class="nomargin"><span id="vault-name"></span></h2>
-      <div>
-        <button class="ghost small" id="b-audit" data-en="Audit">Аудит</button>
-        <button class="ghost small" id="b-settings" data-en="Settings">Настройки</button>
-        <button class="ghost small" id="b-logout" data-en="Log out">Выйти</button>
-      </div>
+<!-- ============ Приложение ============ -->
+<section id="v-vault" class="app hidden">
+  <aside class="side">
+    <a class="brand side-brand" data-home-lock><svg class="ic accent"><use href="#i-logo"/></svg>Vault</a>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-tools">
+      <a class="nav-item" id="b-audit" data-en="Password audit">Аудит паролей</a>
+      <a class="nav-item" id="b-settings" data-en="Settings and backups">Настройки и копии</a>
+      <a class="nav-item" data-guide data-en="Guide">Инструкция</a>
     </div>
+    <div class="side-foot">
+      <span class="avatar accent-bg" id="vault-avatar">Л</span>
+      <span class="who"><span id="vault-name"></span><br><a id="b-switch" data-en="Switch profile">Сменить профиль</a></span>
+      <button class="ib" data-theme-toggle aria-label="Тема">☀</button>
+      <button class="ib" data-lang-toggle>EN</button>
+      <button class="ib" id="b-logout" aria-label="Заблокировать" title="Заблокировать"><svg class="ic"><use href="#i-lock"/></svg></button>
+    </div>
+  </aside>
+
+  <main class="list-pane">
+    <div class="list-top">
+      <label for="search" class="sr" data-en="Search">Поиск</label>
+      <input id="search" class="field" data-en-ph="Search the vault" placeholder="Поиск по хранилищу">
+      <button id="b-new-entry" data-en="+ Add">+ Добавить</button>
+    </div>
+    <div class="list-sub">
+      <span id="list-count" class="muted"></span>
+      <select id="sort" class="field slim">
+        <option value="title" data-en="A → Z">А → Я</option>
+        <option value="updated" data-en="Recently changed">Недавно изменённые</option>
+        <option value="used" data-en="Recently used">Недавно использованные</option>
+        <option value="created" data-en="Newest first">Новые сверху</option>
+      </select>
+    </div>
+    <div id="list" class="rows"></div>
+  </main>
+
+  <section class="detail" id="detail">
+    <!-- Просмотр записи -->
+    <div id="detail-view"></div>
 
     <!-- Форма записи -->
-    <div class="card" id="form-card">
-      <h2 id="form-title" data-en="New entry">Новая запись</h2>
+    <div id="form-card" class="hidden">
+      <div class="d-head">
+        <button class="ib back" data-detail-back aria-label="Назад"><svg class="ic"><use href="#i-back"/></svg></button>
+        <h2 class="d-title" id="form-title" data-en="New entry">Новая запись</h2>
+      </div>
       <div class="tabs" id="type-tabs">
-        <button class="tab active" data-type="login" data-en="Password">Пароль</button>
-        <button class="tab" data-type="note" data-en="Note">Заметка</button>
+        <button class="tab active" data-type="login" data-en="Login">Логин</button>
         <button class="tab" data-type="card" data-en="Card">Карта</button>
-        <button class="tab" data-type="wifi" data-en="Wi-Fi">Wi-Fi</button>
+        <button class="tab" data-type="note" data-en="Note">Заметка</button>
+        <button class="tab" data-type="wifi">Wi-Fi</button>
       </div>
-      <div class="row">
-        <div><label data-f="title" data-en="Site / name">Сайт / название</label><input id="e-title"></div>
-        <div data-show="login card"><label data-f="login" data-en="Login">Логин</label><input id="e-login" autocomplete="off"></div>
-      </div>
-      <div data-show="login"><label data-en="Website address">Адрес сайта</label><input id="e-url" type="url" placeholder="https://example.com" autocomplete="off"></div>
-      <div data-show="card" class="row">
-        <div><label data-en="Card number">Номер карты</label><input id="e-number" inputmode="numeric" autocomplete="off"></div>
-        <div class="row">
-          <div><label data-en="Expiry">Срок</label><input id="e-exp" placeholder="MM/YY" autocomplete="off"></div>
-          <div><label>CVV</label><input id="e-cvv" inputmode="numeric" autocomplete="off"></div>
+      <label data-f="title" for="e-title" data-en="Site / name">Сайт / название</label>
+      <input id="e-title" class="field">
+      <div data-show="login card"><label data-f="login" for="e-login" data-en="Login">Логин</label><input id="e-login" class="field" autocomplete="off"></div>
+      <div data-show="login"><label for="e-url" data-en="Website">Сайт</label><input id="e-url" class="field" type="url" placeholder="https://example.com" autocomplete="off"></div>
+      <div data-show="card">
+        <label for="e-number" data-en="Card number">Номер карты</label><input id="e-number" class="field" inputmode="numeric" autocomplete="off">
+        <div class="two">
+          <div><label for="e-exp" data-en="Expiry">Срок</label><input id="e-exp" class="field" placeholder="MM/YY" autocomplete="off"></div>
+          <div><label for="e-cvv">CVV</label><input id="e-cvv" class="field" inputmode="numeric" autocomplete="off"></div>
         </div>
       </div>
       <div data-show="login wifi card">
-        <label data-f="pass" data-en="Password">Пароль</label>
-        <div class="row nogap"><input id="e-pass" autocomplete="off"><button class="ghost shrink" id="b-gen" data-en="Generate">Сгенерировать</button><button class="ghost shrink" id="b-gen-opts" data-en="Options">Параметры</button></div>
+        <label data-f="pass" for="e-pass" data-en="Password">Пароль</label>
+        <div class="input-group"><input id="e-pass" class="field" autocomplete="off"><button class="ib" id="b-gen" title="Сгенерировать" data-en="Generate">Создать</button><button class="ib" id="b-gen-opts" aria-label="Параметры">⋯</button></div>
         <div class="meter"><div class="meter-bar" id="e-pass-bar"></div></div>
         <div class="meter-text" id="e-pass-text"></div>
         <div class="gen-opts hidden" id="gen-opts">
-          <div class="row">
+          <div class="two">
             <label class="chk"><input type="radio" name="gmode" value="chars" checked> <span data-en="Characters">Символы</span></label>
             <label class="chk"><input type="radio" name="gmode" value="words"> <span data-en="Words">Слова</span></label>
           </div>
           <label><span data-en="Length:">Длина:</span> <span id="g-len-v">20</span></label>
           <input type="range" id="g-len" min="8" max="64" value="20">
-          <div class="row chars-opts">
+          <div class="four chars-opts">
             <label class="chk"><input type="checkbox" id="g-up" checked> A–Z</label>
             <label class="chk"><input type="checkbox" id="g-low" checked> a–z</label>
             <label class="chk"><input type="checkbox" id="g-dig" checked> 0–9</label>
@@ -161,91 +243,81 @@
         </div>
       </div>
       <div data-show="login">
-        <label data-en="2FA key (TOTP), optional">Ключ 2FA (TOTP), необязательно</label>
-        <input id="e-totp" autocomplete="off" spellcheck="false" placeholder="JBSWY3DPEHPK3PXP / otpauth://…">
+        <label for="e-totp" data-en="2FA key (TOTP), optional">Ключ 2FA (TOTP), необязательно</label>
+        <input id="e-totp" class="field mono" autocomplete="off" spellcheck="false" placeholder="JBSWY3DPEHPK3PXP / otpauth://…">
       </div>
-      <div class="row">
-        <div><label data-en="Category">Категория</label><input id="e-cat" list="cat-list" data-en-ph="Social, Banks, Work…" placeholder="Соцсети, Банки, Работа…"><datalist id="cat-list"></datalist></div>
-        <div class="fav-wrap"><label class="chk"><input type="checkbox" id="e-fav"> <span data-en="Favorite">Избранное</span></label></div>
-      </div>
-      <label data-en="Notes / description">Заметки / описание</label>
-      <textarea id="e-note" class="note-input" data-en-ph="For example: work email, security question answer…" placeholder="Например: рабочая почта, ответ на секретный вопрос…"></textarea>
+      <label for="e-cat" data-en="Category">Категория</label>
+      <input id="e-cat" class="field" list="cat-list" data-en-ph="Social, Banks, Work…" placeholder="Соцсети, Банки, Работа…"><datalist id="cat-list"></datalist>
+      <label for="e-note" data-en="Notes">Заметки</label>
+      <textarea id="e-note" class="field" data-en-ph="For example: work email, security answer…" placeholder="Например: рабочая почта, ответ на секретный вопрос…"></textarea>
+      <label class="chk"><input type="checkbox" id="e-fav"> <span data-en="Add to favorites">В избранное</span></label>
       <div class="err" id="form-err"></div>
-      <button id="b-add" data-en="Add">Добавить</button>
-      <button class="ghost hidden" id="b-edit-cancel" data-en="Cancel editing">Отменить изменения</button>
-    </div>
-
-    <!-- Список -->
-    <div class="card">
-      <h2 data-en="My entries">Мои записи</h2>
-      <div class="row nogap">
-        <input id="search" data-en-ph="Search…" placeholder="Поиск…">
-        <select id="sort" class="shrink">
-          <option value="title" data-en="A → Z">А → Я</option>
-          <option value="updated" data-en="Recently changed">Недавно изменённые</option>
-          <option value="used" data-en="Recently used">Недавно использованные</option>
-          <option value="created" data-en="Newest first">Новые сверху</option>
-        </select>
+      <div class="d-btns">
+        <button id="b-add" data-en="Save">Сохранить</button>
+        <button class="ghost" id="b-edit-cancel" data-en="Cancel">Отмена</button>
       </div>
-      <div class="chips" id="chips"></div>
-      <div id="list"></div>
     </div>
+  </section>
+</section>
 
-    <div class="card">
+<!-- ============ Настройки ============ -->
+<section id="v-settings" class="center-page hidden">
+  <div class="panel wide-panel rise">
+    <a class="p-back" data-back-vault><svg class="ic"><use href="#i-back"/></svg><span data-en="Back to vault">К хранилищу</span></a>
+    <h1 class="p-title left" data-en="Settings">Настройки</h1>
+    <h3 data-en="Backups and files">Резервные копии и файлы</h3>
+    <div class="btn-row">
       <button class="ghost" id="b-export" data-en="Download backup">Скачать резервную копию</button>
       <button class="ghost" id="b-xlsx" data-en="Export to Excel">Выгрузить в Excel</button>
-      <button class="ghost" id="b-import" data-en="Import">Импорт</button>
+      <button class="ghost" id="b-import" data-en="Import CSV / Excel">Импорт CSV / Excel</button>
       <input type="file" id="import-file" class="hidden" accept=".csv,.xlsx,text/csv">
-      <button class="ghost" data-guide data-en="Guide">Инструкция</button>
-      <button class="danger" id="b-wipe" data-en="Delete profile from device">Удалить профиль с устройства</button>
-      <p class="sub tight" data-en="The backup is encrypted. Only your secret phrase can open it.">Резервная копия зашифрована. Открыть её можно только вашей секретной фразой.</p>
     </div>
-  </section>
-
-  <!-- Настройки профиля -->
-  <section id="v-settings" class="card hidden">
-    <h2 data-en="Change master password">Смена мастер-пароля</h2>
-    <label data-en="Current password">Текущий пароль</label>
-    <input type="password" id="cp-old" autocomplete="current-password">
-    <label data-en="New password">Новый пароль</label>
-    <input type="password" id="cp-new1" autocomplete="new-password">
-    <div class="meter"><div class="meter-bar" id="cp-new1-bar"></div></div>
-    <div class="meter-text" id="cp-new1-text"></div>
-    <label data-en="Repeat new password">Повторите новый пароль</label>
-    <input type="password" id="cp-new2" autocomplete="new-password">
+    <p class="muted small" data-en="The backup is encrypted — only your secret phrase can open it. Excel is not encrypted.">Резервная копия зашифрована — открыть её можно только вашей фразой. Excel не зашифрован.</p>
+    <h3 data-en="Change master password">Смена мастер-пароля</h3>
+    <label for="cp-old" data-en="Current password">Текущий пароль</label>
+    <input type="password" id="cp-old" class="field" autocomplete="current-password">
+    <div class="two">
+      <div><label for="cp-new1" data-en="New password">Новый пароль</label><input type="password" id="cp-new1" class="field" autocomplete="new-password">
+        <div class="meter"><div class="meter-bar" id="cp-new1-bar"></div></div><div class="meter-text" id="cp-new1-text"></div></div>
+      <div><label for="cp-new2" data-en="Repeat">Повторите</label><input type="password" id="cp-new2" class="field" autocomplete="new-password"></div>
+    </div>
     <div class="err" id="cp-err"></div>
     <button id="b-cp" data-en="Change password">Сменить пароль</button>
-    <h2 class="spaced" data-en="Profile name">Название профиля</h2>
-    <input id="rename" maxlength="40">
-    <button class="ghost" id="b-rename" data-en="Rename">Переименовать</button>
-    <h2 class="spaced" data-en="Auto-lock">Автоблокировка</h2>
-    <p class="sub tight" data-en="The profile closes after 5 minutes of inactivity or 1 minute after you leave the tab.">Профиль закрывается через 5 минут бездействия или через 1 минуту после ухода с вкладки.</p>
-    <div class="spaced"><button class="ghost" data-back-vault data-en="← Back">← Назад</button></div>
-  </section>
+    <h3 data-en="Profile name">Название профиля</h3>
+    <div class="input-row"><input id="rename" class="field" maxlength="40"><button class="ghost" id="b-rename" data-en="Rename">Переименовать</button></div>
+    <h3 data-en="App">Приложение</h3>
+    <p class="muted small" data-en="The profile locks after 5 minutes of inactivity or 1 minute after you leave the tab.">Профиль блокируется через 5 минут бездействия или через минуту после ухода с вкладки.</p>
+    <div class="btn-row"><button class="ghost" data-install hidden data-en="Install as app">Установить как приложение</button></div>
+    <h3 class="danger-h" data-en="Danger zone">Опасная зона</h3>
+    <button class="danger" id="b-wipe" data-en="Delete profile from this device">Удалить профиль с устройства</button>
+  </div>
+</section>
 
-  <!-- Аудит -->
-  <section id="v-audit" class="card hidden">
-    <h2 data-en="Password audit">Аудит паролей</h2>
+<!-- ============ Аудит ============ -->
+<section id="v-audit" class="center-page hidden">
+  <div class="panel wide-panel rise">
+    <a class="p-back" data-back-vault><svg class="ic"><use href="#i-back"/></svg><span data-en="Back to vault">К хранилищу</span></a>
+    <h1 class="p-title left" data-en="Password audit">Аудит паролей</h1>
     <div id="audit-body"></div>
-    <div class="spaced">
-      <button id="b-hibp" data-en="Check for leaks">Проверить утечки</button>
-      <button class="ghost" data-back-vault data-en="← Back">← Назад</button>
-    </div>
-    <p class="sub tight" data-en-html="The leak check uses the Have I Been Pwned service. Only the first 5 characters of a SHA-1 hash of each password are sent — not the password itself. &lt;b&gt;The service cannot learn your passwords.&lt;/b&gt;">Проверка утечек использует сервис Have I Been Pwned. Отправляются только первые 5 символов SHA-1-хеша каждого пароля, а не сам пароль. <b>Сервис не может узнать ваши пароли.</b></p>
-  </section>
+    <button class="spaced" id="b-hibp" data-en="Check for leaks">Проверить утечки</button>
+    <p class="muted small" data-en-html="The leak check uses Have I Been Pwned. Only the first 5 characters of each password's SHA-1 hash are sent — not the password. &lt;b&gt;The service cannot learn your passwords.&lt;/b&gt;">Проверка утечек использует Have I Been Pwned. Отправляются только первые 5 символов SHA-1-хеша каждого пароля, а не сам пароль. <b>Сервис не может узнать ваши пароли.</b></p>
+  </div>
+</section>
 
-  <!-- Импорт -->
-  <section id="v-import" class="card hidden">
-    <h2 data-en="Import">Импорт</h2>
+<!-- ============ Импорт ============ -->
+<section id="v-import" class="center-page hidden">
+  <div class="panel wide-panel rise">
+    <a class="p-back" data-back-vault><svg class="ic"><use href="#i-back"/></svg><span data-en="Back to vault">К хранилищу</span></a>
+    <h1 class="p-title left" data-en="Import">Импорт</h1>
     <div id="import-body"></div>
     <div class="err" id="import-err"></div>
     <button id="b-import-go" data-en="Import">Импортировать</button>
-    <button class="ghost" data-back-vault data-en="Cancel">Отмена</button>
-  </section>
+  </div>
+</section>
 
-  <!-- Инструкция -->
-  <section id="v-guide" class="hidden">
-    <div class="card guide" id="guide-ru">
+<!-- ============ Инструкция ============ -->
+<section id="v-guide" class="center-page hidden">
+  <div class="panel wide-panel guide rise" id="guide-ru">
       <h2>Инструкция</h2>
       <p class="part">Часть 1. Как пользоваться</p>
       <h3><i>A</i>Создание профиля</h3>
@@ -256,13 +328,13 @@
       </ul>
       <h3><i>B</i>Типы записей</h3>
       <ul>
-        <li>Вкладки над формой: <b>Пароль</b> (сайты и приложения), <b>Заметка</b> (любой секретный текст), <b>Карта</b> (номер, срок, CVV, PIN), <b>Wi-Fi</b>.</li>
-        <li>Для паролей можно указать адрес сайта — появится кнопка <b>«Открыть»</b>.</li>
-        <li><b>Категория</b> (например «Банки») и <b>Избранное</b> помогают навести порядок: избранное всегда сверху.</li>
+        <li>Нажмите <b>«+ Добавить»</b> над списком. Справа откроется форма с вкладками: <b>Логин</b> (сайты и приложения), <b>Карта</b> (номер, срок, CVV, PIN), <b>Заметка</b> (любой секретный текст), <b>Wi-Fi</b>.</li>
+        <li>Для логинов можно указать адрес сайта — в карточке записи он станет ссылкой.</li>
+        <li><b>Категория</b> (например «Банки») появится в левом меню. <b>Избранное</b> всегда стоит вверху списка.</li>
       </ul>
       <h3><i>C</i>Генератор паролей</h3>
       <ul>
-        <li>Кнопка <b>«Сгенерировать»</b> создаёт случайный пароль. Кнопка <b>«Параметры»</b> рядом открывает настройки: длина, наборы символов или режим <b>«Слова»</b> — легко запоминаемый пароль вида <code>Лодка-ветер-синий-42</code> на английских словах.</li>
+        <li>Кнопка <b>«Создать»</b> в поле пароля создаёт случайный пароль. Кнопка <b>⋯</b> рядом открывает настройки: длина, наборы символов или режим <b>«Слова»</b> — легко запоминаемый пароль вида <code>Лодка-ветер-синий-42</code> на английских словах.</li>
       </ul>
       <h3><i>D</i>Коды двухфакторной защиты (2FA)</h3>
       <ul>
@@ -271,36 +343,36 @@
       </ul>
       <h3><i>E</i>Работа с записями</h3>
       <ul>
-        <li><b>Поиск</b> — по названию, логину, сайту, категории и заметкам. <b>Фильтры</b> под поиском — по типу, категории и избранному. Справа — сортировка.</li>
-        <li><b>«Показать»</b>, <b>«Логин»</b> и <b>«Пароль»</b> — показать и скопировать, <b>«2FA»</b> — скопировать код, <b>«Открыть»</b> — перейти на сайт, <b>☆</b> — избранное, <b>«Изменить»</b>, <b>«Удалить»</b>.</li>
+        <li>Слева — разделы: все записи, логины, карты, заметки, Wi-Fi, избранное и ваши категории. В центре — список и <b>поиск</b> по названию, логину, сайту, категории и заметкам; под поиском — сортировка.</li>
+        <li>Нажмите на запись — справа откроется её карточка. Значок глаза показывает пароль, значок копирования копирует. Внизу — <b>«Изменить»</b>, <b>«В избранное»</b> и <b>«Удалить»</b>.</li>
         <li>Скопированное удаляется из буфера обмена через 30 секунд.</li>
       </ul>
       <h3><i>F</i>Аудит паролей</h3>
       <ul>
-        <li>Кнопка <b>Аудит</b> вверху показывает оценку из 100 и списки: слабые, повторяющиеся и не менявшиеся больше года пароли. Нажмите «Изменить», чтобы сразу исправить.</li>
+        <li><b>«Аудит паролей»</b> в левом меню показывает оценку из 100 и списки: слабые, повторяющиеся и не менявшиеся больше года пароли. Нажмите «Изменить», чтобы сразу исправить.</li>
         <li><b>«Проверить утечки»</b> сверяет пароли с базой утёкших паролей Have I Been Pwned. Сами пароли никуда не отправляются — только первые 5 символов их хеша.</li>
       </ul>
       <h3><i>G</i>Вход, выход, профили, настройки</h3>
       <ul>
-        <li>На главной выберите профиль и введите мастер-пароль. После 3 неверных попыток вход временно блокируется, и с каждой ошибкой пауза растёт.</li>
-        <li><b>«Выйти»</b> или клик по логотипу закрывают профиль. Vault закрывается сам через 5 минут бездействия или через минуту после ухода с вкладки.</li>
-        <li><b>Настройки</b> — смена мастер-пароля и названия профиля.</li>
+        <li>На экране входа выберите профиль и введите мастер-пароль. После 3 неверных попыток вход временно блокируется, и с каждой ошибкой пауза растёт.</li>
+        <li>Значок замка внизу слева или «Сменить профиль» закрывают сейф. Vault закрывается сам через 5 минут бездействия или через минуту после ухода с вкладки.</li>
+        <li><b>«Настройки и копии»</b> — резервная копия, Excel, импорт, смена мастер-пароля и названия, удаление профиля.</li>
       </ul>
       <h3><i>H</i>Резервная копия и перенос</h3>
       <ul>
-        <li><b>«Скачать резервную копию»</b> — зашифрованный файл <code>.json</code>. Открыть его можно только вашей фразой.</li>
+        <li>В настройках: <b>«Скачать резервную копию»</b> — зашифрованный файл <code>.json</code>. Открыть его можно только вашей фразой.</li>
         <li>На другом устройстве: <b>«Восстановить по секретной фразе»</b> → 12 слов → файл копии → новый мастер-пароль.</li>
         <li>Забыли мастер-пароль — на экране входа нажмите «Забыл пароль» и введите фразу. Записи сохранятся.</li>
       </ul>
       <h3><i>I</i>Импорт и Excel</h3>
       <ul>
-        <li><b>«Импорт»</b> принимает CSV из Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password и файлы Excel (.xlsx). Повторы пропускаются. После импорта удалите исходный файл.</li>
+        <li><b>«Импорт CSV / Excel»</b> в настройках принимает CSV из Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password и файлы Excel (.xlsx). Повторы пропускаются. После импорта удалите исходный файл.</li>
         <li><b>«Выгрузить в Excel»</b> — таблица со всеми записями. Файл не зашифрован.</li>
       </ul>
       <h3><i>J</i>Приложение, тема и язык</h3>
       <ul>
-        <li>Кнопка <b>«Установить»</b> вверху (или «Добавить на главный экран» в меню браузера на телефоне) ставит Vault как приложение. Оно работает и без интернета.</li>
-        <li>☀ / ☾ — светлая и тёмная тема, EN / RU — язык интерфейса.</li>
+        <li>Кнопка <b>«Установить как приложение»</b> в настройках (или «Добавить на главный экран» в меню браузера на телефоне) ставит Vault как приложение. Оно работает и без интернета.</li>
+        <li>☀ / ☾ — светлая и тёмная тема, EN / RU — язык интерфейса (внизу слева в сейфе и вверху на остальных экранах).</li>
       </ul>
 
       <p class="part">Часть 2. Как не дать себя взломать</p>
@@ -341,9 +413,9 @@
         <li>Потеряли устройство — данные зашифрованы, но смените пароли от важных сайтов.</li>
       </ul>
       <div class="warn">Если потеряны и фраза, и пароль — доступ не восстановит никто, даже разработчик. Это и есть гарантия, что никто другой тоже не войдёт.</div>
-      <button data-guide-back>← Назад</button>
-    </div>
-    <div class="card guide hidden" id="guide-en">
+      <button class="ghost" data-guide-back>← Назад</button>
+  </div>
+  <div class="panel wide-panel guide rise hidden" id="guide-en">
       <h2>Guide</h2>
       <p class="part">Part 1. How to use it</p>
       <h3><i>A</i>Creating a profile</h3>
@@ -354,13 +426,13 @@
       </ul>
       <h3><i>B</i>Entry types</h3>
       <ul>
-        <li>Tabs above the form: <b>Password</b> (sites and apps), <b>Note</b> (any secret text), <b>Card</b> (number, expiry, CVV, PIN), <b>Wi-Fi</b>.</li>
-        <li>For passwords you can add a website address — an <b>“Open”</b> button will appear.</li>
-        <li><b>Category</b> (e.g. “Banks”) and <b>Favorite</b> keep things organized: favorites are always on top.</li>
+        <li>Click <b>“+ Add”</b> above the list. A form opens on the right with tabs: <b>Login</b> (sites and apps), <b>Card</b> (number, expiry, CVV, PIN), <b>Note</b> (any secret text), <b>Wi-Fi</b>.</li>
+        <li>For logins you can add a website address — it becomes a link on the entry card.</li>
+        <li>A <b>category</b> (e.g. “Banks”) appears in the left menu. <b>Favorites</b> always stay at the top of the list.</li>
       </ul>
       <h3><i>C</i>Password generator</h3>
       <ul>
-        <li><b>“Generate”</b> creates a random password. The <b>“Options”</b> button next to it opens options: length, character sets, or <b>“Words”</b> mode for a memorable password like <code>Boat-wind-blue-42</code>.</li>
+        <li><b>“Generate”</b> in the password field creates a random password. The <b>⋯</b> button next to it opens options: length, character sets, or <b>“Words”</b> mode for a memorable password like <code>Boat-wind-blue-42</code>.</li>
       </ul>
       <h3><i>D</i>Two-factor codes (2FA)</h3>
       <ul>
@@ -369,36 +441,36 @@
       </ul>
       <h3><i>E</i>Working with entries</h3>
       <ul>
-        <li><b>Search</b> covers name, login, site, category and notes. <b>Filters</b> below it — by type, category and favorites. Sorting is on the right.</li>
-        <li><b>“Show”</b>, <b>“Login”</b> and <b>“Password”</b> — show and copy, <b>“2FA”</b> — copy code, <b>“Open”</b> — go to the site, <b>☆</b> — favorite, <b>“Edit”</b>, <b>“Delete”</b>.</li>
+        <li>On the left: sections — all entries, logins, cards, notes, Wi-Fi, favorites and your categories. In the middle: the list and <b>search</b> by name, login, site, category and notes; sorting is below the search.</li>
+        <li>Click an entry to open its card on the right. The eye icon reveals a password, the copy icon copies it. At the bottom: <b>“Edit”</b>, <b>“Favorite”</b> and <b>“Delete”</b>.</li>
         <li>Copied data is cleared from the clipboard after 30 seconds.</li>
       </ul>
       <h3><i>F</i>Password audit</h3>
       <ul>
-        <li><b>Audit</b> at the top shows a score out of 100 and lists of weak, reused and year-old passwords. Click “Edit” to fix one right away.</li>
+        <li><b>“Password audit”</b> in the left menu shows a score out of 100 and lists of weak, reused and year-old passwords. Click “Edit” to fix one right away.</li>
         <li><b>“Check for leaks”</b> compares your passwords with the Have I Been Pwned database. Passwords are never sent — only the first 5 characters of their hash.</li>
       </ul>
       <h3><i>G</i>Sign in, log out, profiles, settings</h3>
       <ul>
-        <li>On the home screen pick a profile and enter its master password. After 3 wrong attempts sign-in is paused, and the pause grows with each mistake.</li>
-        <li><b>“Log out”</b> or clicking the logo closes the profile. Vault also closes itself after 5 minutes of inactivity or a minute after you leave the tab.</li>
-        <li><b>Settings</b> — change the master password and profile name.</li>
+        <li>On the sign-in screen pick a profile and enter its master password. After 3 wrong attempts sign-in is paused, and the pause grows with each mistake.</li>
+        <li>The lock icon at the bottom left or “Switch profile” closes the safe. Vault also closes itself after 5 minutes of inactivity or a minute after you leave the tab.</li>
+        <li><b>“Settings and backups”</b> — backup, Excel, import, master password and name changes, profile deletion.</li>
       </ul>
       <h3><i>H</i>Backup and moving devices</h3>
       <ul>
-        <li><b>“Download backup”</b> gives an encrypted <code>.json</code> file. Only your phrase can open it.</li>
+        <li>In settings: <b>“Download backup”</b> gives an encrypted <code>.json</code> file. Only your phrase can open it.</li>
         <li>On another device: <b>“Restore with secret phrase”</b> → 12 words → backup file → new master password.</li>
         <li>Forgot the master password — click “Forgot password” on the sign-in screen and enter the phrase. Your entries stay.</li>
       </ul>
       <h3><i>I</i>Import and Excel</h3>
       <ul>
-        <li><b>“Import”</b> accepts CSV from Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password and Excel (.xlsx) files. Duplicates are skipped. Delete the source file afterwards.</li>
+        <li><b>“Import CSV / Excel”</b> in settings accepts CSV from Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password and Excel (.xlsx) files. Duplicates are skipped. Delete the source file afterwards.</li>
         <li><b>“Export to Excel”</b> — a table with all entries. The file is not encrypted.</li>
       </ul>
       <h3><i>J</i>App, theme and language</h3>
       <ul>
-        <li>The <b>“Install app”</b> button at the top (or “Add to Home screen” in your phone browser's menu) installs Vault as an app. It also works offline.</li>
-        <li>☀ / ☾ — light and dark theme, EN / RU — interface language.</li>
+        <li>The <b>“Install as app”</b> button in settings (or “Add to Home screen” in your phone browser's menu) installs Vault as an app. It also works offline.</li>
+        <li>☀ / ☾ — light and dark theme, EN / RU — interface language (bottom left in the safe, top right elsewhere).</li>
       </ul>
 
       <p class="part">Part 2. How not to get hacked</p>
@@ -439,14 +511,13 @@
         <li>Lost a device — data is encrypted, but change passwords for important sites anyway.</li>
       </ul>
       <div class="warn">If both the phrase and the password are lost, nobody can restore access — not even the developer. That's exactly the guarantee that nobody else can get in either.</div>
-      <button data-guide-back>← Back</button>
-    </div>
-  </section>
+      <button class="ghost" data-guide-back>← Back</button>
+  </div>
+</section>
 
-  <section id="v-loading" class="card"><p class="sub" id="loading-msg">Загрузка…</p></section>
+<section id="v-loading" class="center-page"><p class="muted" id="loading-msg">Загрузка…</p></section>
 
-  <div class="modal hidden" id="modal"><div class="modal-box"><p id="modal-text"></p><div id="modal-btns"></div></div></div>
-  <div class="toast hidden" id="toast"></div>
-</main>
+<div class="modal hidden" id="modal"><div class="modal-box"><p id="modal-text"></p><div id="modal-btns"></div></div></div>
+<div class="toast hidden" id="toast"></div>
 </body>
 </html>

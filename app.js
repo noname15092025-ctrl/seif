@@ -39,24 +39,26 @@ function applyLang() {
     if (el.dataset.ruPh === undefined) el.dataset.ruPh = el.placeholder;
     el.placeholder = lang === "en" ? el.dataset.enPh : el.dataset.ruPh;
   });
-  $("b-lang").textContent = lang === "en" ? "RU" : "EN";
+  document.querySelectorAll("[data-lang-toggle]").forEach(b => b.textContent = lang === "en" ? "RU" : "EN");
   $("guide-ru").classList.toggle("hidden", lang === "en");
   $("guide-en").classList.toggle("hidden", lang !== "en");
   document.title = T("Vault — хранилище паролей", "Vault — password manager");
   applyTypeLabels();
-  if (vaultKey) { renderChips(); render(); }
-  if (!$("v-start").classList.contains("hidden")) home();
+  if (vaultKey) { renderNav(); render(); }
+  if (!$("v-unlock").classList.contains("hidden")) renderProfiles();
 }
-$("b-lang").onclick = () => { lang = lang === "en" ? "ru" : "en"; try { localStorage.setItem("vault.lang", lang); } catch {} applyLang(); };
+const toggleLang = () => { lang = lang === "en" ? "ru" : "en"; try { localStorage.setItem("vault.lang", lang); } catch {} applyLang(); };
+document.querySelectorAll("[data-lang-toggle]").forEach(b => b.onclick = toggleLang);
 
 /* ---------------- Тема ---------------- */
 let theme = (() => { try { return localStorage.getItem("vault.theme") || "dark"; } catch { return "dark"; } })();
 function applyTheme() {
   document.documentElement.dataset.theme = theme;
-  $("b-theme").textContent = theme === "dark" ? "☀" : "☾";
-  document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#070707" : "#f6f6f6";
+  document.querySelectorAll("[data-theme-toggle]").forEach(b => b.textContent = theme === "dark" ? "☀" : "☾");
+  document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#0A0A0A" : "#FAFAF9";
 }
-$("b-theme").onclick = () => { theme = theme === "dark" ? "light" : "dark"; try { localStorage.setItem("vault.theme", theme); } catch {} applyTheme(); };
+const toggleTheme = () => { theme = theme === "dark" ? "light" : "dark"; try { localStorage.setItem("vault.theme", theme); } catch {} applyTheme(); };
+document.querySelectorAll("[data-theme-toggle]").forEach(b => b.onclick = toggleTheme);
 
 /* ---------------- Модальные окна и уведомления ---------------- */
 function modal(text, buttons) {
@@ -226,30 +228,43 @@ const views = ["start", "phrase", "verify", "setpw", "restore", "unlock", "vault
 function show(v) { views.forEach(x => $("v-" + x).classList.toggle("hidden", x !== v)); scrollTo(0, 0); }
 const busy = (btn, on, label) => { btn.disabled = on; if (label !== undefined) { if (on) { btn.dataset.l = btn.textContent; btn.textContent = label; } else if (btn.dataset.l) btn.textContent = btn.dataset.l; } };
 
-function home() {
+const initial = s => ([...(s || "?").trim()][0] || "?").toUpperCase();
+function renderProfiles() {
   const list = store.all();
-  $("profiles").innerHTML = list.length ? list.map(p => `
-    <div class="entry"><div><b>${esc(p.name || T("Профиль", "Profile"))}</b></div>
-    <button class="shrink" data-pid="${esc(p.id)}">${T("Войти", "Sign in")}</button></div>`).join("")
-    : `<p class="sub">${T("На этом устройстве пока нет профилей.", "No profiles on this device yet.")}</p>`;
-  show("start");
+  if (!list.some(p => p.id === currentId)) {
+    let last = null; try { last = localStorage.getItem("vault.last"); } catch {}
+    currentId = (list.find(p => p.id === last) || list[0] || {}).id || null;
+  }
+  $("profiles").innerHTML = list.map(p => {
+    const when = p.lastLogin ? T("Последний вход ", "Last sign-in ") + new Date(p.lastLogin).toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "long" }) : "";
+    return `<button type="button" class="prof${p.id === currentId ? " active" : ""}" data-pid="${esc(p.id)}">
+      <span class="avatar${p.id === currentId ? " accent-bg" : ""}">${esc(initial(p.name))}</span>
+      <span class="who">${esc(p.name || T("Профиль", "Profile"))}${when ? `<br><small>${esc(when)}</small>` : ""}</span></button>`;
+  }).join("");
 }
+function home() {
+  if (store.all().length) { renderProfiles(); $("unlock-err").textContent = ""; show("unlock"); setTimeout(() => $("unlock-pw").focus(), 50); }
+  else landing();
+}
+function landing() { $("b-signin").hidden = !store.all().length; show("start"); }
 $("profiles").onclick = e => {
-  const id = e.target.dataset.pid; if (!id) return;
-  currentId = id; $("unlock-name").textContent = store.get().name || T("Профиль", "Profile");
-  $("unlock-err").textContent = ""; show("unlock"); $("unlock-pw").focus();
+  const b = e.target.closest("[data-pid]"); if (!b) return;
+  currentId = b.dataset.pid; renderProfiles(); $("unlock-err").textContent = ""; $("unlock-pw").focus();
 };
-$("b-other").onclick = () => { currentId = null; home(); };
+$("b-signin").onclick = home;
+$("b-new2").onclick = () => $("b-new").click();
+document.querySelectorAll("[data-home]").forEach(a => a.onclick = () => { if (WORDS) { cancelToHome(true); } });
+document.querySelectorAll("[data-home-lock]").forEach(a => a.onclick = () => lock());
+$("sec-tiles").innerHTML = Array.from({ length: 12 }, (_, i) => `<span><i>${i + 1}</i>••••</span>`).join("");
 
-function cancelToHome() {
+function cancelToHome(toLanding) {
   pendingPhrase = null; pendingKey = null; verifyIdx = [];
   $("words").innerHTML = ""; $("verify-fields").innerHTML = "";
   ["pw1", "pw2", "p-name", "restore-words", "unlock-pw", "cp-old", "cp-new1", "cp-new2"].forEach(id => $(id).value = "");
   $("restore-file").value = ""; meterPw1(); meterCp();
-  if (vaultKey) lock(); else { currentId = null; home(); }
+  if (vaultKey) lock(); else if (toLanding === true) landing(); else home();
 }
-document.querySelectorAll("[data-cancel]").forEach(b => b.onclick = cancelToHome);
-$("logo").onclick = () => { if (WORDS) cancelToHome(); };
+document.querySelectorAll("[data-cancel]").forEach(b => b.onclick = () => cancelToHome());
 let guideFrom = "start";
 document.querySelectorAll("[data-guide]").forEach(b => b.onclick = () => { guideFrom = vaultKey ? "vault" : "start"; show("guide"); });
 document.addEventListener("click", e => { if (e.target.closest("[data-guide-back]")) { if (guideFrom === "vault" && vaultKey) show("vault"); else cancelToHome(); } });
@@ -318,7 +333,7 @@ $("b-restore-go").onclick = async e => {
 
 /* ---------------- Вход с ограничением попыток ---------------- */
 $("b-unlock").onclick = async e => {
-  const s = store.get(); if (!s) return home();
+  const s = store.get(); if (!s) { $("unlock-err").textContent = T("Выберите профиль", "Choose a profile"); return; }
   const now = Date.now();
   if (s.lockUntil && s.lockUntil > now) {
     $("unlock-err").textContent = T("Слишком много попыток. Подождите ", "Too many attempts. Wait ") + Math.ceil((s.lockUntil - now) / 1000) + T(" с", " s"); return;
@@ -330,7 +345,7 @@ $("b-unlock").onclick = async e => {
     const raw = await open(wk, s.wrapped);
     vaultKey = await C.importKey("raw", raw, { name: "AES-GCM" }, true, ["encrypt", "decrypt"]); raw.fill(0);
     entries = JSON.parse(dec.decode(await open(vaultKey, s.vault))).map(migrateEntry);
-    s.fails = 0; s.lockUntil = 0;
+    s.fails = 0; s.lockUntil = 0; s.lastLogin = Date.now(); try { localStorage.setItem("vault.last", s.id); } catch {}
     if (!s.kdf || s.kdf.alg !== "argon2id") Object.assign(s, await wrapVaultKey(vaultKey, pw), { iters: undefined }); // переход на Argon2id
     store.set(s);
     $("unlock-pw").value = ""; $("unlock-err").textContent = "";
@@ -433,13 +448,13 @@ function applyTypeLabels() {
   document.querySelectorAll("#form-card [data-show]").forEach(el => el.classList.toggle("hidden", !el.dataset.show.split(" ").includes(formType)));
   document.querySelectorAll("#type-tabs .tab").forEach(b => b.classList.toggle("active", b.dataset.type === formType));
   $("form-title").textContent = editingId ? T("Редактирование", "Editing") : T("Новая запись", "New entry");
-  $("b-add").textContent = editingId ? T("Сохранить", "Save") : T("Добавить", "Add");
+  $("b-add").textContent = T("Сохранить", "Save");
 }
 document.querySelectorAll("#type-tabs .tab").forEach(b => b.onclick = () => { formType = b.dataset.type; applyTypeLabels(); });
 const FIELDS = { title: "e-title", login: "e-login", url: "e-url", pass: "e-pass", totp: "e-totp", category: "e-cat", note: "e-note", number: "e-number", exp: "e-exp", cvv: "e-cvv" };
 function clearForm() {
   Object.values(FIELDS).forEach(id => $(id).value = ""); $("e-fav").checked = false;
-  editingId = null; $("b-edit-cancel").classList.add("hidden"); $("form-err").textContent = ""; meterEntry(); applyTypeLabels();
+  editingId = null; $("form-err").textContent = ""; $("gen-opts").classList.add("hidden"); meterEntry(); applyTypeLabels();
 }
 function safeUrl(u) {
   u = (u || "").trim(); if (!u) return "";
@@ -457,105 +472,152 @@ $("b-add").onclick = async () => {
   const base = { type: formType, category: d.category, note: d.note, fav: $("e-fav").checked };
   keep.forEach(k => base[k] = d[k]);
   if (formType === "login") base.url = safeUrl(d.url);
+  let id;
   if (editingId) {
-    const i = entries.findIndex(x => x.id === editingId), old = entries[i];
-    entries[i] = { ...base, id: old.id, created: old.created, used: old.used, updated: now, pwChanged: old.pass !== base.pass ? now : old.pwChanged };
+    const i = entries.findIndex(x => x.id === editingId), old = entries[i]; id = old.id;
+    entries[i] = { ...base, id, created: old.created, used: old.used, updated: now, pwChanged: old.pass !== base.pass ? now : old.pwChanged };
   } else {
-    entries.push({ ...base, id: b64(rand(9)), created: now, updated: now, pwChanged: now });
+    id = b64(rand(9)); entries.push({ ...base, id, created: now, updated: now, pwChanged: now });
   }
-  await persist(); clearForm(); renderChips(); render(); toast(T("Сохранено", "Saved"));
+  await persist(); clearForm(); selectedId = id; renderNav(); render(); showDetail(); toast(T("Сохранено", "Saved"));
 };
-$("b-edit-cancel").onclick = clearForm;
+$("b-edit-cancel").onclick = () => { clearForm(); showDetail(); };
+function showForm() { $("detail-view").classList.add("hidden"); $("form-card").classList.remove("hidden"); $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; setTimeout(() => $("e-title").focus(), 50); }
+function showDetail() { $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); renderDetail(); }
+$("b-new-entry").onclick = () => { clearForm(); showForm(); };
+document.addEventListener("click", e => { if (e.target.closest("[data-detail-back]")) { clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail"); renderDetail(); } });
 function startEdit(x) {
   editingId = x.id; formType = x.type;
   for (const [k, id] of Object.entries(FIELDS)) $(id).value = x[k] || "";
   $("e-fav").checked = !!x.fav; meterEntry();
-  $("b-edit-cancel").classList.remove("hidden"); applyTypeLabels();
-  $("form-card").scrollIntoView({ behavior: "smooth" });
+  applyTypeLabels(); showForm();
 }
 
 /* ---------------- Список ---------------- */
-let filter = "all";
-function renderChips() {
+let filter = "all", selectedId = null;
+function renderNav() {
   const cats = [...new Set(entries.map(x => x.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   $("cat-list").innerHTML = cats.map(c => `<option value="${esc(c)}">`).join("");
-  const types = [["login", T("Пароли", "Passwords")], ["note", T("Заметки", "Notes")], ["card", T("Карты", "Cards")], ["wifi", "Wi-Fi"]].filter(([t]) => entries.some(x => x.type === t));
-  const chips = [["all", T("Все", "All")], ["fav", T("Избранное", "Favorites")], ...types.map(([t, l]) => ["t:" + t, l]), ...cats.map(c => ["c:" + c, c])];
-  if (!chips.some(c => c[0] === filter)) filter = "all";
-  $("chips").innerHTML = chips.map(([v, l]) => `<button class="chip${v === filter ? " active" : ""}" data-filter="${esc(v)}">${esc(l)}</button>`).join("");
+  const n = f => entries.filter(f).length;
+  const items = [["all", T("Все записи", "All entries"), entries.length], ["t:login", T("Логины", "Logins"), n(x => x.type === "login")],
+    ["t:card", T("Карты", "Cards"), n(x => x.type === "card")], ["t:note", T("Заметки", "Notes"), n(x => x.type === "note")],
+    ["t:wifi", "Wi-Fi", n(x => x.type === "wifi")], ["fav", T("Избранное", "Favorites"), n(x => x.fav)]];
+  const valid = new Set([...items.map(i => i[0]), ...cats.map(c => "c:" + c)]);
+  if (!valid.has(filter)) filter = "all";
+  const link = ([v, l, c]) => `<a class="nav-item${v === filter ? " active" : ""}" data-filter="${esc(v)}">${esc(l)}<span>${c}</span></a>`;
+  $("nav").innerHTML = items.map(link).join("") + (cats.length ? `<div class="nav-head">${T("КАТЕГОРИИ", "CATEGORIES")}</div>` + cats.map(c => link(["c:" + c, c, n(x => x.category === c)])).join("") : "");
 }
-$("chips").onclick = e => { const f = e.target.dataset.filter; if (f === undefined) return; filter = f; renderChips(); render(); };
+$("nav").onclick = e => { const a = e.target.closest("[data-filter]"); if (!a) return; filter = a.dataset.filter; renderNav(); render(); };
 function maskCard(n) { const d = (n || "").replace(/\D/g, ""); return d ? "•••• " + d.slice(-4) : ""; }
-function render() {
+const subline = x => x.type === "card" ? maskCard(x.number) || TYPE_NAME(x.type) : x.type === "note" ? T("Заметка", "Note") : x.type === "wifi" ? "Wi-Fi" : (x.login || x.url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "") || TYPE_NAME(x.type));
+function visibleList() {
   const q = $("search").value.toLowerCase(), sort = $("sort").value;
   let list = entries.filter(x => [x.title, x.login, x.note, x.category, x.url].join(" ").toLowerCase().includes(q));
   if (filter === "fav") list = list.filter(x => x.fav);
   else if (filter.startsWith("t:")) list = list.filter(x => x.type === filter.slice(2));
   else if (filter.startsWith("c:")) list = list.filter(x => x.category === filter.slice(2));
   const cmp = { title: (a, b) => a.title.localeCompare(b.title), updated: (a, b) => b.updated - a.updated, used: (a, b) => (b.used || 0) - (a.used || 0), created: (a, b) => b.created - a.created }[sort];
-  list.sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0) || cmp(a, b));
-  $("list").innerHTML = list.length ? list.map(x => {
-    const hasPass = !!x.pass, cfg = x.type === "login" && parseTotp(x.totp);
-    const sub = x.type === "card" ? [maskCard(x.number), x.exp].filter(Boolean).join(" · ") : x.login;
-    return `<div class="entry" data-id="${esc(x.id)}">
-      <div class="entry-main">
-        <b>${x.fav ? '<span class="star">★</span> ' : ""}${esc(x.title)} <span class="kind">${TYPE_NAME(x.type)}</span></b>
-        ${sub ? `<small>${esc(sub)}</small>` : ""}
-        ${x.category ? `<span class="tag">#${esc(x.category)}</span>` : ""}
-        ${hasPass ? `<div class="pw" data-pw>••••••••</div>` : ""}
-        ${x.type === "card" && x.number ? `<div class="pw hidden" data-card>${esc(x.number)}${x.cvv ? " · CVV " + esc(x.cvv) : ""}</div>` : ""}
-        ${cfg ? `<div class="totp" data-totp="${esc(x.id)}"><span class="code">··· ···</span> <span class="left"></span></div>` : ""}
-        ${x.note ? `<div class="note">${esc(x.note)}</div>` : ""}
-      </div>
-      <div class="entry-actions">
-        ${hasPass || x.type === "card" ? `<button class="ghost" data-act="show">${T("Показать", "Show")}</button>` : ""}
-        ${x.login ? `<button class="ghost" data-act="copy-login">${T("Логин", "Login")}</button>` : ""}
-        ${hasPass ? `<button class="ghost" data-act="copy">${T("Пароль", "Password")}</button>` : ""}
-        ${cfg ? `<button class="ghost" data-act="copy-totp">2FA</button>` : ""}
-        ${x.type === "card" && x.number ? `<button class="ghost" data-act="copy-number">${T("Номер", "Number")}</button>` : ""}
-        ${x.url ? `<button class="ghost" data-act="open">${T("Открыть", "Open")}</button>` : ""}
-        <button class="ghost" data-act="fav" title="${T("Избранное", "Favorite")}">${x.fav ? "★" : "☆"}</button>
-        <button class="ghost" data-act="edit">${T("Изменить", "Edit")}</button>
-        <button class="ghost" data-act="del" class="ghost danger-text">${T("Удалить", "Delete")}</button>
-      </div>
-    </div>`;
-  }).join("") : `<p class="sub">${entries.length ? T("Ничего не найдено.", "Nothing found.") : T("Пока пусто.", "Nothing here yet.")}</p>`;
+  return list.sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0) || cmp(a, b));
+}
+function render() {
+  const list = visibleList();
+  if (!entries.some(x => x.id === selectedId)) selectedId = null;
+  if (!selectedId && list.length && innerWidth > 980) selectedId = list[0].id;
+  $("list-count").textContent = list.length + " " + T(plural(list.length, "запись", "записи", "записей"), list.length === 1 ? "entry" : "entries");
+  $("list").innerHTML = list.length ? list.map((x, i) => `
+    <div class="row${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
+      <span class="ava">${esc(initial(x.title))}</span>
+      <span class="t"><b>${esc(x.title)}</b><small>${esc(subline(x))}</small></span>
+      ${x.fav ? `<svg class="ic fav"><use href="#i-star"/></svg>` : ""}
+    </div>`).join("") : `<div class="empty">${entries.length ? T("Ничего не найдено", "Nothing found") : T("Сейф пока пуст. Нажмите «+ Добавить».", "The safe is empty. Click “+ Add”.")}</div>`;
+  $("list").querySelectorAll(".row").forEach((r, i) => r.style.animationDelay = Math.min(i, 8) * 0.04 + "s");
+  if ($("form-card").classList.contains("hidden")) renderDetail();
+}
+function plural(n, one, few, many) { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; }
+$("search").oninput = render; $("sort").onchange = render;
+$("list").onclick = e => {
+  const r = e.target.closest(".row"); if (!r) return;
+  selectedId = r.dataset.id; clearForm(); showDetail();
+  $("list").querySelectorAll(".row").forEach(x => x.classList.toggle("active", x.dataset.id === selectedId));
+  $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0;
+};
+const ib = (act, icon, label) => `<button type="button" class="ib" data-act="${act}" aria-label="${esc(label)}" title="${esc(label)}"><svg class="ic"><use href="#${icon}"/></svg></button>`;
+function field(label, valueHtml, actions = "", cls = "") { return `<p class="d-label">${label}</p><div class="d-field ${cls}"><span>${valueHtml}</span>${actions}</div>`; }
+function renderDetail() {
+  const x = entries.find(y => y.id === selectedId), box = $("detail-view");
+  if (!x) {
+    box.innerHTML = `<div class="d-empty"><svg class="ic accent"><use href="#i-logo"/></svg><div>${entries.length ? T("Выберите запись слева", "Select an entry") : T("Добавьте первую запись — она будет зашифрована на этом устройстве.", "Add your first entry — it will be encrypted on this device.")}</div>${entries.length ? "" : `<button data-act="new">${T("+ Добавить", "+ Add")}</button>`}</div>`;
+    return;
+  }
+  const show = T("Показать", "Show"), copy = T("Скопировать", "Copy"), dots = '<span class="dots">••••••••••••</span>';
+  const changed = new Date(x.updated || x.created).toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "long", year: "numeric" });
+  let h = `<div class="d-head"><button class="ib back" data-detail-back aria-label="${T("Назад", "Back")}"><svg class="ic"><use href="#i-back"/></svg></button>
+    <span class="ava">${esc(initial(x.title))}</span><div><h2 class="d-title">${esc(x.title)}</h2><span class="d-meta">${TYPE_NAME(x.type)} · ${T("Изменено ", "Changed ")}${changed}</span></div></div>`;
+  if (x.login) h += field(x.type === "card" ? T("Владелец", "Cardholder") : T("Логин", "Login"), esc(x.login), ib("copy-login", "i-copy", copy));
+  if (x.type === "card" && x.number) {
+    h += field(T("Номер карты", "Card number"), `<span data-secret="number">${esc(maskCard(x.number))}</span>`, ib("show", "i-eye", show) + ib("copy-number", "i-copy", copy));
+    if (x.exp || x.cvv) h += `<div class="two">${x.exp ? `<div>${field(T("Срок", "Expiry"), esc(x.exp))}</div>` : ""}${x.cvv ? `<div>${field("CVV", `<span data-secret="cvv">•••</span>`)}</div>` : ""}</div>`;
+  }
+  if (x.pass) {
+    const st = strength(x.pass);
+    h += field(x.type === "card" ? "PIN" : T("Пароль", "Password"), `<span data-secret="pass">${dots}</span>`, ib("show", "i-eye", show) + ib("copy", "i-copy", copy));
+    if (x.type !== "card") h += `<div class="d-strength"><span class="bar"><span data-s="${st.score}"></span></span>${st.label}</div>`;
+  }
+  const cfg = x.type === "login" && parseTotp(x.totp);
+  if (cfg) h += field(T("Код 2FA", "2FA code"), `<span data-totp="${esc(x.id)}"><span class="totp-code code">··· ···</span></span>`, `<span class="totp-left left" data-totp-left></span>` + ib("copy-totp", "i-copy", copy));
+  if (x.url) h += field(T("Сайт", "Website"), `<a data-act="open">${esc(x.url.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</a>`, ib("open", "i-ext", T("Открыть", "Open")));
+  if (x.note) h += field(T("Заметки", "Notes"), esc(x.note), "", "note");
+  if (x.category) h += `<span class="d-tag">${esc(x.category)}</span>`;
+  h += `<div class="d-btns"><button class="ghost" data-act="edit">${T("Изменить", "Edit")}</button><button class="ghost" data-act="fav">${x.fav ? T("Убрать из избранного", "Unfavorite") : T("В избранное", "Favorite")}</button><button class="danger" data-act="del">${T("Удалить", "Delete")}</button></div>`;
+  box.innerHTML = h;
+  // таймер TOTP пишет в .code и .left: привязываем элемент обратного отсчёта
+  const t = box.querySelector("[data-totp]"); if (t) { t.appendChild(box.querySelector("[data-totp-left]")); }
   tickTotp();
 }
-$("search").oninput = render; $("sort").onchange = render;
-async function copySecret(text, btn) {
+async function copySecret(text) {
   try { await navigator.clipboard.writeText(text); } catch { toast(T("Не удалось скопировать", "Copy failed")); return; }
   toast(T("Скопировано. Буфер очистится через 30 с", "Copied. Clipboard clears in 30 s"));
   clearTimeout(copySecret.t);
   copySecret.t = setTimeout(() => navigator.clipboard.writeText("").catch(() => {}), 30000);
 }
 async function markUsed(x) { x.used = Date.now(); await persist(); }
-$("list").onclick = async e => {
+$("detail-view").onclick = async e => {
   const btn = e.target.closest("[data-act]"); if (!btn) return;
-  const act = btn.dataset.act, row = btn.closest(".entry"), x = entries.find(y => y.id === row.dataset.id); if (!x) return;
+  const act = btn.dataset.act;
+  if (act === "new") { clearForm(); showForm(); return; }
+  const x = entries.find(y => y.id === selectedId); if (!x) return;
   if (act === "show") {
-    const el = row.querySelector("[data-pw]"); if (el) el.textContent = el.textContent.startsWith("•") ? x.pass : "••••••••";
-    const c = row.querySelector("[data-card]"); if (c) c.classList.toggle("hidden");
+    const box = btn.closest(".d-field"), s = box.querySelector("[data-secret]");
+    const open = s.dataset.open === "1"; s.dataset.open = open ? "" : "1";
+    if (s.dataset.secret === "pass") s.innerHTML = open ? '<span class="dots">••••••••••••</span>' : esc(x.pass);
+    if (s.dataset.secret === "number") {
+      s.textContent = open ? maskCard(x.number) : x.number;
+      const c = $("detail-view").querySelector('[data-secret="cvv"]'); if (c) c.textContent = open ? "•••" : x.cvv;
+    }
   }
   if (act === "copy") { await copySecret(x.pass); markUsed(x); }
-  if (act === "copy-login") { await copySecret(x.login); }
-  if (act === "copy-number") { await copySecret(x.number.replace(/\s/g, "")); }
+  if (act === "copy-login") await copySecret(x.login);
+  if (act === "copy-number") await copySecret(x.number.replace(/\s/g, ""));
   if (act === "copy-totp") { const r = await totpCode(parseTotp(x.totp)); await copySecret(r.code); markUsed(x); }
   if (act === "open") { const u = safeUrl(x.url); if (u) { window.open(u, "_blank", "noopener,noreferrer"); markUsed(x); } }
-  if (act === "fav") { x.fav = !x.fav; await persist(); render(); }
+  if (act === "fav") { x.fav = !x.fav; await persist(); renderNav(); render(); }
   if (act === "edit") startEdit(x);
   if (act === "del" && await confirmBox(T("Удалить запись «", "Delete entry “") + x.title + T("»?", "”?"), T("Удалить", "Delete"), true)) {
-    entries = entries.filter(y => y !== x); if (editingId === x.id) clearForm(); await persist(); renderChips(); render();
+    entries = entries.filter(y => y !== x); selectedId = null; await persist(); renderNav(); render(); $("v-vault").classList.remove("show-detail");
   }
 };
 
 function openVaultView() {
-  $("vault-name").textContent = store.get().name || T("Профиль", "Profile");
-  renderChips(); render(); show("vault"); resetIdle();
+  const s = store.get();
+  $("vault-name").textContent = s.name || T("Профиль", "Profile");
+  $("vault-avatar").textContent = initial(s.name);
+  clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail");
+  renderNav(); render(); show("vault"); resetIdle();
 }
 
 /* ---------------- Настройки: смена пароля, имя ---------------- */
 $("b-settings").onclick = () => { $("rename").value = store.get().name || ""; $("cp-err").textContent = ""; show("settings"); };
+$("b-switch").onclick = () => lock();
 $("b-cp").onclick = async e => {
   const s = store.get(), oldPw = $("cp-old").value, p1 = $("cp-new1").value, p2 = $("cp-new2").value;
   const bad = checkNewPassword(p1, p2); if (bad) { $("cp-err").textContent = bad; return; }
@@ -580,8 +642,8 @@ function audit() {
   const old = withPass.filter(x => Date.now() - (x.pwChanged || x.created) > 365 * 864e5);
   const leaked = withPass.filter(x => breached.get(x.id) > 0);
   const sec = (title, list, why) => `<h3>${title} <span class="count${list.length ? " bad" : ""}">${list.length}</span></h3>` +
-    (list.length ? `<div>${list.map(x => `<div class="entry compact"><div><b>${esc(x.title)}</b><small>${esc(why(x))}</small></div><button class="ghost shrink" data-audit-edit="${esc(x.id)}">${T("Изменить", "Edit")}</button></div>`).join("")}</div>`
-      : `<p class="sub tight">${T("Всё в порядке", "All good")}</p>`);
+    (list.length ? `<div>${list.map(x => `<div class="mini"><div><b>${esc(x.title)}</b><small>${esc(why(x))}</small></div><button class="ghost" data-audit-edit="${esc(x.id)}">${T("Изменить", "Edit")}</button></div>`).join("")}</div>`
+      : `<p class="muted small">${T("Всё в порядке", "All good")}</p>`);
   const score = withPass.length ? Math.round(100 * (1 - new Set([...weak, ...reused, ...old, ...leaked]).size / withPass.length)) : 100;
   $("audit-body").innerHTML = `<div class="score"><b>${score}</b><span>${T("из 100 — общая оценка", "out of 100 — overall score")}</span></div>` +
     sec(T("Найдены в утечках", "Found in breaches"), leaked, x => T("Встречался в утечках ", "Seen in breaches ") + breached.get(x.id).toLocaleString() + T(" раз — смените срочно", " times — change it now")) +
@@ -590,7 +652,7 @@ function audit() {
     sec(T("Старше года", "Older than a year"), old, x => T("Не менялся с ", "Not changed since ") + new Date(x.pwChanged || x.created).toLocaleDateString());
 }
 $("b-audit").onclick = () => { audit(); show("audit"); };
-$("audit-body").onclick = e => { const id = e.target.dataset.auditEdit; if (!id) return; show("vault"); startEdit(entries.find(x => x.id === id)); };
+$("audit-body").onclick = e => { const id = e.target.dataset.auditEdit; if (!id) return; openVaultView(); selectedId = id; render(); startEdit(entries.find(x => x.id === id)); };
 $("b-hibp").onclick = async e => {
   const list = entries.filter(x => x.pass && x.type !== "card");
   if (!list.length) return;
@@ -752,8 +814,8 @@ $("import-file").onchange = async () => {
     const keys = new Set(entries.map(x => x.title + "\u0000" + x.login + "\u0000" + x.pass));
     const dup = importRows.filter(x => keys.has(x.title + "\u0000" + x.login + "\u0000" + x.pass)).length;
     $("import-body").innerHTML = `<p>${T("Файл: ", "File: ")}<b>${esc(f.name)}</b></p><p>${T("Найдено записей: ", "Entries found: ")}<b>${importRows.length}</b>${dup ? T(", из них уже есть: ", ", already present: ") + dup + T(" (будут пропущены)", " (will be skipped)") : ""}</p>` +
-      `<div class="preview">${importRows.slice(0, 5).map(x => `<div class="entry compact"><div><b>${esc(x.title)}</b><small>${esc(x.login)}</small></div></div>`).join("")}${importRows.length > 5 ? `<p class="sub tight">${T("и ещё ", "and ")}${importRows.length - 5}${T("…", " more…")}</p>` : ""}</div>` +
-      `<div class="warn">${T("Поддерживаются CSV из Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password и Excel-выгрузка из Vault. После импорта удалите исходный файл — он не зашифрован.", "Supports CSV from Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password and Vault's Excel export. Delete the source file after import — it is not encrypted.")}</div>`;
+      `<div class="preview">${importRows.slice(0, 5).map(x => `<div class="mini"><div><b>${esc(x.title)}</b><small>${esc(x.login)}</small></div></div>`).join("")}${importRows.length > 5 ? `<p class="muted small">${T("и ещё ", "and ")}${importRows.length - 5}${T("…", " more…")}</p>` : ""}</div>` +
+      `<div class="note-box">${T("Поддерживаются CSV из Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password и Excel-выгрузка из Vault. После импорта удалите исходный файл — он не зашифрован.", "Supports CSV from Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password and Vault's Excel export. Delete the source file after import — it is not encrypted.")}</div>`;
     show("import");
   } catch (err) { alertBox(T("Не удалось прочитать файл: ", "Could not read the file: ") + err.message); }
 };
@@ -763,18 +825,18 @@ $("b-import-go").onclick = async () => {
     const k = x.title + "\u0000" + x.login + "\u0000" + x.pass; if (keys.has(k)) continue; keys.add(k);
     entries.push({ ...x, id: b64(rand(9)), created: now, updated: now, pwChanged: now }); n++;
   }
-  importRows = []; await persist(); openVaultView(); toast(T("Импортировано: ", "Imported: ") + n);
+  importRows = []; await persist(); filter = "all"; openVaultView(); toast(T("Импортировано: ", "Imported: ") + n);
 };
 
 /* ---------------- Выход, удаление, автоблокировка ---------------- */
 function lock() {
-  vaultKey = null; entries = []; currentId = null; breached = new Map(); totpKeys.clear();
-  $("list").innerHTML = ""; $("search").value = ""; $("audit-body").innerHTML = ""; $("import-body").innerHTML = ""; importRows = [];
+  vaultKey = null; entries = []; selectedId = null; breached = new Map(); totpKeys.clear();
+  $("list").innerHTML = ""; $("detail-view").innerHTML = ""; $("search").value = ""; $("audit-body").innerHTML = ""; $("import-body").innerHTML = ""; importRows = [];
   clearForm(); home();
 }
 $("b-logout").onclick = lock;
 $("b-wipe").onclick = async () => {
-  if (await confirmBox(T("Удалить профиль «", "Delete profile “") + (store.get().name || "") + T("» с этого устройства? Восстановить можно будет только по секретной фразе и резервной копии.", "” from this device? It can only be restored with the secret phrase and a backup."), T("Удалить", "Delete"), true)) { store.remove(currentId); lock(); }
+  if (await confirmBox(T("Удалить профиль «", "Delete profile “") + (store.get().name || "") + T("» с этого устройства? Восстановить можно будет только по секретной фразе и резервной копии.", "” from this device? It can only be restored with the secret phrase and a backup."), T("Удалить", "Delete"), true)) { store.remove(currentId); currentId = null; lock(); }
 };
 let idle, hiddenTimer;
 function resetIdle() { clearTimeout(idle); if (vaultKey) idle = setTimeout(lock, LOCK_IDLE_MS); }
@@ -786,8 +848,8 @@ document.addEventListener("visibilitychange", () => {
 
 /* ---------------- PWA ---------------- */
 let installEvt = null;
-addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; $("b-install").hidden = false; });
-$("b-install").onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; $("b-install").hidden = true; };
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; document.querySelectorAll("[data-install]").forEach(b => b.hidden = false); });
+document.querySelectorAll("[data-install]").forEach(b => b.onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; document.querySelectorAll("[data-install]").forEach(x => x.hidden = true); });
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
 /* ---------------- Запуск ---------------- */
