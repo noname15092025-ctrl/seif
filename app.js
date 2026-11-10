@@ -352,7 +352,7 @@ function genPassword() {
   if (mode === "words") {
     const n = Math.max(3, Math.round(len / 5)), w = [];
     for (let i = 0; i < n; i++) w.push(WORDS[randInt(2048)]);
-    w[randInt(n)] = w[randInt(n)].replace(/^./, c => c.toUpperCase());
+    const ci = randInt(n); w[ci] = w[ci].replace(/^./, c => c.toUpperCase());
     return w.join("-") + "-" + randInt(100);
   }
   const sets = [];
