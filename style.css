@@ -380,3 +380,25 @@ label.chk { display:flex; align-items:center; color:var(--text); font-size:14px;
   .crow .us::before { content:"✓ "; color:var(--accent); }
   .crow.chead { display:none; }
 }
+
+/* Свои поля */
+.cf-row { display:grid; grid-template-columns:1fr 1.3fr auto auto; gap:8px; align-items:center; margin-bottom:8px; }
+.cf-row .field { margin:0; height:46px; font-size:15px; }
+.cf-row .chk { margin:0; white-space:nowrap; font-size:13px; }
+.cf-row .cf-del { color:var(--muted); min-width:34px; height:34px; }
+.cf-row .cf-del:hover { color:var(--accent); background:transparent; }
+.cf-add { height:40px; padding:0 16px; font-size:14px; margin:0 0 18px; }
+@media (max-width:760px) { .cf-row { grid-template-columns:1fr auto auto; } .cf-row .cf-k { grid-column:1 / -1; } }
+
+/* Памятка восстановления (печать) */
+#print-kit { display:none; }
+@media print {
+  body > *:not(#print-kit) { display:none !important; }
+  #print-kit { display:block !important; color:#000; background:#fff; font-family:system-ui, sans-serif; padding:24px; }
+  #print-kit h1 { font-size:22px; margin:0 0 12px; letter-spacing:.04em; }
+  #print-kit p { font-size:13px; line-height:1.55; color:#222; margin:0 0 10px; }
+  #print-kit .pk-words { columns:3; column-gap:24px; list-style-position:inside; font-family:"JetBrains Mono", monospace; font-size:16px; margin:18px 0; padding:16px; border:1px solid #000; border-radius:8px; }
+  #print-kit .pk-words li { margin:6px 0; break-inside:avoid; }
+  #print-kit .pk-note { color:#555; font-size:12px; }
+  #print-kit .pk-warn { margin-top:14px; font-weight:700; }
+}

@@ -148,7 +148,7 @@
     <p class="p-sub" data-en="Write these 12 words on paper in order and keep them somewhere safe. It's the only way to restore the vault. Nobody, including the developer, can help if you lose them.">Запишите эти 12 слов на бумагу по порядку и храните в надёжном месте. Это единственный способ восстановить хранилище. Никто, включая разработчика, не сможет помочь, если вы их потеряете.</p>
     <div class="words" id="words"></div>
     <button class="wide" id="b-phrase-ok" data-en="I wrote it down">Я записал(а)</button>
-    <div class="p-links center"><a data-cancel data-en="Cancel">Отмена</a></div>
+    <div class="p-links"><a id="b-print-kit" data-en="🖨 Print recovery sheet">🖨 Напечатать памятку</a><a data-cancel data-en="Cancel">Отмена</a></div>
   </div>
 </section>
 
@@ -303,6 +303,9 @@
       <input id="e-cat" class="field" list="cat-list" data-en-ph="Social, Banks, Work…" placeholder="Соцсети, Банки, Работа…"><datalist id="cat-list"></datalist>
       <label for="e-note" data-en="Notes">Заметки</label>
       <textarea id="e-note" class="field" data-en-ph="For example: work email, security answer…" placeholder="Например: рабочая почта, ответ на секретный вопрос…"></textarea>
+      <label data-en="Custom fields">Свои поля</label>
+      <div id="cf-list"></div>
+      <button class="ghost cf-add" id="b-cf-add" type="button" data-en="+ Add field">+ Добавить поле</button>
       <label class="chk"><input type="checkbox" id="e-fav"> <span data-en="Add to favorites">В избранное</span></label>
       <div class="err" id="form-err"></div>
       <div class="d-btns">
@@ -359,6 +362,7 @@
       <button class="tab active" data-mode="chars" data-en="Characters">Символы</button>
       <button class="tab" data-mode="words" data-en="Words">Слова</button>
       <button class="tab" data-mode="pin">PIN</button>
+      <button class="tab" data-mode="pron" data-en="Pronounceable">Произносимый</button>
     </div>
     <label><span data-en="Length:">Длина:</span> <b id="gp-len-v">20</b></label>
     <input type="range" id="gp-len" min="4" max="64" value="20">
@@ -656,5 +660,6 @@
 
 <div class="modal hidden" id="modal"><div class="modal-box"><p id="modal-text"></p><div id="modal-btns"></div></div></div>
 <div class="toast hidden" id="toast"></div>
+<div id="print-kit" aria-hidden="true"></div>
 </body>
 </html>

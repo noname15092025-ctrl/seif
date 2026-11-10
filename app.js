@@ -293,6 +293,16 @@ $("b-phrase-ok").onclick = () => {
   $("verify-fields").innerHTML = verifyIdx.map(i => `<label>${T("Слово №", "Word #")}${i + 1}</label><input data-i="${i}" autocomplete="off" spellcheck="false">`).join("");
   $("verify-err").textContent = ""; show("verify");
 };
+$("b-print-kit").onclick = () => {
+  if (!pendingPhrase) return;
+  const words = pendingPhrase.split(" ");
+  $("print-kit").innerHTML = `<h1>Vault — ${T("памятка восстановления", "recovery sheet")}</h1>
+    <p>${T("Эти 12 слов — единственный способ восстановить ваш сейф. Храните этот лист в надёжном месте. Никому не показывайте и не фотографируйте.", "These 12 words are the only way to restore your vault. Keep this sheet somewhere safe. Never show or photograph it.")}</p>
+    <ol class="pk-words">${words.map(w => `<li>${esc(w)}</li>`).join("")}</ol>
+    <p class="pk-note">${T("Создано", "Created")}: ${new Date().toLocaleDateString()} · noname15092025-ctrl.github.io/seif</p>
+    <p class="pk-warn">${T("Мастер-пароль сюда НЕ записывайте — держите его только в памяти.", "Do NOT write your master password here — keep it only in your memory.")}</p>`;
+  window.print();
+};
 $("b-back-phrase").onclick = () => show("phrase");
 $("b-verify").onclick = async () => {
   const w = pendingPhrase.split(" ");
@@ -380,6 +390,11 @@ function genPassword(o) {
   o = o || { mode: document.querySelector('input[name="gmode"]:checked').value, len: +$("g-len").value, up: $("g-up").checked, low: $("g-low").checked, dig: $("g-dig").checked, sym: $("g-sym").checked };
   const mode = o.mode, len = o.len;
   if (mode === "pin") { let p = ""; for (let i = 0; i < len; i++) p += randInt(10); return p; }
+  if (mode === "pron") { // произносимый: чередование согласная/гласная + цифры
+    const Cs = "bcdfghjkmnprstvwz", Vs = "aeiou"; let p = "";
+    for (let i = 0; i < Math.max(len - 2, 6); i++) { const set = i % 2 ? Vs : Cs; p += set[randInt(set.length)]; }
+    return p.charAt(0).toUpperCase() + p.slice(1) + randInt(100);
+  }
   if (mode === "words") {
     const n = Math.max(3, Math.round(len / 5)), w = [];
     for (let i = 0; i < n; i++) w.push(WORDS[randInt(2048)]);
@@ -548,8 +563,20 @@ function applyTypeLabels() {
 document.querySelectorAll("#type-tabs .tab").forEach(b => b.onclick = () => { formType = b.dataset.type; applyTypeLabels(); });
 const FIELDS = { title: "e-title", login: "e-login", url: "e-url", pass: "e-pass", totp: "e-totp", category: "e-cat", note: "e-note", number: "e-number", exp: "e-exp", cvv: "e-cvv" };
 function clearForm() {
-  Object.values(FIELDS).forEach(id => $(id).value = ""); $("e-fav").checked = false; $("e-extra").innerHTML = "";
+  Object.values(FIELDS).forEach(id => $(id).value = ""); $("e-fav").checked = false; $("e-extra").innerHTML = ""; $("cf-list").innerHTML = "";
   editingId = null; $("form-err").textContent = ""; $("gen-opts").classList.add("hidden"); meterEntry(); applyTypeLabels();
+}
+// Свои (произвольные) поля записи — любые пары «название: значение», можно пометить секретными
+function cfAddRow(k = "", v = "", sec = false) {
+  const row = document.createElement("div"); row.className = "cf-row";
+  row.innerHTML = `<input class="field cf-k" maxlength="40" placeholder="${T("Название", "Label")}"><input class="field cf-v" placeholder="${T("Значение", "Value")}"><label class="chk"><input type="checkbox" class="cf-s"> ${T("Скрыть", "Hide")}</label><button class="ib cf-del" type="button" aria-label="×">✕</button>`;
+  row.querySelector(".cf-k").value = k; row.querySelector(".cf-v").value = v; row.querySelector(".cf-s").checked = sec;
+  row.querySelector(".cf-del").onclick = () => row.remove();
+  $("cf-list").appendChild(row);
+}
+$("b-cf-add").onclick = () => cfAddRow();
+function collectCustom() {
+  return [...$("cf-list").querySelectorAll(".cf-row")].map(r => ({ k: r.querySelector(".cf-k").value.trim(), v: r.querySelector(".cf-v").value, s: r.querySelector(".cf-s").checked })).filter(c => c.k || c.v.trim());
 }
 function safeUrl(u) {
   u = (u || "").trim(); if (!u) return "";
@@ -568,6 +595,7 @@ $("b-add").onclick = async () => {
   keep.forEach(k => base[k] = d[k]);
   if (formType === "login") base.url = safeUrl(d.url);
   if (EXTRA[formType]) { base.f = {}; EXTRA[formType].forEach(f => { const v = $("ex-" + f.k).value; if (v.trim()) base.f[f.k] = f.s || f.m ? v : v.trim(); }); }
+  const custom = collectCustom(); if (custom.length) base.custom = custom;
   let id;
   if (editingId) {
     const i = entries.findIndex(x => x.id === editingId), old = entries[i]; id = old.id;
@@ -589,7 +617,9 @@ function startEdit(x) {
   editingId = x.id; formType = x.type;
   for (const [k, id] of Object.entries(FIELDS)) $(id).value = x[k] || "";
   $("e-fav").checked = !!x.fav; meterEntry();
-  $("e-extra").innerHTML = ""; applyTypeLabels(); renderExtraForm(x.f || {}); showForm();
+  $("e-extra").innerHTML = ""; applyTypeLabels(); renderExtraForm(x.f || {});
+  $("cf-list").innerHTML = ""; (x.custom || []).forEach(c => cfAddRow(c.k, c.v, c.s));
+  showForm();
 }
 
 /* ---------------- Список ---------------- */
@@ -636,7 +666,7 @@ const subline = x => {
 };
 function visibleList() {
   const q = $("search").value.toLowerCase(), sort = $("sort").value;
-  const searchable = x => [x.title, x.login, x.note, x.category, x.url, ...Object.entries(x.f || {}).filter(([k]) => !["seed", "wpass", "key", "account", "number"].includes(k)).map(e => e[1])].join(" ").toLowerCase();
+  const searchable = x => [x.title, x.login, x.note, x.category, x.url, ...Object.entries(x.f || {}).filter(([k]) => !["seed", "wpass", "key", "account", "number"].includes(k)).map(e => e[1]), ...(x.custom || []).filter(c => !c.s).flatMap(c => [c.k, c.v])].join(" ").toLowerCase();
   let list = (filter === "trash" ? entries.filter(x => x.deletedAt) : live()).filter(x => searchable(x).includes(q));
   if (filter === "fav") list = list.filter(x => x.fav);
   else if (filter === "recent") return list.filter(x => x.used || x.updated !== x.created).sort((a, b) => Math.max(b.used || 0, b.updated) - Math.max(a.used || 0, a.updated)).slice(0, 20);
@@ -706,6 +736,10 @@ function renderDetail() {
   });
   if (x.type === "card" && expiringSoon(x)) h += `<p class="trash-note">${expiryOf(x) < Date.now() ? T("Срок действия карты истёк.", "This card has expired.") : T("Срок действия карты скоро закончится.", "This card expires soon.")}</p>`;
   if (x.note) h += field(T("Заметки", "Notes"), esc(x.note), "", "note");
+  (x.custom || []).forEach((c, i) => {
+    if (c.s) h += field(esc(c.k), `<span data-secret="c:${i}">${dots}</span>`, ib("show", "i-eye", show) + ib("copy-c:" + i, "i-copy", copy));
+    else h += field(esc(c.k), esc(c.v), ib("copy-c:" + i, "i-copy", copy));
+  });
   if (x.history && x.history.length) h += `<details class="hist"><summary>${T("История паролей", "Password history")} (${x.history.length})</summary>` +
     x.history.map((hh, i) => `<div class="d-field"><span data-secret="h:${i}">${dots}</span><small>${esc(new Date(hh.at).toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU"))}</small>${ib("show", "i-eye", show)}${ib("copy-h:" + i, "i-copy", copy)}</div>`).join("") + `</details>`;
   if (x.category) h += `<span class="d-tag">${esc(x.category)}</span>`;
@@ -746,8 +780,8 @@ $("detail-view").onclick = async e => {
     const open = s.dataset.open === "1"; s.dataset.open = open ? "" : "1";
     if (s.dataset.secret === "pass") { if (open) s.innerHTML = '<span class="dots">••••••••••••</span>'; else decryptInto(s, x.pass); }
     const sk = s.dataset.secret;
-    if (sk.startsWith("f:") || sk.startsWith("h:")) {
-      const val = sk.startsWith("f:") ? (x.f || {})[sk.slice(2)] : x.history[+sk.slice(2)].pass;
+    if (sk.startsWith("f:") || sk.startsWith("h:") || sk.startsWith("c:")) {
+      const val = sk.startsWith("f:") ? (x.f || {})[sk.slice(2)] : sk.startsWith("h:") ? x.history[+sk.slice(2)].pass : (x.custom || [])[+sk.slice(2)].v;
       if (open) s.innerHTML = '<span class="dots">••••••••••••</span>'; else decryptInto(s, val);
     }
     if (s.dataset.secret === "number") {
@@ -759,6 +793,7 @@ $("detail-view").onclick = async e => {
   if (act === "copy-login") await copySecret(x.login);
   if (act.startsWith("copy-f:")) { await copySecret((x.f || {})[act.slice(7)]); markUsed(x); }
   if (act.startsWith("copy-h:")) await copySecret(x.history[+act.slice(7)].pass);
+  if (act.startsWith("copy-c:")) { await copySecret((x.custom || [])[+act.slice(7)].v); markUsed(x); }
   if (act === "restore") { delete x.deletedAt; await persist(); filter = "all"; renderNav(); render(); toast(T("Запись восстановлена", "Entry restored")); }
   if (act === "purge" && await confirmBox(T("Удалить «", "Delete “") + x.title + T("» навсегда? Это нельзя отменить.", "” forever? This cannot be undone."), T("Удалить навсегда", "Delete forever"), true)) {
     entries = entries.filter(y => y !== x); selectedId = null; await persist(); renderNav(); render(); $("v-vault").classList.remove("show-detail");
@@ -898,9 +933,10 @@ const EX_COLS = () => [
   ["url", T("Сайт", "Website"), 30, x => x.url], ["category", T("Категория", "Category"), 14, x => x.category],
   ["note", T("Заметки", "Notes"), 40, x => x.note], ["card", T("Данные карты", "Card details"), 28, x => [x.number, x.exp, x.cvv && "CVV " + x.cvv].filter(Boolean).join(" · ")],
   ["totp", T("Ключ 2FA", "2FA key"), 22, x => x.totp], ["extra", T("Доп. поля", "Extra fields"), 40, x => (EXTRA[x.type] || []).filter(f => (x.f || {})[f.k]).map(f => exLabel(f) + ": " + x.f[f.k]).join("\n")],
+  ["custom", T("Свои поля", "Custom fields"), 40, x => (x.custom || []).map(c => c.k + ": " + c.v).join("\n")],
   ["dates", T("Даты", "Dates"), 22, x => T("Добавлено ", "Added ") + new Date(x.created).toLocaleDateString() + (x.updated !== x.created ? "\n" + T("Изменено ", "Changed ") + new Date(x.updated).toLocaleDateString() : "")]
 ];
-let exSel = new Set(), exTypes = new Set(), exCats = new Set(), exCols = new Set(["type", "title", "login", "pass", "url", "category", "note", "card", "extra"]);
+let exSel = new Set(), exTypes = new Set(), exCats = new Set(), exCols = new Set(["type", "title", "login", "pass", "url", "category", "note", "card", "extra", "custom"]);
 function exPool() { return live().filter(x => (!exTypes.size || exTypes.has(x.type)) && (!exCats.size || exCats.has(x.category || "\u0000"))); }
 function renderExport() {
   const L = live(), types = [...new Set(L.map(x => x.type))], cats = [...new Set(L.map(x => x.category || "\u0000"))];
