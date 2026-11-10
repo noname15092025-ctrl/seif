@@ -224,7 +224,7 @@ function checkNewPassword(p1, p2) {
 }
 
 /* ---------------- Экраны ---------------- */
-const views = ["start", "phrase", "verify", "setpw", "restore", "unlock", "vault", "settings", "audit", "import", "guide", "loading"];
+const views = ["start", "phrase", "verify", "setpw", "restore", "unlock", "vault", "settings", "audit", "import", "guide", "generator", "loading"];
 function show(v) { views.forEach(x => $("v-" + x).classList.toggle("hidden", x !== v)); scrollTo(0, 0); }
 const busy = (btn, on, label) => { btn.disabled = on; if (label !== undefined) { if (on) { btn.dataset.l = btn.textContent; btn.textContent = label; } else if (btn.dataset.l) btn.textContent = btn.dataset.l; } };
 
@@ -363,8 +363,10 @@ $("unlock-pw").addEventListener("input", e => { $("ldial-turn").style.transform 
 
 /* ---------------- Генератор ---------------- */
 function randInt(n) { const lim = Math.floor(4294967296 / n) * n, r = new Uint32Array(1); do crypto.getRandomValues(r); while (r[0] >= lim); return r[0] % n; }
-function genPassword() {
-  const mode = document.querySelector('input[name="gmode"]:checked').value, len = +$("g-len").value;
+function genPassword(o) {
+  o = o || { mode: document.querySelector('input[name="gmode"]:checked').value, len: +$("g-len").value, up: $("g-up").checked, low: $("g-low").checked, dig: $("g-dig").checked, sym: $("g-sym").checked };
+  const mode = o.mode, len = o.len;
+  if (mode === "pin") { let p = ""; for (let i = 0; i < len; i++) p += randInt(10); return p; }
   if (mode === "words") {
     const n = Math.max(3, Math.round(len / 5)), w = [];
     for (let i = 0; i < n; i++) w.push(WORDS[randInt(2048)]);
@@ -372,10 +374,10 @@ function genPassword() {
     return w.join("-") + "-" + randInt(100);
   }
   const sets = [];
-  if ($("g-up").checked) sets.push("ABCDEFGHJKLMNPQRSTUVWXYZ");
-  if ($("g-low").checked) sets.push("abcdefghijkmnopqrstuvwxyz");
-  if ($("g-dig").checked) sets.push("23456789");
-  if ($("g-sym").checked) sets.push("!@#$%^&*-_=+?");
+  if (o.up) sets.push("ABCDEFGHJKLMNPQRSTUVWXYZ");
+  if (o.low) sets.push("abcdefghijkmnopqrstuvwxyz");
+  if (o.dig) sets.push("23456789");
+  if (o.sym) sets.push("!@#$%^&*-_=+?");
   if (!sets.length) sets.push("abcdefghijkmnopqrstuvwxyz");
   const all = sets.join(""), out = sets.map(s => s[randInt(s.length)]); // хотя бы один символ каждого вида
   while (out.length < len) out.push(all[randInt(all.length)]);
@@ -390,6 +392,29 @@ const updGenUi = () => {
   document.querySelector(".chars-opts").classList.toggle("hidden", words);
 };
 $("g-len").oninput = updGenUi; document.querySelectorAll('input[name="gmode"]').forEach(r => r.onchange = updGenUi);
+
+/* ---------------- Страница генератора ---------------- */
+let gpMode = "chars", gpValue = "";
+function gpOpts() { return { mode: gpMode, len: +$("gp-len").value, up: $("gp-up").checked, low: $("gp-low").checked, dig: $("gp-dig").checked, sym: $("gp-sym").checked }; }
+function gpRun() {
+  const o = gpOpts();
+  $("gp-len-v").textContent = gpMode === "words" ? Math.max(3, Math.round(o.len / 5)) + T(" слов", " words") : o.len;
+  $("gp-sets").classList.toggle("hidden", gpMode !== "chars");
+  gpValue = genPassword(o); decryptInto($("gp-out"), gpValue);
+  const st = strength(gpValue); $("gp-bar").dataset.s = st.score; $("gp-label").textContent = st.label + " · ~" + st.bits + T(" бит", " bits");
+}
+$("b-generator").onclick = () => { show("generator"); gpRun(); };
+$("gp-again").onclick = gpRun;
+$("gp-copy").onclick = () => copySecret(gpValue);
+$("gp-len").oninput = gpRun;
+["gp-up", "gp-low", "gp-dig", "gp-sym"].forEach(id => $(id).onchange = gpRun);
+$("gp-mode").onclick = e => {
+  const b = e.target.closest("[data-mode]"); if (!b) return; gpMode = b.dataset.mode;
+  $("gp-mode").querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === b));
+  if (gpMode === "pin" && +$("gp-len").value > 12) $("gp-len").value = 6;
+  if (gpMode !== "pin" && +$("gp-len").value < 8) $("gp-len").value = 20;
+  gpRun();
+};
 
 /* ---------------- TOTP (коды 2FA) ---------------- */
 function parseTotp(s) {
@@ -435,26 +460,82 @@ async function tickTotp() {
 }
 setInterval(tickTotp, 1000);
 
+/* ---------------- Типы записей с дополнительными полями ---------------- */
+// k — ключ, s — секрет (скрыт, кнопки показать/копировать), m — многострочное, d — дата, c — можно копировать
+const EXTRA = {
+  doc: [{ k: "kind", ru: "Вид документа", en: "Document type", ph: ["Паспорт, СНИЛС, ИНН, права…", "Passport, ID, driver's license…"] },
+        { k: "fio", ru: "ФИО", en: "Full name", c: 1 }, { k: "number", ru: "Серия и номер", en: "Number", s: 1 },
+        { k: "issuer", ru: "Кем выдан", en: "Issued by" }, { k: "issued", ru: "Дата выдачи", en: "Issue date", d: 1 },
+        { k: "expires", ru: "Действует до", en: "Valid until", d: 1 }],
+  crypto: [{ k: "network", ru: "Сеть", en: "Network", ph: ["Bitcoin, Ethereum, TON…", "Bitcoin, Ethereum, TON…"] },
+        { k: "address", ru: "Адрес кошелька", en: "Wallet address", c: 1, mono: 1 },
+        { k: "seed", ru: "Сид-фраза", en: "Seed phrase", s: 1, m: 1, mono: 1 },
+        { k: "wpass", ru: "Пароль кошелька", en: "Wallet password", s: 1 }],
+  key: [{ k: "product", ru: "Программа или сервис", en: "Product or service" }, { k: "key", ru: "Ключ", en: "Key", s: 1, m: 1, mono: 1 },
+        { k: "email", ru: "Зарегистрирован на", en: "Registered to", c: 1 }, { k: "expires", ru: "Действует до", en: "Valid until", d: 1 }],
+  bank: [{ k: "holder", ru: "Получатель", en: "Account holder", c: 1 }, { k: "account", ru: "Номер счёта", en: "Account number", s: 1 },
+        { k: "bik", ru: "БИК", en: "BIC / SWIFT", c: 1 }, { k: "corr", ru: "Корр. счёт", en: "Correspondent account", c: 1 },
+        { k: "inn", ru: "ИНН", en: "Tax ID", c: 1 }],
+  contact: [{ k: "relation", ru: "Кем приходится", en: "Relationship" }, { k: "phone", ru: "Телефон", en: "Phone", c: 1 },
+        { k: "email", ru: "Email", en: "Email", c: 1 }, { k: "address", ru: "Адрес", en: "Address", m: 1 }]
+};
+const exLabel = f => lang === "en" ? f.en : f.ru;
+function renderExtraForm(values) {
+  const fs = EXTRA[formType];
+  $("e-extra").innerHTML = fs ? fs.map(f => `<label for="ex-${f.k}">${esc(exLabel(f))}</label>` + (f.m
+    ? `<textarea id="ex-${f.k}" class="field${f.mono ? " mono" : ""}" autocomplete="off" spellcheck="false"></textarea>`
+    : `<input id="ex-${f.k}" class="field${f.mono ? " mono" : ""}" ${f.d ? 'type="date"' : 'autocomplete="off"'}${f.ph ? ` placeholder="${esc(lang === "en" ? f.ph[1] : f.ph[0])}"` : ""}>`)).join("") : "";
+  if (fs && values) fs.forEach(f => { $("ex-" + f.k).value = values[f.k] || ""; });
+}
+function expiryOf(x) {
+  if (x.deletedAt) return null;
+  if (x.type === "card" && /^\s*(\d{1,2})\s*\/\s*(\d{2,4})\s*$/.test(x.exp || "")) {
+    const [, mm, yy] = x.exp.match(/(\d{1,2})\s*\/\s*(\d{2,4})/); const y = yy.length === 2 ? 2000 + +yy : +yy;
+    return new Date(y, +mm, 0, 23, 59);
+  }
+  const e = x.f && x.f.expires; if (e && /^\d{4}-\d{2}-\d{2}$/.test(e)) return new Date(e + "T23:59:00");
+  return null;
+}
+const EXPIRE_SOON_MS = 90 * 864e5;
+const expiringSoon = x => { const d = expiryOf(x); return d && d - Date.now() < EXPIRE_SOON_MS; };
+const live = () => entries.filter(x => !x.deletedAt);
+function attentionSet() {
+  const withPass = live().filter(x => x.pass && x.type !== "card");
+  const counts = {}; withPass.forEach(x => counts[x.pass] = (counts[x.pass] || 0) + 1);
+  return new Set(withPass.filter(x => strength(x.pass).score < 3 || counts[x.pass] > 1 || breached.get(x.id) > 0 ||
+    Date.now() - (x.pwChanged || x.created) > 365 * 864e5).map(x => x.id));
+}
+const TRASH_DAYS = 30;
+function purgeTrash() {
+  const before = entries.length;
+  entries = entries.filter(x => !x.deletedAt || Date.now() - x.deletedAt < TRASH_DAYS * 864e5);
+  return entries.length !== before;
+}
+
 /* ---------------- Форма записи ---------------- */
 let formType = "login", editingId = null;
 const TYPE_LABELS = () => ({
   login: { title: T("Сайт / название", "Site / name"), login: T("Логин", "Login"), pass: T("Пароль", "Password") },
   note: { title: T("Название заметки", "Note title") },
   card: { title: T("Название карты (банк)", "Card name (bank)"), login: T("Владелец карты", "Cardholder"), pass: T("PIN-код", "PIN") },
-  wifi: { title: T("Название сети (SSID)", "Network name (SSID)"), pass: T("Пароль Wi-Fi", "Wi-Fi password") }
+  wifi: { title: T("Название сети (SSID)", "Network name (SSID)"), pass: T("Пароль Wi-Fi", "Wi-Fi password") },
+  doc: { title: T("Название", "Name") }, crypto: { title: T("Название кошелька", "Wallet name") },
+  key: { title: T("Название", "Name") }, bank: { title: T("Банк", "Bank") }, contact: { title: T("Имя", "Name") }
 });
 function applyTypeLabels() {
   const L = TYPE_LABELS()[formType];
   document.querySelectorAll("[data-f]").forEach(el => { if (L[el.dataset.f]) el.textContent = L[el.dataset.f]; });
   document.querySelectorAll("#form-card [data-show]").forEach(el => el.classList.toggle("hidden", !el.dataset.show.split(" ").includes(formType)));
   document.querySelectorAll("#type-tabs .tab").forEach(b => b.classList.toggle("active", b.dataset.type === formType));
+  const keepVals = {}; (EXTRA[formType] || []).forEach(f => { const el = $("ex-" + f.k); if (el) keepVals[f.k] = el.value; });
+  renderExtraForm(keepVals);
   $("form-title").textContent = editingId ? T("Редактирование", "Editing") : T("Новая запись", "New entry");
   $("b-add").textContent = T("Сохранить", "Save");
 }
 document.querySelectorAll("#type-tabs .tab").forEach(b => b.onclick = () => { formType = b.dataset.type; applyTypeLabels(); });
 const FIELDS = { title: "e-title", login: "e-login", url: "e-url", pass: "e-pass", totp: "e-totp", category: "e-cat", note: "e-note", number: "e-number", exp: "e-exp", cvv: "e-cvv" };
 function clearForm() {
-  Object.values(FIELDS).forEach(id => $(id).value = ""); $("e-fav").checked = false;
+  Object.values(FIELDS).forEach(id => $(id).value = ""); $("e-fav").checked = false; $("e-extra").innerHTML = "";
   editingId = null; $("form-err").textContent = ""; $("gen-opts").classList.add("hidden"); meterEntry(); applyTypeLabels();
 }
 function safeUrl(u) {
@@ -468,15 +549,19 @@ $("b-add").onclick = async () => {
   if (!d.title) { $("form-err").textContent = T("Укажите название", "Enter a name"); return; }
   if (formType === "login" && d.url && !safeUrl(d.url)) { $("form-err").textContent = T("Некорректный адрес сайта", "Invalid website address"); return; }
   if (formType === "login" && d.totp && !parseTotp(d.totp)) { $("form-err").textContent = T("Некорректный ключ 2FA", "Invalid 2FA key"); return; }
-  const keep = { login: ["title", "login", "url", "pass", "totp"], note: ["title"], card: ["title", "login", "number", "exp", "cvv", "pass"], wifi: ["title", "pass"] }[formType];
+  const keep = { login: ["title", "login", "url", "pass", "totp"], note: ["title"], card: ["title", "login", "number", "exp", "cvv", "pass"], wifi: ["title", "pass"] }[formType] || ["title"];
   const now = Date.now();
   const base = { type: formType, category: d.category, note: d.note, fav: $("e-fav").checked };
   keep.forEach(k => base[k] = d[k]);
   if (formType === "login") base.url = safeUrl(d.url);
+  if (EXTRA[formType]) { base.f = {}; EXTRA[formType].forEach(f => { const v = $("ex-" + f.k).value; if (v.trim()) base.f[f.k] = f.s || f.m ? v : v.trim(); }); }
   let id;
   if (editingId) {
     const i = entries.findIndex(x => x.id === editingId), old = entries[i]; id = old.id;
-    entries[i] = { ...base, id, created: old.created, used: old.used, updated: now, pwChanged: old.pass !== base.pass ? now : old.pwChanged };
+    // история: старый пароль сохраняется при смене (до 10 версий)
+    let history = old.history || [];
+    if (old.pass && old.pass !== base.pass) history = [{ pass: old.pass, at: now }, ...history].slice(0, 10);
+    entries[i] = { ...base, id, created: old.created, used: old.used, updated: now, history, pwChanged: old.pass !== base.pass ? now : old.pwChanged };
   } else {
     id = b64(rand(9)); entries.push({ ...base, id, created: now, updated: now, pwChanged: now });
   }
@@ -491,30 +576,62 @@ function startEdit(x) {
   editingId = x.id; formType = x.type;
   for (const [k, id] of Object.entries(FIELDS)) $(id).value = x[k] || "";
   $("e-fav").checked = !!x.fav; meterEntry();
-  applyTypeLabels(); showForm();
+  $("e-extra").innerHTML = ""; applyTypeLabels(); renderExtraForm(x.f || {}); showForm();
 }
 
 /* ---------------- Список ---------------- */
 let filter = "all", selectedId = null;
 function renderNav() {
-  const cats = [...new Set(entries.map(x => x.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const L = live(), cats = [...new Set(L.map(x => x.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   $("cat-list").innerHTML = cats.map(c => `<option value="${esc(c)}">`).join("");
-  const n = f => entries.filter(f).length;
-  const items = [["all", T("Все записи", "All entries"), entries.length], ["t:login", T("Логины", "Logins"), n(x => x.type === "login")],
-    ["t:card", T("Карты", "Cards"), n(x => x.type === "card")], ["t:note", T("Заметки", "Notes"), n(x => x.type === "note")],
-    ["t:wifi", "Wi-Fi", n(x => x.type === "wifi")], ["fav", T("Избранное", "Favorites"), n(x => x.fav)]];
-  const valid = new Set([...items.map(i => i[0]), ...cats.map(c => "c:" + c)]);
+  const n = f => L.filter(f).length, att = attentionSet();
+  const top = [["all", T("Все записи", "All entries"), L.length], ["fav", T("Избранное", "Favorites"), n(x => x.fav)],
+    ["recent", T("Недавние", "Recent"), Math.min(n(x => x.used || x.updated !== x.created), 20)]];
+  const types = [["t:login", T("Логины", "Logins"), 1], ["t:card", T("Карты", "Cards"), 1], ["t:note", T("Заметки", "Notes"), 1],
+    ["t:wifi", "Wi-Fi"], ["t:doc", T("Документы", "Documents")], ["totp", T("Коды 2FA", "2FA codes")], ["t:crypto", T("Криптокошельки", "Crypto wallets")],
+    ["t:key", T("Ключи и лицензии", "Keys & licenses")], ["t:bank", T("Банковские счета", "Bank accounts")], ["t:contact", T("Контакты", "Contacts")]]
+    .map(([v, l, always]) => [v, l, v === "totp" ? n(x => x.type === "login" && parseTotp(x.totp)) : n(x => x.type === v.slice(2)), always])
+    .filter(([v, , c, always]) => always || c > 0 || filter === v);
+  const checks = [["attention", T("Требуют внимания", "Need attention"), att.size, "warn"], ["expiring", T("Скоро истекают", "Expiring soon"), n(expiringSoon), "warn"],
+    ["nocat", T("Без категории", "Uncategorized"), n(x => !x.category)]].filter(([v, , c]) => c > 0 || filter === v || v === "attention");
+  const trash = entries.length - L.length;
+  const valid = new Set([...top, ...types, ...checks].map(i => i[0]).concat(cats.map(c => "c:" + c), ["trash"]));
   if (!valid.has(filter)) filter = "all";
-  const link = ([v, l, c]) => `<a class="nav-item${v === filter ? " active" : ""}" data-filter="${esc(v)}">${esc(l)}<span>${c}</span></a>`;
-  $("nav").innerHTML = items.map(link).join("") + (cats.length ? `<div class="nav-head">${T("КАТЕГОРИИ", "CATEGORIES")}</div>` + cats.map(c => link(["c:" + c, c, n(x => x.category === c)])).join("") : "");
+  const link = ([v, l, c, w]) => `<a class="nav-item${v === filter ? " active" : ""}${v === "trash" ? " trash" : ""}" data-filter="${esc(v)}">${esc(l)}<span${w === "warn" && c ? ' class="badge-warn"' : ""}>${c}</span></a>`;
+  $("nav").innerHTML = top.map(link).join("") +
+    `<div class="nav-head">${T("ТИПЫ", "TYPES")}</div>` + types.map(link).join("") +
+    `<div class="nav-head">${T("ПРОВЕРКА", "CHECKS")}</div>` + checks.map(link).join("") +
+    (cats.length ? `<div class="nav-head">${T("КАТЕГОРИИ", "CATEGORIES")}</div>` + cats.map(c => link(["c:" + c, c, n(x => x.category === c)])).join("") : "") +
+    link(["trash", T("Корзина", "Trash"), trash]);
 }
 $("nav").onclick = e => { const a = e.target.closest("[data-filter]"); if (!a) return; filter = a.dataset.filter; renderNav(); render(); };
 function maskCard(n) { const d = (n || "").replace(/\D/g, ""); return d ? "•••• " + d.slice(-4) : ""; }
-const subline = x => x.type === "card" ? maskCard(x.number) || TYPE_NAME(x.type) : x.type === "note" ? T("Заметка", "Note") : x.type === "wifi" ? "Wi-Fi" : (x.login || x.url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "") || TYPE_NAME(x.type));
+const subline = x => {
+  const f = x.f || {};
+  if (x.deletedAt) return T("Удалится ", "Deleted for good on ") + new Date(x.deletedAt + TRASH_DAYS * 864e5).toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "long" });
+  if (expiringSoon(x)) { const d = expiryOf(x); return (d < Date.now() ? T("Истёк ", "Expired ") : T("Истекает ", "Expires ")) + d.toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "short", year: "numeric" }); }
+  switch (x.type) {
+    case "card": return maskCard(x.number) || TYPE_NAME(x.type);
+    case "note": return TYPE_NAME("note"); case "wifi": return "Wi-Fi";
+    case "doc": return f.kind || TYPE_NAME("doc");
+    case "crypto": return f.network || (f.address ? f.address.slice(0, 6) + "…" + f.address.slice(-4) : TYPE_NAME("crypto"));
+    case "key": return f.product || TYPE_NAME("key");
+    case "bank": return f.account ? "•••• " + f.account.replace(/\s/g, "").slice(-4) : TYPE_NAME("bank");
+    case "contact": return f.relation || f.phone || f.email || TYPE_NAME("contact");
+    default: return x.login || (x.url || "").replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "") || TYPE_NAME(x.type);
+  }
+};
 function visibleList() {
   const q = $("search").value.toLowerCase(), sort = $("sort").value;
-  let list = entries.filter(x => [x.title, x.login, x.note, x.category, x.url].join(" ").toLowerCase().includes(q));
+  const searchable = x => [x.title, x.login, x.note, x.category, x.url, ...Object.entries(x.f || {}).filter(([k]) => !["seed", "wpass", "key", "account", "number"].includes(k)).map(e => e[1])].join(" ").toLowerCase();
+  let list = (filter === "trash" ? entries.filter(x => x.deletedAt) : live()).filter(x => searchable(x).includes(q));
   if (filter === "fav") list = list.filter(x => x.fav);
+  else if (filter === "recent") return list.filter(x => x.used || x.updated !== x.created).sort((a, b) => Math.max(b.used || 0, b.updated) - Math.max(a.used || 0, a.updated)).slice(0, 20);
+  else if (filter === "attention") { const a = attentionSet(); list = list.filter(x => a.has(x.id)); }
+  else if (filter === "expiring") return list.filter(expiringSoon).sort((a, b) => expiryOf(a) - expiryOf(b));
+  else if (filter === "nocat") list = list.filter(x => !x.category);
+  else if (filter === "totp") list = list.filter(x => x.type === "login" && parseTotp(x.totp));
+  else if (filter === "trash") return list.sort((a, b) => b.deletedAt - a.deletedAt);
   else if (filter.startsWith("t:")) list = list.filter(x => x.type === filter.slice(2));
   else if (filter.startsWith("c:")) list = list.filter(x => x.category === filter.slice(2));
   const cmp = { title: (a, b) => a.title.localeCompare(b.title), updated: (a, b) => b.updated - a.updated, used: (a, b) => (b.used || 0) - (a.used || 0), created: (a, b) => b.created - a.created }[sort];
@@ -522,15 +639,15 @@ function visibleList() {
 }
 function render() {
   const list = visibleList();
-  if (!entries.some(x => x.id === selectedId)) selectedId = null;
+  if (!list.some(x => x.id === selectedId)) selectedId = null;
   if (!selectedId && list.length && innerWidth > 980) selectedId = list[0].id;
   $("list-count").textContent = list.length + " " + T(plural(list.length, "запись", "записи", "записей"), list.length === 1 ? "entry" : "entries");
   $("list").innerHTML = list.length ? list.map((x, i) => `
     <div class="row${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
       <span class="ava">${esc(initial(x.title))}</span>
-      <span class="t"><b>${esc(x.title)}</b><small>${esc(subline(x))}</small></span>
+      <span class="t"><b>${esc(x.title)}</b><small${expiringSoon(x) ? ' class="exp-soon"' : ""}>${esc(subline(x))}</small></span>
       ${x.fav ? `<svg class="ic fav"><use href="#i-star"/></svg>` : ""}
-    </div>`).join("") : `<div class="empty">${entries.length ? T("Ничего не найдено", "Nothing found") : T("Сейф пока пуст. Нажмите «+ Добавить».", "The safe is empty. Click “+ Add”.")}</div>`;
+    </div>`).join("") : `<div class="empty">${filter === "trash" ? T("Корзина пуста", "Trash is empty") : filter === "attention" ? T("Всё в порядке — проблемных паролей нет", "All good — no problem passwords") : live().length ? T("Ничего не найдено", "Nothing found") : T("Сейф пока пуст. Нажмите «+ Добавить».", "The safe is empty. Click “+ Add”.")}</div>`;
   $("list").querySelectorAll(".row").forEach((r, i) => r.style.animationDelay = Math.min(i, 8) * 0.04 + "s");
   if ($("form-card").classList.contains("hidden")) renderDetail();
 }
@@ -567,9 +684,23 @@ function renderDetail() {
   const cfg = x.type === "login" && parseTotp(x.totp);
   if (cfg) h += field(T("Код 2FA", "2FA code"), `<span data-totp="${esc(x.id)}"><span class="totp-code code">··· ···</span></span>`, `<span class="totp-left left" data-totp-left></span>` + ib("copy-totp", "i-copy", copy));
   if (x.url) h += field(T("Сайт", "Website"), `<a data-act="open">${esc(x.url.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</a>`, ib("open", "i-ext", T("Открыть", "Open")));
+  (EXTRA[x.type] || []).forEach(f => {
+    const v = (x.f || {})[f.k]; if (!v) return;
+    if (f.s) h += field(exLabel(f), `<span data-secret="f:${f.k}">${dots}</span>`, ib("show", "i-eye", show) + ib("copy-f:" + f.k, "i-copy", copy), f.m ? "note" : "");
+    else if (f.d) { const dt = new Date(v + "T12:00:00"), soon = f.k === "expires" && expiringSoon(x);
+      h += field(exLabel(f), `<span${soon ? ' class="exp-soon"' : ""}>${esc(dt.toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "long", year: "numeric" }))}${soon ? (dt < Date.now() ? T(" · истёк", " · expired") : T(" · скоро истекает", " · expires soon")) : ""}</span>`); }
+    else h += field(exLabel(f), esc(v), f.c ? ib("copy-f:" + f.k, "i-copy", copy) : "", (f.m ? "note " : "") + (f.mono ? "mono" : ""));
+  });
+  if (x.type === "card" && expiringSoon(x)) h += `<p class="trash-note">${expiryOf(x) < Date.now() ? T("Срок действия карты истёк.", "This card has expired.") : T("Срок действия карты скоро закончится.", "This card expires soon.")}</p>`;
   if (x.note) h += field(T("Заметки", "Notes"), esc(x.note), "", "note");
+  if (x.history && x.history.length) h += `<details class="hist"><summary>${T("История паролей", "Password history")} (${x.history.length})</summary>` +
+    x.history.map((hh, i) => `<div class="d-field"><span data-secret="h:${i}">${dots}</span><small>${esc(new Date(hh.at).toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU"))}</small>${ib("show", "i-eye", show)}${ib("copy-h:" + i, "i-copy", copy)}</div>`).join("") + `</details>`;
   if (x.category) h += `<span class="d-tag">${esc(x.category)}</span>`;
-  h += `<div class="d-btns"><button class="ghost" data-act="edit">${T("Изменить", "Edit")}</button><button class="ghost" data-act="fav">${x.fav ? T("Убрать из избранного", "Unfavorite") : T("В избранное", "Favorite")}</button><button class="danger" data-act="del">${T("Удалить", "Delete")}</button></div>`;
+  if (x.deletedAt) {
+    h += `<p class="trash-note">${T("Запись в корзине. Она удалится навсегда ", "This entry is in the trash. It will be deleted for good on ")}${new Date(x.deletedAt + TRASH_DAYS * 864e5).toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "long" })}.</p>` +
+      `<div class="d-btns"><button data-act="restore">${T("Восстановить", "Restore")}</button><button class="danger" data-act="purge">${T("Удалить навсегда", "Delete forever")}</button></div>`;
+  } else
+  h += `<div class="d-btns"><button class="ghost" data-act="edit">${T("Изменить", "Edit")}</button><button class="ghost" data-act="fav">${x.fav ? T("Убрать из избранного", "Unfavorite") : T("В избранное", "Favorite")}</button><button class="danger" data-act="del">${T("В корзину", "Move to trash")}</button></div>`;
   const cp = $("copied"); $("detail").appendChild(cp); cp.classList.add("hidden");
   box.innerHTML = h;
   // таймер TOTP пишет в .code и .left: привязываем элемент обратного отсчёта
@@ -601,6 +732,11 @@ $("detail-view").onclick = async e => {
     const box = btn.closest(".d-field"), s = box.querySelector("[data-secret]");
     const open = s.dataset.open === "1"; s.dataset.open = open ? "" : "1";
     if (s.dataset.secret === "pass") { if (open) s.innerHTML = '<span class="dots">••••••••••••</span>'; else decryptInto(s, x.pass); }
+    const sk = s.dataset.secret;
+    if (sk.startsWith("f:") || sk.startsWith("h:")) {
+      const val = sk.startsWith("f:") ? (x.f || {})[sk.slice(2)] : x.history[+sk.slice(2)].pass;
+      if (open) s.innerHTML = '<span class="dots">••••••••••••</span>'; else decryptInto(s, val);
+    }
     if (s.dataset.secret === "number") {
       if (open) s.textContent = maskCard(x.number); else decryptInto(s, x.number);
       const c = $("detail-view").querySelector('[data-secret="cvv"]'); if (c) c.textContent = open ? "•••" : x.cvv;
@@ -608,13 +744,20 @@ $("detail-view").onclick = async e => {
   }
   if (act === "copy") { await copySecret(x.pass); markUsed(x); }
   if (act === "copy-login") await copySecret(x.login);
+  if (act.startsWith("copy-f:")) { await copySecret((x.f || {})[act.slice(7)]); markUsed(x); }
+  if (act.startsWith("copy-h:")) await copySecret(x.history[+act.slice(7)].pass);
+  if (act === "restore") { delete x.deletedAt; await persist(); filter = "all"; renderNav(); render(); toast(T("Запись восстановлена", "Entry restored")); }
+  if (act === "purge" && await confirmBox(T("Удалить «", "Delete “") + x.title + T("» навсегда? Это нельзя отменить.", "” forever? This cannot be undone."), T("Удалить навсегда", "Delete forever"), true)) {
+    entries = entries.filter(y => y !== x); selectedId = null; await persist(); renderNav(); render(); $("v-vault").classList.remove("show-detail");
+  }
   if (act === "copy-number") await copySecret(x.number.replace(/\s/g, ""));
   if (act === "copy-totp") { const r = await totpCode(parseTotp(x.totp)); await copySecret(r.code); markUsed(x); }
   if (act === "open") { const u = safeUrl(x.url); if (u) { window.open(u, "_blank", "noopener,noreferrer"); markUsed(x); } }
   if (act === "fav") { x.fav = !x.fav; await persist(); renderNav(); render(); }
   if (act === "edit") startEdit(x);
-  if (act === "del" && await confirmBox(T("Удалить запись «", "Delete entry “") + x.title + T("»?", "”?"), T("Удалить", "Delete"), true)) {
-    entries = entries.filter(y => y !== x); selectedId = null; await persist(); renderNav(); render(); $("v-vault").classList.remove("show-detail");
+  if (act === "del") {
+    x.deletedAt = Date.now(); selectedId = null; await persist(); renderNav(); render(); $("v-vault").classList.remove("show-detail");
+    toast(T("Перемещено в корзину на 30 дней", "Moved to trash for 30 days"));
   }
 };
 
@@ -623,6 +766,7 @@ function openVaultView() {
   $("vault-name").textContent = s.name || T("Профиль", "Profile");
   $("vault-avatar").textContent = initial(s.name);
   clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail");
+  if (purgeTrash()) persist();
   renderNav(); render(); show("vault"); resetIdle();
 }
 
@@ -646,7 +790,7 @@ $("b-rename").onclick = () => { const s = store.get(), n = $("rename").value.tri
 /* ---------------- Аудит ---------------- */
 let breached = new Map();
 function audit() {
-  const withPass = entries.filter(x => x.pass && x.type !== "card");
+  const withPass = live().filter(x => x.pass && x.type !== "card");
   const counts = {}; withPass.forEach(x => counts[x.pass] = (counts[x.pass] || 0) + 1);
   const weak = withPass.filter(x => strength(x.pass).score < 3);
   const reused = withPass.filter(x => counts[x.pass] > 1);
@@ -665,7 +809,7 @@ function audit() {
 $("b-audit").onclick = () => { audit(); show("audit"); };
 $("audit-body").onclick = e => { const id = e.target.dataset.auditEdit; if (!id) return; openVaultView(); selectedId = id; render(); startEdit(entries.find(x => x.id === id)); };
 $("b-hibp").onclick = async e => {
-  const list = entries.filter(x => x.pass && x.type !== "card");
+  const list = live().filter(x => x.pass && x.type !== "card");
   if (!list.length) return;
   if (!await confirmBox(T("Для проверки будут отправлены первые 5 символов SHA-1-хеша каждого пароля на api.pwnedpasswords.com. Сами пароли не отправляются. Продолжить?",
     "The first 5 characters of the SHA-1 hash of each password will be sent to api.pwnedpasswords.com. The passwords themselves are not sent. Continue?"), T("Проверить", "Check"))) return;
@@ -683,7 +827,7 @@ $("b-hibp").onclick = async e => {
       const line = cache.get(pre).split("\n").find(l => l.startsWith(suf));
       breached.set(x.id, line ? parseInt(line.split(":")[1], 10) || 0 : 0);
     }
-    audit(); toast(T("Проверка завершена", "Check complete"));
+    audit(); renderNav(); toast(T("Проверка завершена", "Check complete"));
   } catch (err) { alertBox(T("Не удалось проверить: ", "Check failed: ") + err.message); }
   busy(e.target, false, "");
 };
@@ -732,14 +876,16 @@ function buildXlsx(rows, widths) {
       widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("") + '</cols><sheetData>' + sheetRows + '</sheetData></worksheet>']
   ]);
 }
-const TYPE_NAME = t => ({ login: T("Пароль", "Password"), note: T("Заметка", "Note"), card: T("Карта", "Card"), wifi: "Wi-Fi" }[t] || t);
+const TYPE_NAME = t => ({ login: T("Пароль", "Password"), note: T("Заметка", "Note"), card: T("Карта", "Card"), wifi: "Wi-Fi", doc: T("Документ", "Document"),
+  crypto: T("Криптокошелёк", "Crypto wallet"), key: T("Ключ", "Key"), bank: T("Счёт", "Bank account"), contact: T("Контакт", "Contact") }[t] || t);
 $("b-xlsx").onclick = async () => {
-  if (!entries.length) { alertBox(T("В профиле пока нет записей.", "This profile has no entries yet.")); return; }
+  if (!live().length) { alertBox(T("В профиле пока нет записей.", "This profile has no entries yet.")); return; }
   if (!await confirmBox(T("Внимание: файл Excel НЕ зашифрован. Любой, кто получит его, увидит все пароли. Удалите файл, когда он станет не нужен. Продолжить?",
     "Warning: the Excel file is NOT encrypted. Anyone who gets it will see all passwords. Delete the file when you no longer need it. Continue?"), T("Выгрузить", "Export"))) return;
-  const rows = [[T("Тип", "Type"), T("Название", "Name"), T("Логин", "Login"), T("Пароль", "Password"), T("Сайт", "Website"), T("Категория", "Category"), T("Заметки", "Notes"), T("Номер карты", "Card number"), T("Срок", "Expiry"), "CVV", "2FA", T("Добавлено", "Added")],
-    ...entries.map(x => [TYPE_NAME(x.type), x.title, x.login, x.pass, x.url, x.category, x.note, x.number, x.exp, x.cvv, x.totp, new Date(x.created).toLocaleString()])];
-  download(buildXlsx(rows, [10, 28, 26, 24, 30, 14, 40, 20, 8, 6, 20, 18]), "vault-" + fileSafe(store.get().name) + "-" + new Date().toISOString().slice(0, 10) + ".xlsx");
+  const rows = [[T("Тип", "Type"), T("Название", "Name"), T("Логин", "Login"), T("Пароль", "Password"), T("Сайт", "Website"), T("Категория", "Category"), T("Заметки", "Notes"), T("Номер карты", "Card number"), T("Срок", "Expiry"), "CVV", "2FA", T("Дополнительные поля", "Extra fields"), T("Добавлено", "Added")],
+    ...live().map(x => [TYPE_NAME(x.type), x.title, x.login, x.pass, x.url, x.category, x.note, x.number, x.exp, x.cvv, x.totp,
+      (EXTRA[x.type] || []).filter(f => (x.f || {})[f.k]).map(f => exLabel(f) + ": " + x.f[f.k]).join("\n"), new Date(x.created).toLocaleString()])];
+  download(buildXlsx(rows, [10, 28, 26, 24, 30, 14, 40, 20, 8, 6, 20, 40, 18]), "vault-" + fileSafe(store.get().name) + "-" + new Date().toISOString().slice(0, 10) + ".xlsx");
 };
 
 /* ---------------- Импорт CSV / Excel ---------------- */
@@ -805,7 +951,10 @@ function mapRows(rows) {
   for (const [k, syn] of Object.entries(SYN)) { const i = head.findIndex(h => syn.includes(h)); if (i >= 0) map[k] = i; }
   if (map.title === undefined && map.url !== undefined) map.title = map.url;
   if (map.pass === undefined && map.title === undefined) throw new Error(T("Не найдены колонки с названием или паролем", "No name or password columns found"));
-  const typeOf = v => { v = String(v || "").toLowerCase(); return ["note", "заметка", "securenote", "2"].includes(v) ? "note" : ["card", "карта", "3"].includes(v) ? "card" : v === "wi-fi" || v === "wifi" ? "wifi" : "login"; };
+  const TYPE_ALIASES = { note: ["note", "заметка", "securenote", "secure note", "2"], card: ["card", "карта", "3"], wifi: ["wi-fi", "wifi"],
+    doc: ["document", "документ", "identity", "4"], crypto: ["crypto", "crypto wallet", "криптокошелёк", "криптокошелек"], key: ["key", "ключ", "license"],
+    bank: ["bank", "bank account", "счёт", "счет"], contact: ["contact", "контакт"] };
+  const typeOf = v => { v = String(v || "").trim().toLowerCase(); for (const [t, a] of Object.entries(TYPE_ALIASES)) if (a.includes(v)) return t; return "login"; };
   return rows.slice(1).map(r => {
     const g = k => map[k] !== undefined ? String(r[map[k]] ?? "").trim() : "";
     let url = g("url"), title = g("title");

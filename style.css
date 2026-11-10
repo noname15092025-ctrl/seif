@@ -323,3 +323,22 @@ label.chk { display:flex; align-items:center; color:var(--text); font-size:14px;
   .dial, .hero-glow, .rise, .row, .ldial, .ring, .dc, .timer.run, .l-card, button { animation:none !important; transition:none !important; }
   .ring { stroke-dashoffset:0; }
 }
+
+/* Вкладки типов: в несколько рядов */
+#type-tabs { flex-wrap:wrap; }
+#type-tabs .tab { flex:1 0 calc(20% - 6px); min-width:84px; }
+/* Генератор */
+.gen-out { display:flex; align-items:center; gap:4px; min-height:72px; padding:12px 10px 12px 20px; border:1px solid var(--line2); border-radius:16px; background:var(--panel); margin-bottom:20px; }
+.gen-out > span { flex:1; min-width:0; font-size:22px; word-break:break-all; line-height:1.35; }
+#gp-mode { margin-top:28px; }
+/* История и корзина */
+.hist { margin:-6px 0 24px; }
+.hist summary { cursor:pointer; color:var(--soft); font-size:14px; padding:6px 0; list-style:none; }
+.hist summary::-webkit-details-marker { display:none; }
+.hist summary::before { content:"▸ "; color:var(--muted); } .hist[open] summary::before { content:"▾ "; }
+.hist .d-field { margin:8px 0 0; }
+.hist small { color:var(--muted); font-size:12px; margin-right:6px; white-space:nowrap; }
+.trash-note { padding:12px 14px; border:1px solid var(--line); border-left:2px solid var(--accent); border-radius:12px; background:var(--panel); color:var(--soft); font-size:14px; margin:0 0 24px; }
+.badge-warn { color:var(--accent) !important; }
+.nav-item.trash { margin-top:8px; }
+.exp-soon { color:var(--accent); }

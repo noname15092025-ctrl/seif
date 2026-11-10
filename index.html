@@ -185,6 +185,7 @@
     <a class="brand side-brand" data-home-lock><svg class="ic accent"><use href="#i-logo"/></svg>Vault</a>
     <nav class="nav" id="nav"></nav>
     <div class="side-tools">
+      <a class="nav-item" id="b-generator" data-en="Password generator">Генератор паролей</a>
       <a class="nav-item" id="b-audit" data-en="Password audit">Аудит паролей</a>
       <a class="nav-item" id="b-settings" data-en="Settings and backups">Настройки и копии</a>
       <a class="nav-item" data-guide data-en="Guide">Инструкция</a>
@@ -235,6 +236,11 @@
         <button class="tab" data-type="card" data-en="Card">Карта</button>
         <button class="tab" data-type="note" data-en="Note">Заметка</button>
         <button class="tab" data-type="wifi">Wi-Fi</button>
+        <button class="tab" data-type="doc" data-en="Document">Документ</button>
+        <button class="tab" data-type="crypto" data-en="Crypto">Крипто</button>
+        <button class="tab" data-type="key" data-en="Key">Ключ</button>
+        <button class="tab" data-type="bank" data-en="Account">Счёт</button>
+        <button class="tab" data-type="contact" data-en="Contact">Контакт</button>
       </div>
       <label data-f="title" for="e-title" data-en="Site / name">Сайт / название</label>
       <input id="e-title" class="field">
@@ -271,6 +277,7 @@
         <label for="e-totp" data-en="2FA key (TOTP), optional">Ключ 2FA (TOTP), необязательно</label>
         <input id="e-totp" class="field mono" autocomplete="off" spellcheck="false" placeholder="JBSWY3DPEHPK3PXP / otpauth://…">
       </div>
+      <div id="e-extra"></div>
       <label for="e-cat" data-en="Category">Категория</label>
       <input id="e-cat" class="field" list="cat-list" data-en-ph="Social, Banks, Work…" placeholder="Соцсети, Банки, Работа…"><datalist id="cat-list"></datalist>
       <label for="e-note" data-en="Notes">Заметки</label>
@@ -318,6 +325,32 @@
   </div>
 </section>
 
+<!-- ============ Генератор ============ -->
+<section id="v-generator" class="center-page hidden">
+  <div class="panel wide-panel rise">
+    <a class="p-back" data-back-vault><svg class="ic"><use href="#i-back"/></svg><span data-en="Back to vault">К хранилищу</span></a>
+    <h1 class="p-title left" data-en="Password generator">Генератор паролей</h1>
+    <div class="gen-out"><span id="gp-out" class="revealed"></span>
+      <button class="ib" id="gp-again" aria-label="Ещё" title="Ещё" data-en="New">Новый</button>
+      <button class="ib" id="gp-copy" aria-label="Скопировать" title="Скопировать"><svg class="ic"><use href="#i-copy"/></svg></button></div>
+    <div class="d-strength"><span class="bar"><span id="gp-bar"></span></span><span id="gp-label"></span></div>
+    <div class="tabs" id="gp-mode">
+      <button class="tab active" data-mode="chars" data-en="Characters">Символы</button>
+      <button class="tab" data-mode="words" data-en="Words">Слова</button>
+      <button class="tab" data-mode="pin">PIN</button>
+    </div>
+    <label><span data-en="Length:">Длина:</span> <b id="gp-len-v">20</b></label>
+    <input type="range" id="gp-len" min="4" max="64" value="20">
+    <div class="four" id="gp-sets">
+      <label class="chk"><input type="checkbox" id="gp-up" checked> A–Z</label>
+      <label class="chk"><input type="checkbox" id="gp-low" checked> a–z</label>
+      <label class="chk"><input type="checkbox" id="gp-dig" checked> 0–9</label>
+      <label class="chk"><input type="checkbox" id="gp-sym" checked> !@#</label>
+    </div>
+    <p class="muted small" data-en="Generated passwords are not saved anywhere. Copy one and paste it into an entry or a website.">Сгенерированные пароли никуда не сохраняются. Скопируйте пароль и вставьте его в запись или на сайт.</p>
+  </div>
+</section>
+
 <!-- ============ Аудит ============ -->
 <section id="v-audit" class="center-page hidden">
   <div class="panel wide-panel rise">
@@ -357,9 +390,28 @@
         <li>Для логинов можно указать адрес сайта — в карточке записи он станет ссылкой.</li>
         <li><b>Категория</b> (например «Банки») появится в левом меню. <b>Избранное</b> всегда стоит вверху списка.</li>
       </ul>
+      <h3><i>B2</i>Документы, криптокошельки, ключи, счета, контакты</h3>
+      <ul>
+        <li>Во вкладках формы есть ещё пять типов: <b>Документ</b> (паспорт, СНИЛС, права — номер, кем выдан, даты), <b>Крипто</b> (сеть, адрес, сид-фраза, пароль кошелька), <b>Ключ</b> (лицензии и API-ключи), <b>Счёт</b> (реквизиты) и <b>Контакт</b>.</li>
+        <li>Секретные поля — номер документа, сид-фраза, ключ, номер счёта — скрыты, пока вы не нажмёте на глаз.</li>
+        <li>Сид-фразы и ключи от криптокошельков — самое ценное. Убедитесь, что у Vault длинный мастер-пароль и есть резервная копия.</li>
+      </ul>
+      <h3><i>B3</i>Умные разделы меню</h3>
+      <ul>
+        <li><b>Недавние</b> — что вы недавно открывали, копировали или меняли.</li>
+        <li><b>Коды 2FA</b> — все записи с кодами подтверждения в одном месте.</li>
+        <li><b>Требуют внимания</b> — слабые, повторяющиеся, утёкшие и старые пароли. Красный счётчик означает, что есть что исправить.</li>
+        <li><b>Скоро истекают</b> — карты, документы и ключи, срок которых заканчивается в ближайшие 3 месяца или уже прошёл.</li>
+        <li><b>Без категории</b> — записи, которые ещё не разложены по категориям.</li>
+      </ul>
+      <h3><i>B4</i>Корзина и история паролей</h3>
+      <ul>
+        <li>Удалённая запись попадает в <b>Корзину</b> и хранится там 30 дней. Её можно <b>восстановить</b> или <b>удалить навсегда</b>.</li>
+        <li>Когда вы меняете пароль в записи, старый сохраняется в <b>Истории паролей</b> в карточке (последние 10 версий).</li>
+      </ul>
       <h3><i>C</i>Генератор паролей</h3>
       <ul>
-        <li>Кнопка <b>«Создать»</b> в поле пароля создаёт случайный пароль. Кнопка <b>⋯</b> рядом открывает настройки: длина, наборы символов или режим <b>«Слова»</b> — легко запоминаемый пароль вида <code>Лодка-ветер-синий-42</code> на английских словах.</li>
+        <li>Кнопка <b>«Создать»</b> в поле пароля создаёт случайный пароль. Отдельная страница <b>«Генератор паролей»</b> в меню создаёт пароли, слова и PIN-коды без сохранения. Кнопка <b>⋯</b> рядом открывает настройки: длина, наборы символов или режим <b>«Слова»</b> — легко запоминаемый пароль вида <code>Лодка-ветер-синий-42</code> на английских словах.</li>
       </ul>
       <h3><i>D</i>Коды двухфакторной защиты (2FA)</h3>
       <ul>
@@ -455,9 +507,28 @@
         <li>For logins you can add a website address — it becomes a link on the entry card.</li>
         <li>A <b>category</b> (e.g. “Banks”) appears in the left menu. <b>Favorites</b> always stay at the top of the list.</li>
       </ul>
+      <h3><i>B2</i>Documents, crypto wallets, keys, accounts, contacts</h3>
+      <ul>
+        <li>The form has five more tabs: <b>Document</b> (passport, ID, license — number, issuer, dates), <b>Crypto</b> (network, address, seed phrase, wallet password), <b>Key</b> (licenses and API keys), <b>Account</b> (bank details) and <b>Contact</b>.</li>
+        <li>Secret fields — document number, seed phrase, key, account number — stay hidden until you click the eye.</li>
+        <li>Crypto seed phrases and keys are the most valuable data. Make sure Vault has a long master password and a backup.</li>
+      </ul>
+      <h3><i>B3</i>Smart menu sections</h3>
+      <ul>
+        <li><b>Recent</b> — what you recently opened, copied or changed.</li>
+        <li><b>2FA codes</b> — all entries with verification codes in one place.</li>
+        <li><b>Need attention</b> — weak, reused, leaked and old passwords. A red counter means there's something to fix.</li>
+        <li><b>Expiring soon</b> — cards, documents and keys that expire within 3 months or already have.</li>
+        <li><b>Uncategorized</b> — entries not yet sorted into categories.</li>
+      </ul>
+      <h3><i>B4</i>Trash and password history</h3>
+      <ul>
+        <li>A deleted entry goes to the <b>Trash</b> and stays there for 30 days. You can <b>restore</b> it or <b>delete it forever</b>.</li>
+        <li>When you change a password, the old one is kept in the entry's <b>Password history</b> (last 10 versions).</li>
+      </ul>
       <h3><i>C</i>Password generator</h3>
       <ul>
-        <li><b>“Generate”</b> in the password field creates a random password. The <b>⋯</b> button next to it opens options: length, character sets, or <b>“Words”</b> mode for a memorable password like <code>Boat-wind-blue-42</code>.</li>
+        <li><b>“Generate”</b> in the password field creates a random password. The separate <b>“Password generator”</b> page in the menu makes passwords, word phrases and PINs without saving anything. The <b>⋯</b> button next to it opens options: length, character sets, or <b>“Words”</b> mode for a memorable password like <code>Boat-wind-blue-42</code>.</li>
       </ul>
       <h3><i>D</i>Two-factor codes (2FA)</h3>
       <ul>
