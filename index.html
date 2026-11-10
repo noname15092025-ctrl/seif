@@ -1,659 +1,452 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; worker-src 'self'; manifest-src 'self'; connect-src 'self' https://api.pwnedpasswords.com; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="theme-color" content="#070707">
 <title>Vault — хранилище паролей</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%2064%2064%22%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Crect%20x%3D%226%22%20y%3D%228%22%20width%3D%2252%22%20height%3D%2246%22%20rx%3D%228%22%20fill%3D%22%23000%22%20stroke%3D%22%23ff2d3d%22%20stroke-width%3D%224%22/%3E%3Crect%20x%3D%2213%22%20y%3D%2215%22%20width%3D%2238%22%20height%3D%2232%22%20rx%3D%224%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.35%22%20stroke-width%3D%222%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2231%22%20r%3D%229%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2231%22%20r%3D%222.5%22%20fill%3D%22%23ff2d3d%22/%3E%3Cpath%20d%3D%22M32%2020v3M32%2039v3M21%2031h3M40%2031h3%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22/%3E%3Crect%20x%3D%2214%22%20y%3D%2254%22%20width%3D%228%22%20height%3D%224%22%20rx%3D%221%22%20fill%3D%22%23ff2d3d%22/%3E%3Crect%20x%3D%2242%22%20y%3D%2254%22%20width%3D%228%22%20height%3D%224%22%20rx%3D%221%22%20fill%3D%22%23ff2d3d%22/%3E%3C/svg%3E">
-<style>
-  :root { --bg:#070707; --card:rgba(255,255,255,.035); --line:rgba(255,255,255,.09); --text:#f5f5f5; --muted:#8c8c8c;
-          --red:#ff2d3d; --red2:#c8101f; --glow:rgba(255,45,61,.35); }
-  * { box-sizing:border-box; }
-  html { background:var(--bg); }
-  body { margin:0; min-height:100vh; color:var(--text); font:15px/1.55 "Inter",ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-         background:
-           radial-gradient(900px 500px at 85% -10%, rgba(255,45,61,.18), transparent 60%),
-           radial-gradient(700px 400px at -10% 110%, rgba(255,45,61,.10), transparent 60%),
-           linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px) 0 0/44px 44px,
-           linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px) 0 0/44px 44px,
-           var(--bg); }
-  main { max-width:660px; margin:0 auto; padding:56px 18px 80px; }
-  h1 { font-size:44px; line-height:1; letter-spacing:-.04em; font-weight:800; margin:0 0 10px; text-transform:uppercase; }
-  h1 span::after { content:""; display:inline-block; width:12px; height:12px; background:var(--red); border-radius:50%; margin-left:8px; box-shadow:0 0 18px var(--glow); }
-  h2 { font-size:13px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; margin:0 0 16px; color:#fff; }
-  .sub { color:var(--muted); margin:0 0 28px; font-size:14px; max-width:520px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:24px; margin-bottom:14px;
-          backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 20px 60px -30px #000;
-          animation:rise .35s ease both; }
-  @keyframes rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
-  .hidden { display:none !important; }
-  input, textarea { width:100%; background:rgba(0,0,0,.55); color:var(--text); border:1px solid var(--line); border-radius:12px;
-          padding:12px 14px; font:inherit; margin:6px 0 14px; outline:none; transition:border-color .15s, box-shadow .15s; }
-  input:focus, textarea:focus { border-color:var(--red); box-shadow:0 0 0 4px rgba(255,45,61,.15); }
-  input[type=file] { padding:10px; color:var(--muted); }
-  textarea { min-height:96px; resize:vertical; font-family:"JetBrains Mono",ui-monospace,monospace; }
-  label { font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
-  button { background:var(--red); color:#fff; border:0; border-radius:999px; padding:11px 20px; font:inherit; font-weight:700; font-size:14px;
-           cursor:pointer; margin:4px 6px 4px 0; transition:transform .12s, box-shadow .15s, background .15s; box-shadow:0 8px 24px -10px var(--glow); }
-  button:hover { background:#ff4655; transform:translateY(-1px); box-shadow:0 12px 30px -10px var(--glow); }
-  button:active { transform:translateY(0) scale(.98); }
-  button.ghost { background:transparent; border:1px solid var(--line); color:var(--text); box-shadow:none; }
-  button.ghost:hover { background:#fff; color:#000; border-color:#fff; }
-  button.danger { background:transparent; color:var(--red); border:1px solid rgba(255,45,61,.45); box-shadow:none; }
-  button.danger:hover { background:var(--red); color:#fff; }
-  button:disabled { opacity:.45; cursor:wait; transform:none; }
-  .words { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:16px 0; counter-reset:w; }
-  .words div { background:#000; border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:14px; }
-  .words span { color:var(--red); margin-right:8px; font-size:11px; font-weight:700; }
-  .warn { background:rgba(255,45,61,.07); border:1px solid rgba(255,45,61,.35); border-left:3px solid var(--red); color:#ffd5d8; border-radius:12px; padding:12px 14px; font-size:13px; margin:14px 0; }
-  .err { color:var(--red); font-size:13px; min-height:18px; font-weight:600; }
-  .entry { border:1px solid var(--line); background:rgba(0,0,0,.35); border-radius:14px; padding:14px 16px; margin-bottom:8px;
-           display:flex; justify-content:space-between; gap:10px; align-items:center; transition:border-color .15s, background .15s; }
-  .entry:hover { border-color:rgba(255,45,61,.45); background:rgba(255,45,61,.04); }
-  .entry b { display:block; font-weight:700; } .entry small { color:var(--muted); }
-  .entry .pw { font-family:"JetBrains Mono",ui-monospace,monospace; color:#fff; margin-top:2px; }
-  .entry .note { color:#bbb; font-size:13px; margin-top:6px; padding-left:10px; border-left:2px solid var(--red); white-space:pre-wrap; word-break:break-word; }
-  .entry button { padding:8px 12px; font-size:13px; }
-  .row { display:flex; gap:10px; } .row > * { flex:1; }
-  @media (max-width:520px) { h1 { font-size:34px; } .row { flex-direction:column; gap:0; } .words { grid-template-columns:repeat(2,1fr); } .entry { flex-wrap:wrap; } }
-  ::selection { background:var(--red); color:#fff; }
-  .logo { display:flex; align-items:center; gap:14px; cursor:pointer; user-select:none; width:max-content; transition:opacity .15s; }
-  .logo:hover { opacity:.85; }
-  .logo svg { flex:0 0 auto; filter:drop-shadow(0 0 16px var(--glow)); }
-  .about .lead { font-size:17px; line-height:1.5; margin:0 0 20px; color:#ddd; }
-  .about .lead b { color:#fff; background:linear-gradient(transparent 60%, rgba(255,45,61,.45) 60%); }
-  .feats { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .feats div { background:rgba(0,0,0,.4); border:1px solid var(--line); border-radius:14px; padding:16px; transition:border-color .15s; }
-  .feats div:hover { border-color:rgba(255,45,61,.45); }
-  .feats i { display:block; font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace; color:var(--red); font-size:12px; font-weight:700; margin-bottom:8px; }
-  .feats b { display:block; font-size:15px; margin-bottom:4px; }
-  .feats span { color:var(--muted); font-size:13px; line-height:1.45; }
-  @media (max-width:520px) { .feats { grid-template-columns:1fr; } }
-  .guide h3 { display:flex; align-items:center; gap:10px; font-size:16px; margin:26px 0 8px; }
-  .guide h3 i { font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace; color:var(--red); font-size:12px; font-weight:700; border:1px solid rgba(255,45,61,.45); border-radius:999px; padding:2px 8px; }
-  .guide ul { margin:0; padding-left:20px; color:#cfcfcf; } .guide li { margin:6px 0; } .guide li::marker { color:var(--red); }
-  .guide code { background:#000; border:1px solid var(--line); border-radius:6px; padding:1px 6px; font-size:13px; color:#fff; }
-  .guide .lead, .about .lead { font-size:17px; line-height:1.5; margin:0 0 8px; color:#ddd; }
-</style>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+<script src="wordlist.js" defer></script>
+<script src="argon2.js" defer></script>
+<script src="app.js" defer></script>
 </head>
 <body>
 <main>
-  <h1 class="logo" id="logo" title="На главную"><svg viewBox="0 0 64 64" width="52" height="52" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="8" width="52" height="46" rx="8" fill="#000" stroke="#ff2d3d" stroke-width="4"/><rect x="13" y="15" width="38" height="32" rx="4" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><circle cx="32" cy="31" r="9" stroke="#fff" stroke-width="3"/><circle cx="32" cy="31" r="2.5" fill="#ff2d3d"/><path d="M32 20v3M32 39v3M21 31h3M40 31h3" stroke="#fff" stroke-width="3" stroke-linecap="round"/><rect x="14" y="54" width="8" height="4" rx="1" fill="#ff2d3d"/><rect x="42" y="54" width="8" height="4" rx="1" fill="#ff2d3d"/></svg><span>Vault</span></h1>
-  <p class="sub">Пароли шифруются прямо в браузере. Ничего не отправляется на сервер. Без фразы и пароля восстановить доступ невозможно.</p>
+  <header class="top">
+    <h1 class="logo" id="logo" title="На главную"><img src="icon.svg" alt="" width="52" height="52"><span>Vault</span></h1>
+    <div class="toggles">
+      <button class="ghost small" id="b-install" hidden data-en="Install app">Установить</button>
+      <button class="ghost small" id="b-lang" title="Язык / Language">EN</button>
+      <button class="ghost small" id="b-theme" title="Тема">☀</button>
+    </div>
+  </header>
+  <p class="sub" data-en="Passwords are encrypted right in your browser. Nothing is sent to a server. Without your phrase and password, access cannot be recovered.">Пароли шифруются прямо в браузере. Ничего не отправляется на сервер. Без фразы и пароля восстановить доступ невозможно.</p>
 
-  <!-- Старт -->
+  <!-- Главная -->
   <section id="v-start" class="hidden">
     <div class="card about">
-      <h2>Что такое Vault</h2>
-      <p class="lead">Менеджер паролей, где ключ есть <b>только у вас</b>. Ваши пароли не видит никто: ни сервер, ни хакеры, ни даже создатель приложения.</p>
+      <h2 data-en="What is Vault">Что такое Vault</h2>
+      <p class="lead" data-en-html="A password manager where the key is held &lt;b&gt;only by you&lt;/b&gt;. Nobody can see your passwords: not a server, not hackers, not even the app's creator.">Менеджер паролей, где ключ есть <b>только у вас</b>. Ваши пароли не видит никто: ни сервер, ни хакеры, ни даже создатель приложения.</p>
       <div class="feats">
-        <div><i>01</i><b>Шифрование на устройстве</b><span>Пароли шифруются AES-256 прямо в браузере, до того как куда-либо попасть.</span></div>
-        <div><i>02</i><b>Без сервера и аккаунтов</b><span>Нет email, логинов и базы данных. Нечего взламывать и нечего передавать третьим лицам.</span></div>
-        <div><i>03</i><b>Создатель не имеет доступа</b><span>Разработчик не знает ваших паролей и секретной фразы и физически не может их узнать.</span></div>
-        <div><i>04</i><b>Восстановление только по фразе</b><span>12 слов — ваш единственный ключ. Потеряли фразу и пароль — доступ не восстановит никто.</span></div>
+        <div><i>01</i><b data-en="On-device encryption">Шифрование на устройстве</b><span data-en="Passwords are encrypted with AES-256 in the browser before they go anywhere.">Пароли шифруются AES-256 прямо в браузере, до того как куда-либо попасть.</span></div>
+        <div><i>02</i><b data-en="No server, no accounts">Без сервера и аккаунтов</b><span data-en="No email, logins or database. Nothing to hack and nothing to hand over.">Нет email, логинов и базы данных. Нечего взламывать и нечего передавать третьим лицам.</span></div>
+        <div><i>03</i><b data-en="The creator has no access">Создатель не имеет доступа</b><span data-en="The developer does not know your passwords or phrase and physically cannot learn them.">Разработчик не знает ваших паролей и секретной фразы и физически не может их узнать.</span></div>
+        <div><i>04</i><b data-en="Recovery only by phrase">Восстановление только по фразе</b><span data-en="12 words are your only key. Lose the phrase and the password, and nobody can restore access.">12 слов — ваш единственный ключ. Потеряли фразу и пароль — доступ не восстановит никто.</span></div>
       </div>
     </div>
     <div class="card">
-    <h2>Профили</h2>
-    <div id="profiles"></div>
-    <button id="b-new">Создать новый профиль</button>
-    <button class="ghost" id="b-restore">Восстановить по секретной фразе</button>
-    <button class="ghost" data-guide>📖 Инструкция</button>
+      <h2 data-en="Profiles">Профили</h2>
+      <div id="profiles"></div>
+      <button id="b-new" data-en="Create new profile">Создать новый профиль</button>
+      <button class="ghost" id="b-restore" data-en="Restore with secret phrase">Восстановить по секретной фразе</button>
+      <button class="ghost" data-guide data-en="📖 Guide">📖 Инструкция</button>
     </div>
   </section>
 
   <!-- Показ фразы -->
   <section id="v-phrase" class="card hidden">
-    <h2>Ваша секретная фраза</h2>
-    <div class="warn">Запишите эти 12 слов на бумагу по порядку и храните в надёжном месте. Это единственный способ восстановить хранилище. Никто, включая разработчика, не сможет помочь, если вы их потеряете.</div>
+    <h2 data-en="Your secret phrase">Ваша секретная фраза</h2>
+    <div class="warn" data-en="Write these 12 words on paper in order and keep them somewhere safe. This is the only way to restore the vault. Nobody, including the developer, can help if you lose them.">Запишите эти 12 слов на бумагу по порядку и храните в надёжном месте. Это единственный способ восстановить хранилище. Никто, включая разработчика, не сможет помочь, если вы их потеряете.</div>
     <div class="words" id="words"></div>
-    <button id="b-phrase-ok">Я записал(а)</button>
-    <button class="ghost" data-cancel>Отмена</button>
+    <button id="b-phrase-ok" data-en="I wrote it down">Я записал(а)</button>
+    <button class="ghost" data-cancel data-en="Cancel">Отмена</button>
   </section>
 
   <!-- Проверка фразы -->
   <section id="v-verify" class="card hidden">
-    <h2>Проверка</h2>
-    <p class="sub">Введите слова с указанными номерами.</p>
+    <h2 data-en="Check">Проверка</h2>
+    <p class="sub" data-en="Enter the words with these numbers.">Введите слова с указанными номерами.</p>
     <div id="verify-fields"></div>
     <div class="err" id="verify-err"></div>
-    <button id="b-verify">Проверить</button>
-    <button class="ghost" id="b-back-phrase">Показать фразу снова</button>
-    <button class="ghost" data-cancel>Отмена</button>
+    <button id="b-verify" data-en="Check">Проверить</button>
+    <button class="ghost" id="b-back-phrase" data-en="Show phrase again">Показать фразу снова</button>
+    <button class="ghost" data-cancel data-en="Cancel">Отмена</button>
   </section>
 
   <!-- Установка пароля -->
   <section id="v-setpw" class="card hidden">
-    <h2>Мастер-пароль</h2>
-    <p class="sub">Нужен для входа на этом устройстве. Если забудете, войдите по секретной фразе.</p>
-    <label>Название профиля</label>
-    <input id="p-name" placeholder="Например: Личное" maxlength="40">
-    <label>Пароль (минимум 10 символов)</label>
+    <h2 data-en="Master password">Мастер-пароль</h2>
+    <p class="sub" data-en="Used to sign in on this device. If you forget it, sign in with the secret phrase.">Нужен для входа на этом устройстве. Если забудете, войдите по секретной фразе.</p>
+    <label data-en="Profile name">Название профиля</label>
+    <input id="p-name" maxlength="40" data-en-ph="For example: Personal" placeholder="Например: Личное">
+    <label data-en="Password (at least 10 characters)">Пароль (минимум 10 символов)</label>
     <input type="password" id="pw1" autocomplete="new-password">
-    <label>Повторите пароль</label>
+    <div class="meter"><div class="meter-bar" id="pw1-bar"></div></div>
+    <div class="meter-text" id="pw1-text"></div>
+    <label data-en="Repeat password">Повторите пароль</label>
     <input type="password" id="pw2" autocomplete="new-password">
     <div class="err" id="setpw-err"></div>
-    <button id="b-setpw">Сохранить</button>
-    <button class="ghost" data-cancel>Отмена</button>
+    <button id="b-setpw" data-en="Save">Сохранить</button>
+    <button class="ghost" data-cancel data-en="Cancel">Отмена</button>
   </section>
 
   <!-- Восстановление -->
   <section id="v-restore" class="card hidden">
-    <h2>Восстановление</h2>
-    <label>Секретная фраза (12 слов) через пробел</label>
+    <h2 data-en="Restore">Восстановление</h2>
+    <label data-en="Secret phrase (12 words) separated by spaces">Секретная фраза (12 слов) через пробел</label>
     <textarea id="restore-words" autocomplete="off" spellcheck="false"></textarea>
-    <label>Файл резервной копии (необязательно, если хранилище уже есть в этом браузере)</label>
+    <label data-en="Backup file (optional if the vault is already in this browser)">Файл резервной копии (необязательно, если хранилище уже есть в этом браузере)</label>
     <input type="file" id="restore-file" accept=".json,application/json">
     <div class="err" id="restore-err"></div>
-    <button id="b-restore-go">Восстановить</button>
-    <button class="ghost" id="b-restore-cancel">Назад</button>
+    <button id="b-restore-go" data-en="Restore">Восстановить</button>
+    <button class="ghost" data-cancel data-en="Back">Назад</button>
   </section>
 
   <!-- Вход -->
   <section id="v-unlock" class="card hidden">
-    <h2>Вход: <span id="unlock-name"></span></h2>
-    <label>Мастер-пароль</label>
+    <h2><span data-en="Sign in:">Вход:</span> <span id="unlock-name"></span></h2>
+    <label data-en="Master password">Мастер-пароль</label>
     <input type="password" id="unlock-pw" autocomplete="current-password">
     <div class="err" id="unlock-err"></div>
-    <button id="b-unlock">Открыть</button>
-    <button class="ghost" id="b-forgot">Забыл пароль (войти по секретной фразе)</button>
-    <button class="ghost" id="b-other">← Другой профиль</button>
+    <button id="b-unlock" data-en="Open">Открыть</button>
+    <button class="ghost" id="b-forgot" data-en="Forgot password (use secret phrase)">Забыл пароль (войти по секретной фразе)</button>
+    <button class="ghost" id="b-other" data-en="← Another profile">← Другой профиль</button>
   </section>
 
   <!-- Хранилище -->
   <section id="v-vault" class="hidden">
-    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
-      <h2 style="margin:0">👤 <span id="vault-name"></span></h2>
-      <button class="ghost" id="b-logout" style="margin:0">Выйти</button>
-    </div>
-    <div class="card">
-      <h2>Новая запись</h2>
-      <div class="row">
-        <div><label>Сайт / название</label><input id="e-site"></div>
-        <div><label>Логин</label><input id="e-login" autocomplete="off"></div>
+    <div class="card bar">
+      <h2 class="nomargin">👤 <span id="vault-name"></span></h2>
+      <div>
+        <button class="ghost small" id="b-audit" data-en="🛡 Audit">🛡 Аудит</button>
+        <button class="ghost small" id="b-settings" data-en="⚙ Settings">⚙ Настройки</button>
+        <button class="ghost small" id="b-logout" data-en="Log out">Выйти</button>
       </div>
-      <label>Пароль</label>
-      <div class="row"><input id="e-pass" autocomplete="off"><button class="ghost" id="b-gen" style="flex:0 0 auto">Сгенерировать</button></div>
-      <label>Заметки / описание</label>
-      <textarea id="e-note" style="min-height:64px;font-family:inherit" placeholder="Например: рабочая почта, ответ на секретный вопрос…"></textarea>
-      <button id="b-add">Добавить</button>
     </div>
+
+    <!-- Форма записи -->
+    <div class="card" id="form-card">
+      <h2 id="form-title" data-en="New entry">Новая запись</h2>
+      <div class="tabs" id="type-tabs">
+        <button class="tab active" data-type="login" data-en="🔑 Password">🔑 Пароль</button>
+        <button class="tab" data-type="note" data-en="📝 Note">📝 Заметка</button>
+        <button class="tab" data-type="card" data-en="💳 Card">💳 Карта</button>
+        <button class="tab" data-type="wifi" data-en="📶 Wi-Fi">📶 Wi-Fi</button>
+      </div>
+      <div class="row">
+        <div><label data-f="title" data-en="Site / name">Сайт / название</label><input id="e-title"></div>
+        <div data-show="login card"><label data-f="login" data-en="Login">Логин</label><input id="e-login" autocomplete="off"></div>
+      </div>
+      <div data-show="login"><label data-en="Website address">Адрес сайта</label><input id="e-url" type="url" placeholder="https://example.com" autocomplete="off"></div>
+      <div data-show="card" class="row">
+        <div><label data-en="Card number">Номер карты</label><input id="e-number" inputmode="numeric" autocomplete="off"></div>
+        <div class="row">
+          <div><label data-en="Expiry">Срок</label><input id="e-exp" placeholder="MM/YY" autocomplete="off"></div>
+          <div><label>CVV</label><input id="e-cvv" inputmode="numeric" autocomplete="off"></div>
+        </div>
+      </div>
+      <div data-show="login wifi card">
+        <label data-f="pass" data-en="Password">Пароль</label>
+        <div class="row nogap"><input id="e-pass" autocomplete="off"><button class="ghost shrink" id="b-gen" data-en="Generate">Сгенерировать</button><button class="ghost shrink" id="b-gen-opts" title="Настройки генератора">⚙</button></div>
+        <div class="meter"><div class="meter-bar" id="e-pass-bar"></div></div>
+        <div class="meter-text" id="e-pass-text"></div>
+        <div class="gen-opts hidden" id="gen-opts">
+          <div class="row">
+            <label class="chk"><input type="radio" name="gmode" value="chars" checked> <span data-en="Characters">Символы</span></label>
+            <label class="chk"><input type="radio" name="gmode" value="words"> <span data-en="Words">Слова</span></label>
+          </div>
+          <label><span data-en="Length:">Длина:</span> <span id="g-len-v">20</span></label>
+          <input type="range" id="g-len" min="8" max="64" value="20">
+          <div class="row chars-opts">
+            <label class="chk"><input type="checkbox" id="g-up" checked> A–Z</label>
+            <label class="chk"><input type="checkbox" id="g-low" checked> a–z</label>
+            <label class="chk"><input type="checkbox" id="g-dig" checked> 0–9</label>
+            <label class="chk"><input type="checkbox" id="g-sym" checked> !@#</label>
+          </div>
+        </div>
+      </div>
+      <div data-show="login">
+        <label data-en="2FA key (TOTP), optional">Ключ 2FA (TOTP), необязательно</label>
+        <input id="e-totp" autocomplete="off" spellcheck="false" placeholder="JBSWY3DPEHPK3PXP / otpauth://…">
+      </div>
+      <div class="row">
+        <div><label data-en="Category">Категория</label><input id="e-cat" list="cat-list" data-en-ph="Social, Banks, Work…" placeholder="Соцсети, Банки, Работа…"><datalist id="cat-list"></datalist></div>
+        <div class="fav-wrap"><label class="chk"><input type="checkbox" id="e-fav"> <span data-en="★ Favorite">★ Избранное</span></label></div>
+      </div>
+      <label data-en="Notes / description">Заметки / описание</label>
+      <textarea id="e-note" class="note-input" data-en-ph="For example: work email, security question answer…" placeholder="Например: рабочая почта, ответ на секретный вопрос…"></textarea>
+      <div class="err" id="form-err"></div>
+      <button id="b-add" data-en="Add">Добавить</button>
+      <button class="ghost hidden" id="b-edit-cancel" data-en="Cancel editing">Отменить изменения</button>
+    </div>
+
+    <!-- Список -->
     <div class="card">
-      <h2>Мои пароли</h2>
-      <input id="search" placeholder="Поиск…">
+      <h2 data-en="My entries">Мои записи</h2>
+      <div class="row nogap">
+        <input id="search" data-en-ph="Search…" placeholder="Поиск…">
+        <select id="sort" class="shrink">
+          <option value="title" data-en="A → Z">А → Я</option>
+          <option value="updated" data-en="Recently changed">Недавно изменённые</option>
+          <option value="used" data-en="Recently used">Недавно использованные</option>
+          <option value="created" data-en="Newest first">Новые сверху</option>
+        </select>
+      </div>
+      <div class="chips" id="chips"></div>
       <div id="list"></div>
     </div>
+
     <div class="card">
-      <button class="ghost" id="b-export">Скачать резервную копию</button>
-      <button class="ghost" id="b-xlsx">Выгрузить в Excel</button>
-            <button class="ghost" data-guide>📖 Инструкция</button>
-      <button class="danger" id="b-wipe">Удалить профиль с устройства</button>
-      <p class="sub" style="margin:8px 0 0">Резервная копия зашифрована. Открыть её можно только вашей секретной фразой.</p>
+      <button class="ghost" id="b-export" data-en="Download backup">Скачать резервную копию</button>
+      <button class="ghost" id="b-xlsx" data-en="Export to Excel">Выгрузить в Excel</button>
+      <button class="ghost" id="b-import" data-en="Import">Импорт</button>
+      <input type="file" id="import-file" class="hidden" accept=".csv,.xlsx,text/csv">
+      <button class="ghost" data-guide data-en="📖 Guide">📖 Инструкция</button>
+      <button class="danger" id="b-wipe" data-en="Delete profile from device">Удалить профиль с устройства</button>
+      <p class="sub tight" data-en="The backup is encrypted. Only your secret phrase can open it.">Резервная копия зашифрована. Открыть её можно только вашей секретной фразой.</p>
     </div>
+  </section>
+
+  <!-- Настройки профиля -->
+  <section id="v-settings" class="card hidden">
+    <h2 data-en="Change master password">Смена мастер-пароля</h2>
+    <label data-en="Current password">Текущий пароль</label>
+    <input type="password" id="cp-old" autocomplete="current-password">
+    <label data-en="New password">Новый пароль</label>
+    <input type="password" id="cp-new1" autocomplete="new-password">
+    <div class="meter"><div class="meter-bar" id="cp-new1-bar"></div></div>
+    <div class="meter-text" id="cp-new1-text"></div>
+    <label data-en="Repeat new password">Повторите новый пароль</label>
+    <input type="password" id="cp-new2" autocomplete="new-password">
+    <div class="err" id="cp-err"></div>
+    <button id="b-cp" data-en="Change password">Сменить пароль</button>
+    <h2 class="spaced" data-en="Profile name">Название профиля</h2>
+    <input id="rename" maxlength="40">
+    <button class="ghost" id="b-rename" data-en="Rename">Переименовать</button>
+    <h2 class="spaced" data-en="Auto-lock">Автоблокировка</h2>
+    <p class="sub tight" data-en="The profile closes after 5 minutes of inactivity or 1 minute after you leave the tab.">Профиль закрывается через 5 минут бездействия или через 1 минуту после ухода с вкладки.</p>
+    <div class="spaced"><button class="ghost" data-back-vault data-en="← Back">← Назад</button></div>
+  </section>
+
+  <!-- Аудит -->
+  <section id="v-audit" class="card hidden">
+    <h2 data-en="Password audit">Аудит паролей</h2>
+    <div id="audit-body"></div>
+    <div class="spaced">
+      <button id="b-hibp" data-en="Check for leaks">Проверить утечки</button>
+      <button class="ghost" data-back-vault data-en="← Back">← Назад</button>
+    </div>
+    <p class="sub tight" data-en-html="The leak check uses the Have I Been Pwned service. Only the first 5 characters of a SHA-1 hash of each password are sent — not the password itself. &lt;b&gt;The service cannot learn your passwords.&lt;/b&gt;">Проверка утечек использует сервис Have I Been Pwned. Отправляются только первые 5 символов SHA-1-хеша каждого пароля, а не сам пароль. <b>Сервис не может узнать ваши пароли.</b></p>
+  </section>
+
+  <!-- Импорт -->
+  <section id="v-import" class="card hidden">
+    <h2 data-en="Import">Импорт</h2>
+    <div id="import-body"></div>
+    <div class="err" id="import-err"></div>
+    <button id="b-import-go" data-en="Import">Импортировать</button>
+    <button class="ghost" data-back-vault data-en="Cancel">Отмена</button>
   </section>
 
   <!-- Инструкция -->
   <section id="v-guide" class="hidden">
-    <div class="card guide">
+    <div class="card guide" id="guide-ru">
       <h2>Инструкция</h2>
-      <p class="lead" style="margin-bottom:4px">Часть 1. Как пользоваться</p>
-
+      <p class="part">Часть 1. Как пользоваться</p>
       <h3><i>A</i>Создание профиля</h3>
       <ul>
         <li>На главной нажмите <b>«Создать новый профиль»</b>.</li>
-        <li>Появятся 12 слов — перепишите их на бумагу по порядку и нажмите «Я записал(а)».</li>
-        <li>Введите 3 слова, которые попросит Vault: так он убедится, что фраза записана верно.</li>
-        <li>Придумайте название профиля (например «Личное») и мастер-пароль. Готово — вы внутри.</li>
+        <li>Перепишите 12 слов на бумагу по порядку и нажмите «Я записал(а)». Затем введите 3 слова, которые попросит Vault.</li>
+        <li>Задайте название профиля и мастер-пароль. Полоска под полем показывает надёжность: пароль ниже уровня «Средний» Vault не примет.</li>
       </ul>
-
-      <h3><i>B</i>Добавление паролей</h3>
+      <h3><i>B</i>Типы записей</h3>
       <ul>
-        <li>Заполните «Сайт / название», «Логин» и «Пароль». Кнопка <b>«Сгенерировать»</b> создаст надёжный случайный пароль из 20 символов.</li>
-        <li>В «Заметках» можно указать, для чего этот аккаунт, ответ на секретный вопрос и что угодно ещё.</li>
-        <li>Нажмите <b>«Добавить»</b> — запись сразу зашифруется и сохранится.</li>
+        <li>Вкладки над формой: <b>🔑 Пароль</b> (сайты и приложения), <b>📝 Заметка</b> (любой секретный текст), <b>💳 Карта</b> (номер, срок, CVV, PIN), <b>📶 Wi-Fi</b>.</li>
+        <li>Для паролей можно указать адрес сайта — появится кнопка <b>↗</b>, которая откроет его.</li>
+        <li><b>Категория</b> (например «Банки») и <b>★ Избранное</b> помогают навести порядок: избранное всегда сверху.</li>
       </ul>
-
-      <h3><i>C</i>Работа с записями</h3>
+      <h3><i>C</i>Генератор паролей</h3>
       <ul>
-        <li><b>Поиск</b> ищет по названию, логину и заметкам.</li>
-        <li><b>👁</b> — показать или скрыть пароль, <b>«Копировать»</b> — скопировать в буфер обмена, <b>✕</b> — удалить запись.</li>
+        <li>Кнопка <b>«Сгенерировать»</b> создаёт случайный пароль. Кнопка <b>⚙</b> рядом открывает настройки: длина, наборы символов или режим <b>«Слова»</b> — легко запоминаемый пароль вида <code>Лодка-ветер-синий-42</code> на английских словах.</li>
       </ul>
-
-      <h3><i>D</i>Вход и выход</h3>
+      <h3><i>D</i>Коды двухфакторной защиты (2FA)</h3>
       <ul>
-        <li>На главной выберите профиль, нажмите «Войти» и введите мастер-пароль.</li>
-        <li>Кнопка <b>«Выйти»</b> вверху или клик по логотипу VAULT закрывают профиль.</li>
-        <li>Профилей может быть несколько — у каждого своя фраза, пароль и записи.</li>
+        <li>В поле «Ключ 2FA» вставьте секретный ключ, который сайт показывает при включении 2FA (или ссылку <code>otpauth://</code>). Vault будет показывать 6-значный код, как Google Authenticator.</li>
+        <li>Важно: если хранить коды 2FA рядом с паролями, тот, кто откроет профиль, получит и то и другое. Для самых важных аккаунтов (почта, банк) держите 2FA в отдельном приложении на телефоне.</li>
       </ul>
-
-      <h3><i>E</i>Резервная копия и перенос на другое устройство</h3>
+      <h3><i>E</i>Работа с записями</h3>
       <ul>
-        <li>Внутри профиля нажмите <b>«Скачать резервную копию»</b> — скачается зашифрованный файл <code>.json</code>.</li>
-        <li>На новом устройстве или в другом браузере откройте Vault, нажмите <b>«Восстановить по секретной фразе»</b>, введите 12 слов и выберите этот файл. Затем задайте мастер-пароль.</li>
-        <li>Без файла по фразе откроется пустой профиль — записи хранятся только в браузере и в ваших копиях.</li>
+        <li><b>Поиск</b> — по названию, логину, сайту, категории и заметкам. <b>Фильтры</b> под поиском — по типу, категории и избранному. Справа — сортировка.</li>
+        <li><b>👁</b> показать, <b>👤</b> копировать логин, <b>«Пароль»</b> копировать пароль, <b>2FA</b> копировать код, <b>↗</b> открыть сайт, <b>☆</b> избранное, <b>✎</b> изменить, <b>✕</b> удалить.</li>
+        <li>Скопированное удаляется из буфера обмена через 30 секунд.</li>
       </ul>
-
-      <h3><i>F</i>Забыли мастер-пароль</h3>
+      <h3><i>F</i>Аудит паролей</h3>
       <ul>
-        <li>На экране входа нажмите <b>«Забыл пароль»</b>, введите 12 слов и задайте новый пароль. Записи сохранятся.</li>
+        <li>Кнопка <b>🛡 Аудит</b> вверху показывает оценку из 100 и списки: слабые, повторяющиеся и не менявшиеся больше года пароли. Нажмите ✎, чтобы сразу исправить.</li>
+        <li><b>«Проверить утечки»</b> сверяет пароли с базой утёкших паролей Have I Been Pwned. Сами пароли никуда не отправляются — только первые 5 символов их хеша.</li>
       </ul>
-
-      <h3><i>G</i>Выгрузка в Excel</h3>
+      <h3><i>G</i>Вход, выход, профили, настройки</h3>
       <ul>
-        <li>Кнопка <b>«Выгрузить в Excel»</b> скачает таблицу со всеми паролями профиля. Файл не зашифрован — смотрите правила ниже.</li>
+        <li>На главной выберите профиль и введите мастер-пароль. После 3 неверных попыток вход временно блокируется, и с каждой ошибкой пауза растёт.</li>
+        <li><b>«Выйти»</b> или клик по логотипу закрывают профиль. Vault закрывается сам через 5 минут бездействия или через минуту после ухода с вкладки.</li>
+        <li><b>⚙ Настройки</b> — смена мастер-пароля и названия профиля.</li>
       </ul>
-
-      <h3><i>H</i>Удаление профиля</h3>
+      <h3><i>H</i>Резервная копия и перенос</h3>
       <ul>
-        <li><b>«Удалить профиль с устройства»</b> стирает его из этого браузера. Вернуть можно только по фразе и резервной копии.</li>
+        <li><b>«Скачать резервную копию»</b> — зашифрованный файл <code>.json</code>. Открыть его можно только вашей фразой.</li>
+        <li>На другом устройстве: <b>«Восстановить по секретной фразе»</b> → 12 слов → файл копии → новый мастер-пароль.</li>
+        <li>Забыли мастер-пароль — на экране входа нажмите «Забыл пароль» и введите фразу. Записи сохранятся.</li>
       </ul>
-
-      <p class="lead" style="margin:32px 0 4px">Часть 2. Как не дать себя взломать</p>
-      <p class="lead">Vault шифрует всё на вашем устройстве. Взломать его можно только через вас: через вашу фразу, пароль или устройство. Эти правила закрывают такие пути.</p>
-
-      <h3><i>01</i>Секретная фраза из 12 слов</h3>
+      <h3><i>I</i>Импорт и Excel</h3>
       <ul>
-        <li><b>Запишите от руки на бумаге</b> и храните дома в надёжном месте. Можно сделать две копии в разных местах.</li>
-        <li><b>Никогда</b> не фотографируйте фразу, не храните в заметках телефона, облаке, почте или мессенджерах и не отправляйте её никому.</li>
-        <li>Фраза — это полный доступ к профилю. Тот, кто её знает, может открыть все ваши пароли без мастер-пароля.</li>
+        <li><b>«Импорт»</b> принимает CSV из Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password и файлы Excel (.xlsx). Повторы пропускаются. После импорта удалите исходный файл.</li>
+        <li><b>«Выгрузить в Excel»</b> — таблица со всеми записями. Файл не зашифрован.</li>
+      </ul>
+      <h3><i>J</i>Приложение, тема и язык</h3>
+      <ul>
+        <li>Кнопка <b>«Установить»</b> вверху (или «Добавить на главный экран» в меню браузера на телефоне) ставит Vault как приложение. Оно работает и без интернета.</li>
+        <li>☀ / ☾ — светлая и тёмная тема, EN / RU — язык интерфейса.</li>
       </ul>
 
+      <p class="part">Часть 2. Как не дать себя взломать</p>
+      <p class="lead">Vault шифрует всё на вашем устройстве. Взломать его можно только через вас: через вашу фразу, пароль или устройство.</p>
+      <h3><i>01</i>Секретная фраза</h3>
+      <ul>
+        <li><b>Запишите от руки на бумаге</b> и храните дома. Можно сделать две копии в разных местах.</li>
+        <li><b>Никогда</b> не фотографируйте фразу, не храните в заметках, облаке, почте или мессенджерах и никому не отправляйте.</li>
+        <li>Фраза — это полный доступ к профилю без мастер-пароля.</li>
+      </ul>
       <h3><i>02</i>Мастер-пароль</h3>
       <ul>
-        <li>Делайте его <b>длинным</b>: лучше фраза из 4–5 случайных слов, например <code>лодка-ветер-синий-утюг-42</code>, чем короткий сложный пароль.</li>
-        <li>Не используйте его больше нигде: ни на сайтах, ни в почте.</li>
-        <li>Забыли пароль — войдите по секретной фразе и задайте новый.</li>
+        <li>Длинная фраза из 4–5 случайных слов надёжнее короткого сложного пароля. Добейтесь отметки «Хороший» или «Отличный».</li>
+        <li>Не используйте его больше нигде.</li>
       </ul>
-
-      <h3><i>03</i>Нас невозможно «попросить помочь»</h3>
+      <h3><i>03</i>Мошенники</h3>
       <ul>
-        <li>У Vault нет поддержки, которая может восстановить доступ, и нет аккаунтов. <b>Никто от имени Vault никогда не попросит</b> вашу фразу, пароль или файл резервной копии.</li>
-        <li>Если кто-то пишет «от разработчика» и просит фразу — это мошенник.</li>
+        <li>У Vault нет поддержки и аккаунтов. <b>Никто от имени Vault никогда не попросит</b> фразу, пароль или файл копии. Кто просит — мошенник.</li>
       </ul>
-
-      <h3><i>04</i>Проверяйте адрес сайта</h3>
+      <h3><i>04</i>Адрес сайта</h3>
       <ul>
-        <li>Открывайте Vault только по адресу <code>noname15092025-ctrl.github.io/seif</code>. Добавьте его в закладки и заходите оттуда, а не по ссылкам из писем и сообщений.</li>
-        <li>Мошенники делают копии сайтов, которые выглядят так же. Поддельный сайт может украсть то, что вы введёте.</li>
-        <li>Для максимальной надёжности сохраните страницу себе (Ctrl+S) и открывайте файл с компьютера: он работает без интернета.</li>
+        <li>Открывайте Vault только по адресу <code>noname15092025-ctrl.github.io/seif</code> — из закладки или установленного приложения, а не по ссылкам из писем и сообщений.</li>
+        <li>Поддельная копия сайта может украсть то, что вы введёте.</li>
       </ul>
-
       <h3><i>05</i>Устройство</h3>
       <ul>
-        <li>Пользуйтесь Vault только на своём устройстве. Не входите на чужих и общих компьютерах.</li>
-        <li>Обновляйте систему и браузер, поставьте блокировку экрана паролем или отпечатком.</li>
-        <li>Не устанавливайте сомнительные программы и расширения браузера: они могут подсматривать, что вы вводите.</li>
-        <li>Нажимайте «Выйти», когда закончили. Через 5 минут бездействия Vault закрывается сам.</li>
+        <li>Только своё устройство, с обновлениями и блокировкой экрана. Не входите на чужих и общих компьютерах.</li>
+        <li>Не ставьте сомнительные программы и расширения браузера: они могут подсматривать ввод.</li>
       </ul>
-
-      <h3><i>06</i>Резервные копии и Excel</h3>
+      <h3><i>06</i>Копии и файлы</h3>
       <ul>
-        <li><b>Скачивайте резервную копию</b> после важных изменений. Она зашифрована, открыть её можно только вашей фразой. Храните её на флешке или в облаке.</li>
-        <li>Данные хранятся в браузере. Если очистить данные сайта или переустановить браузер, без резервной копии записи пропадут.</li>
-        <li><b>Файл Excel не зашифрован.</b> Выгружайте его только при необходимости и удаляйте сразу после использования, включая корзину.</li>
-        <li>Скопированный пароль удаляется из буфера обмена через 30 секунд.</li>
+        <li>Скачивайте резервную копию после важных изменений и храните на флешке или в облаке. Без неё при очистке браузера записи пропадут.</li>
+        <li>Файлы Excel и CSV для импорта не зашифрованы — удаляйте их сразу, включая корзину.</li>
       </ul>
-
       <h3><i>07</i>Если что-то пошло не так</h3>
       <ul>
-        <li>Подозреваете, что фразу кто-то увидел, — создайте новый профиль, перенесите пароли и смените важные пароли на самих сайтах. Старый профиль удалите.</li>
-        <li>Потеряли устройство — ваши данные зашифрованы, но на всякий случай смените мастер-пароль на других устройствах, а пароли от важных сайтов — на самих сайтах.</li>
+        <li>Фразу могли увидеть — создайте новый профиль, перенесите записи через Excel и импорт, смените важные пароли на самих сайтах, удалите старый профиль.</li>
+        <li>Потеряли устройство — данные зашифрованы, но смените пароли от важных сайтов.</li>
+      </ul>
+      <div class="warn">Если потеряны и фраза, и пароль — доступ не восстановит никто, даже разработчик. Это и есть гарантия, что никто другой тоже не войдёт.</div>
+      <button data-guide-back>← Назад</button>
+    </div>
+    <div class="card guide hidden" id="guide-en">
+      <h2>Guide</h2>
+      <p class="part">Part 1. How to use it</p>
+      <h3><i>A</i>Creating a profile</h3>
+      <ul>
+        <li>On the home screen click <b>“Create new profile”</b>.</li>
+        <li>Write the 12 words on paper in order and click “I wrote it down”. Then enter the 3 words Vault asks for.</li>
+        <li>Set a profile name and a master password. The bar under the field shows its strength: Vault won't accept anything below “Fair”.</li>
+      </ul>
+      <h3><i>B</i>Entry types</h3>
+      <ul>
+        <li>Tabs above the form: <b>🔑 Password</b> (sites and apps), <b>📝 Note</b> (any secret text), <b>💳 Card</b> (number, expiry, CVV, PIN), <b>📶 Wi-Fi</b>.</li>
+        <li>For passwords you can add a website address — a <b>↗</b> button will open it.</li>
+        <li><b>Category</b> (e.g. “Banks”) and <b>★ Favorite</b> keep things organized: favorites are always on top.</li>
+      </ul>
+      <h3><i>C</i>Password generator</h3>
+      <ul>
+        <li><b>“Generate”</b> creates a random password. The <b>⚙</b> button next to it opens options: length, character sets, or <b>“Words”</b> mode for a memorable password like <code>Boat-wind-blue-42</code>.</li>
+      </ul>
+      <h3><i>D</i>Two-factor codes (2FA)</h3>
+      <ul>
+        <li>Paste the secret key a site shows when you enable 2FA (or an <code>otpauth://</code> link) into the “2FA key” field. Vault will show the 6-digit code, like Google Authenticator.</li>
+        <li>Note: if 2FA codes live next to passwords, anyone who opens the profile gets both. For the most important accounts (email, bank) keep 2FA in a separate app on your phone.</li>
+      </ul>
+      <h3><i>E</i>Working with entries</h3>
+      <ul>
+        <li><b>Search</b> covers name, login, site, category and notes. <b>Filters</b> below it — by type, category and favorites. Sorting is on the right.</li>
+        <li><b>👁</b> show, <b>👤</b> copy login, <b>“Password”</b> copy password, <b>2FA</b> copy code, <b>↗</b> open site, <b>☆</b> favorite, <b>✎</b> edit, <b>✕</b> delete.</li>
+        <li>Copied data is cleared from the clipboard after 30 seconds.</li>
+      </ul>
+      <h3><i>F</i>Password audit</h3>
+      <ul>
+        <li><b>🛡 Audit</b> at the top shows a score out of 100 and lists of weak, reused and year-old passwords. Click ✎ to fix one right away.</li>
+        <li><b>“Check for leaks”</b> compares your passwords with the Have I Been Pwned database. Passwords are never sent — only the first 5 characters of their hash.</li>
+      </ul>
+      <h3><i>G</i>Sign in, log out, profiles, settings</h3>
+      <ul>
+        <li>On the home screen pick a profile and enter its master password. After 3 wrong attempts sign-in is paused, and the pause grows with each mistake.</li>
+        <li><b>“Log out”</b> or clicking the logo closes the profile. Vault also closes itself after 5 minutes of inactivity or a minute after you leave the tab.</li>
+        <li><b>⚙ Settings</b> — change the master password and profile name.</li>
+      </ul>
+      <h3><i>H</i>Backup and moving devices</h3>
+      <ul>
+        <li><b>“Download backup”</b> gives an encrypted <code>.json</code> file. Only your phrase can open it.</li>
+        <li>On another device: <b>“Restore with secret phrase”</b> → 12 words → backup file → new master password.</li>
+        <li>Forgot the master password — click “Forgot password” on the sign-in screen and enter the phrase. Your entries stay.</li>
+      </ul>
+      <h3><i>I</i>Import and Excel</h3>
+      <ul>
+        <li><b>“Import”</b> accepts CSV from Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password and Excel (.xlsx) files. Duplicates are skipped. Delete the source file afterwards.</li>
+        <li><b>“Export to Excel”</b> — a table with all entries. The file is not encrypted.</li>
+      </ul>
+      <h3><i>J</i>App, theme and language</h3>
+      <ul>
+        <li>The <b>“Install app”</b> button at the top (or “Add to Home screen” in your phone browser's menu) installs Vault as an app. It also works offline.</li>
+        <li>☀ / ☾ — light and dark theme, EN / RU — interface language.</li>
       </ul>
 
-      <div class="warn">Помните: если потеряны и фраза, и пароль — доступ не восстановит никто, даже разработчик. Это и есть гарантия, что никто другой тоже не войдёт.</div>
-      <button id="b-guide-back">← На главную</button>
+      <p class="part">Part 2. How not to get hacked</p>
+      <p class="lead">Vault encrypts everything on your device. The only way in is through you: your phrase, your password or your device.</p>
+      <h3><i>01</i>Secret phrase</h3>
+      <ul>
+        <li><b>Write it by hand on paper</b> and keep it at home. You can make two copies in different places.</li>
+        <li><b>Never</b> photograph it, store it in notes, cloud, email or messengers, or send it to anyone.</li>
+        <li>The phrase is full access to the profile without the master password.</li>
+      </ul>
+      <h3><i>02</i>Master password</h3>
+      <ul>
+        <li>A long phrase of 4–5 random words beats a short complex password. Aim for “Good” or “Strong”.</li>
+        <li>Don't use it anywhere else.</li>
+      </ul>
+      <h3><i>03</i>Scammers</h3>
+      <ul>
+        <li>Vault has no support team and no accounts. <b>Nobody on behalf of Vault will ever ask</b> for your phrase, password or backup file. Anyone who asks is a scammer.</li>
+      </ul>
+      <h3><i>04</i>Site address</h3>
+      <ul>
+        <li>Open Vault only at <code>noname15092025-ctrl.github.io/seif</code> — from a bookmark or the installed app, not from links in emails or messages.</li>
+        <li>A fake copy of the site can steal what you type.</li>
+      </ul>
+      <h3><i>05</i>Your device</h3>
+      <ul>
+        <li>Use only your own device, kept updated and with a screen lock. Don't sign in on shared computers.</li>
+        <li>Avoid dubious programs and browser extensions: they can spy on your typing.</li>
+      </ul>
+      <h3><i>06</i>Backups and files</h3>
+      <ul>
+        <li>Download a backup after important changes and keep it on a USB stick or in the cloud. Without it, clearing the browser loses your entries.</li>
+        <li>Excel files and CSV files for import are not encrypted — delete them right away, including from the trash.</li>
+      </ul>
+      <h3><i>07</i>If something goes wrong</h3>
+      <ul>
+        <li>Someone may have seen the phrase — create a new profile, move entries via Excel and import, change important passwords on the sites themselves, delete the old profile.</li>
+        <li>Lost a device — data is encrypted, but change passwords for important sites anyway.</li>
+      </ul>
+      <div class="warn">If both the phrase and the password are lost, nobody can restore access — not even the developer. That's exactly the guarantee that nobody else can get in either.</div>
+      <button data-guide-back>← Back</button>
     </div>
   </section>
 
   <section id="v-loading" class="card"><p class="sub" id="loading-msg">Загрузка…</p></section>
+
+  <div class="modal hidden" id="modal"><div class="modal-box"><p id="modal-text"></p><div id="modal-btns"></div></div></div>
+  <div class="toast hidden" id="toast"></div>
 </main>
-
-<script>
-"use strict";
-/* ================== Криптография ==================
-   Схема:
-   - энтропия 128 бит → 12 слов (BIP39); при восстановлении принимаются 12/15/18/21/24
-   - фраза → seed (PBKDF2-SHA512, 2048 итераций, стандарт BIP39)
-   - seed → vaultKey (HKDF-SHA256) — шифрует данные (AES-256-GCM)
-   - мастер-пароль → wrapKey (PBKDF2-SHA256, 600 000 итераций) — шифрует vaultKey на этом устройстве
-   В localStorage лежат только зашифрованные данные. Ключи живут лишь в памяти вкладки.
-*/
-// Официальный словарь BIP39 (english.txt), встроен в страницу. SHA-256 файла сверяется при запуске.
-const WORDLIST = "abandon ability able about above absent absorb abstract absurd abuse access accident account accuse achieve acid acoustic acquire across act action actor actress actual adapt add addict address adjust admit adult advance advice aerobic affair afford afraid again age agent agree ahead aim air airport aisle alarm album alcohol alert alien all alley allow almost alone alpha already also alter always amateur amazing among amount amused analyst anchor ancient anger angle angry animal ankle announce annual another answer antenna antique anxiety any apart apology appear apple approve april arch arctic area arena argue arm armed armor army around arrange arrest arrive arrow art artefact artist artwork ask aspect assault asset assist assume asthma athlete atom attack attend attitude attract auction audit august aunt author auto autumn average avocado avoid awake aware away awesome awful awkward axis baby bachelor bacon badge bag balance balcony ball bamboo banana banner bar barely bargain barrel base basic basket battle beach bean beauty because become beef before begin behave behind believe below belt bench benefit best betray better between beyond bicycle bid bike bind biology bird birth bitter black blade blame blanket blast bleak bless blind blood blossom blouse blue blur blush board boat body boil bomb bone bonus book boost border boring borrow boss bottom bounce box boy bracket brain brand brass brave bread breeze brick bridge brief bright bring brisk broccoli broken bronze broom brother brown brush bubble buddy budget buffalo build bulb bulk bullet bundle bunker burden burger burst bus business busy butter buyer buzz cabbage cabin cable cactus cage cake call calm camera camp can canal cancel candy cannon canoe canvas canyon capable capital captain car carbon card cargo carpet carry cart case cash casino castle casual cat catalog catch category cattle caught cause caution cave ceiling celery cement census century cereal certain chair chalk champion change chaos chapter charge chase chat cheap check cheese chef cherry chest chicken chief child chimney choice choose chronic chuckle chunk churn cigar cinnamon circle citizen city civil claim clap clarify claw clay clean clerk clever click client cliff climb clinic clip clock clog close cloth cloud clown club clump cluster clutch coach coast coconut code coffee coil coin collect color column combine come comfort comic common company concert conduct confirm congress connect consider control convince cook cool copper copy coral core corn correct cost cotton couch country couple course cousin cover coyote crack cradle craft cram crane crash crater crawl crazy cream credit creek crew cricket crime crisp critic crop cross crouch crowd crucial cruel cruise crumble crunch crush cry crystal cube culture cup cupboard curious current curtain curve cushion custom cute cycle dad damage damp dance danger daring dash daughter dawn day deal debate debris decade december decide decline decorate decrease deer defense define defy degree delay deliver demand demise denial dentist deny depart depend deposit depth deputy derive describe desert design desk despair destroy detail detect develop device devote diagram dial diamond diary dice diesel diet differ digital dignity dilemma dinner dinosaur direct dirt disagree discover disease dish dismiss disorder display distance divert divide divorce dizzy doctor document dog doll dolphin domain donate donkey donor door dose double dove draft dragon drama drastic draw dream dress drift drill drink drip drive drop drum dry duck dumb dune during dust dutch duty dwarf dynamic eager eagle early earn earth easily east easy echo ecology economy edge edit educate effort egg eight either elbow elder electric elegant element elephant elevator elite else embark embody embrace emerge emotion employ empower empty enable enact end endless endorse enemy energy enforce engage engine enhance enjoy enlist enough enrich enroll ensure enter entire entry envelope episode equal equip era erase erode erosion error erupt escape essay essence estate eternal ethics evidence evil evoke evolve exact example excess exchange excite exclude excuse execute exercise exhaust exhibit exile exist exit exotic expand expect expire explain expose express extend extra eye eyebrow fabric face faculty fade faint faith fall false fame family famous fan fancy fantasy farm fashion fat fatal father fatigue fault favorite feature february federal fee feed feel female fence festival fetch fever few fiber fiction field figure file film filter final find fine finger finish fire firm first fiscal fish fit fitness fix flag flame flash flat flavor flee flight flip float flock floor flower fluid flush fly foam focus fog foil fold follow food foot force forest forget fork fortune forum forward fossil foster found fox fragile frame frequent fresh friend fringe frog front frost frown frozen fruit fuel fun funny furnace fury future gadget gain galaxy gallery game gap garage garbage garden garlic garment gas gasp gate gather gauge gaze general genius genre gentle genuine gesture ghost giant gift giggle ginger giraffe girl give glad glance glare glass glide glimpse globe gloom glory glove glow glue goat goddess gold good goose gorilla gospel gossip govern gown grab grace grain grant grape grass gravity great green grid grief grit grocery group grow grunt guard guess guide guilt guitar gun gym habit hair half hammer hamster hand happy harbor hard harsh harvest hat have hawk hazard head health heart heavy hedgehog height hello helmet help hen hero hidden high hill hint hip hire history hobby hockey hold hole holiday hollow home honey hood hope horn horror horse hospital host hotel hour hover hub huge human humble humor hundred hungry hunt hurdle hurry hurt husband hybrid ice icon idea identify idle ignore ill illegal illness image imitate immense immune impact impose improve impulse inch include income increase index indicate indoor industry infant inflict inform inhale inherit initial inject injury inmate inner innocent input inquiry insane insect inside inspire install intact interest into invest invite involve iron island isolate issue item ivory jacket jaguar jar jazz jealous jeans jelly jewel job join joke journey joy judge juice jump jungle junior junk just kangaroo keen keep ketchup key kick kid kidney kind kingdom kiss kit kitchen kite kitten kiwi knee knife knock know lab label labor ladder lady lake lamp language laptop large later latin laugh laundry lava law lawn lawsuit layer lazy leader leaf learn leave lecture left leg legal legend leisure lemon lend length lens leopard lesson letter level liar liberty library license life lift light like limb limit link lion liquid list little live lizard load loan lobster local lock logic lonely long loop lottery loud lounge love loyal lucky luggage lumber lunar lunch luxury lyrics machine mad magic magnet maid mail main major make mammal man manage mandate mango mansion manual maple marble march margin marine market marriage mask mass master match material math matrix matter maximum maze meadow mean measure meat mechanic medal media melody melt member memory mention menu mercy merge merit merry mesh message metal method middle midnight milk million mimic mind minimum minor minute miracle mirror misery miss mistake mix mixed mixture mobile model modify mom moment monitor monkey monster month moon moral more morning mosquito mother motion motor mountain mouse move movie much muffin mule multiply muscle museum mushroom music must mutual myself mystery myth naive name napkin narrow nasty nation nature near neck need negative neglect neither nephew nerve nest net network neutral never news next nice night noble noise nominee noodle normal north nose notable note nothing notice novel now nuclear number nurse nut oak obey object oblige obscure observe obtain obvious occur ocean october odor off offer office often oil okay old olive olympic omit once one onion online only open opera opinion oppose option orange orbit orchard order ordinary organ orient original orphan ostrich other outdoor outer output outside oval oven over own owner oxygen oyster ozone pact paddle page pair palace palm panda panel panic panther paper parade parent park parrot party pass patch path patient patrol pattern pause pave payment peace peanut pear peasant pelican pen penalty pencil people pepper perfect permit person pet phone photo phrase physical piano picnic picture piece pig pigeon pill pilot pink pioneer pipe pistol pitch pizza place planet plastic plate play please pledge pluck plug plunge poem poet point polar pole police pond pony pool popular portion position possible post potato pottery poverty powder power practice praise predict prefer prepare present pretty prevent price pride primary print priority prison private prize problem process produce profit program project promote proof property prosper protect proud provide public pudding pull pulp pulse pumpkin punch pupil puppy purchase purity purpose purse push put puzzle pyramid quality quantum quarter question quick quit quiz quote rabbit raccoon race rack radar radio rail rain raise rally ramp ranch random range rapid rare rate rather raven raw razor ready real reason rebel rebuild recall receive recipe record recycle reduce reflect reform refuse region regret regular reject relax release relief rely remain remember remind remove render renew rent reopen repair repeat replace report require rescue resemble resist resource response result retire retreat return reunion reveal review reward rhythm rib ribbon rice rich ride ridge rifle right rigid ring riot ripple risk ritual rival river road roast robot robust rocket romance roof rookie room rose rotate rough round route royal rubber rude rug rule run runway rural sad saddle sadness safe sail salad salmon salon salt salute same sample sand satisfy satoshi sauce sausage save say scale scan scare scatter scene scheme school science scissors scorpion scout scrap screen script scrub sea search season seat second secret section security seed seek segment select sell seminar senior sense sentence series service session settle setup seven shadow shaft shallow share shed shell sheriff shield shift shine ship shiver shock shoe shoot shop short shoulder shove shrimp shrug shuffle shy sibling sick side siege sight sign silent silk silly silver similar simple since sing siren sister situate six size skate sketch ski skill skin skirt skull slab slam sleep slender slice slide slight slim slogan slot slow slush small smart smile smoke smooth snack snake snap sniff snow soap soccer social sock soda soft solar soldier solid solution solve someone song soon sorry sort soul sound soup source south space spare spatial spawn speak special speed spell spend sphere spice spider spike spin spirit split spoil sponsor spoon sport spot spray spread spring spy square squeeze squirrel stable stadium staff stage stairs stamp stand start state stay steak steel stem step stereo stick still sting stock stomach stone stool story stove strategy street strike strong struggle student stuff stumble style subject submit subway success such sudden suffer sugar suggest suit summer sun sunny sunset super supply supreme sure surface surge surprise surround survey suspect sustain swallow swamp swap swarm swear sweet swift swim swing switch sword symbol symptom syrup system table tackle tag tail talent talk tank tape target task taste tattoo taxi teach team tell ten tenant tennis tent term test text thank that theme then theory there they thing this thought three thrive throw thumb thunder ticket tide tiger tilt timber time tiny tip tired tissue title toast tobacco today toddler toe together toilet token tomato tomorrow tone tongue tonight tool tooth top topic topple torch tornado tortoise toss total tourist toward tower town toy track trade traffic tragic train transfer trap trash travel tray treat tree trend trial tribe trick trigger trim trip trophy trouble truck true truly trumpet trust truth try tube tuition tumble tuna tunnel turkey turn turtle twelve twenty twice twin twist two type typical ugly umbrella unable unaware uncle uncover under undo unfair unfold unhappy uniform unique unit universe unknown unlock until unusual unveil update upgrade uphold upon upper upset urban urge usage use used useful useless usual utility vacant vacuum vague valid valley valve van vanish vapor various vast vault vehicle velvet vendor venture venue verb verify version very vessel veteran viable vibrant vicious victory video view village vintage violin virtual virus visa visit visual vital vivid vocal voice void volcano volume vote voyage wage wagon wait walk wall walnut want warfare warm warrior wash wasp waste water wave way wealth weapon wear weasel weather web wedding weekend weird welcome west wet whale what wheat wheel when where whip whisper wide width wife wild will win window wine wing wink winner winter wire wisdom wise wish witness wolf woman wonder wood wool word work world worry worth wrap wreck wrestle wrist write wrong yard year yellow you young youth zebra zero zone zoo";
-const WORDLIST_SHA256 = "2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda";
-const STORE = "seif.v2";
-const PBKDF2_ITERS = 600000;
-const enc = new TextEncoder(), dec = new TextDecoder();
-const C = crypto.subtle;
-let WORDS = null;
-
-const b64 = u8 => btoa(String.fromCharCode(...new Uint8Array(u8)));
-const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-const rand = n => crypto.getRandomValues(new Uint8Array(n));
-
-async function loadWordlist() {
-  const list = WORDLIST.split(" ");
-  const h = [...new Uint8Array(await C.digest("SHA-256", enc.encode(list.join("\n") + "\n")))].map(b => b.toString(16).padStart(2, "0")).join("");
-  if (h !== WORDLIST_SHA256) throw new Error("Словарь повреждён");
-  if (list.length !== 2048 || list[0] !== "abandon" || list[2047] !== "zoo") throw new Error("Словарь повреждён");
-  WORDS = list;
-  // Самопроверка по официальному тест-вектору BIP39 (128 бит нулей → "abandon ×11 about")
-  const t = await entropyToMnemonic(new Uint8Array(16));
-  if (t !== Array(11).fill("abandon").concat("about").join(" ")) throw new Error("Самопроверка BIP39 не пройдена");
-}
-
-async function entropyToMnemonic(ent) {
-  const hash = new Uint8Array(await C.digest("SHA-256", ent));
-  let bits = [...ent].map(b => b.toString(2).padStart(8, "0")).join("");
-  bits += hash[0].toString(2).padStart(8, "0").slice(0, ent.length / 4); // контрольная сумма: 1 бит на 32 бита энтропии
-  const out = [];
-  for (let i = 0; i < bits.length; i += 11) out.push(WORDS[parseInt(bits.slice(i, i + 11), 2)]);
-  return out.join(" ");
-}
-
-function normalizePhrase(s) { return s.normalize("NFKD").toLowerCase().trim().split(/\s+/).join(" "); }
-
-async function validateMnemonic(phrase) {
-  const words = phrase.split(" ");
-  if (![12, 15, 18, 21, 24].includes(words.length)) return "Нужно 12 слов (сейчас " + words.length + ")";
-  let bits = "";
-  for (const w of words) {
-    const i = WORDS.indexOf(w);
-    if (i < 0) return "Неизвестное слово: «" + w + "»";
-    bits += i.toString(2).padStart(11, "0");
-  }
-  const csLen = words.length / 3, entBits = bits.length - csLen;
-  const ent = new Uint8Array(entBits / 8);
-  for (let i = 0; i < ent.length; i++) ent[i] = parseInt(bits.slice(i * 8, i * 8 + 8), 2);
-  const hash = new Uint8Array(await C.digest("SHA-256", ent));
-  if (hash[0].toString(2).padStart(8, "0").slice(0, csLen) !== bits.slice(entBits)) return "Ошибка контрольной суммы. Проверьте порядок и написание слов";
-  return null;
-}
-
-async function phraseToVaultKey(phrase) {
-  const base = await C.importKey("raw", enc.encode(phrase), "PBKDF2", false, ["deriveBits"]);
-  const seed = await C.deriveBits({ name: "PBKDF2", hash: "SHA-512", salt: enc.encode("mnemonic"), iterations: 2048 }, base, 512);
-  const hk = await C.importKey("raw", seed, "HKDF", false, ["deriveKey"]);
-  return C.deriveKey({ name: "HKDF", hash: "SHA-256", salt: enc.encode("seif-vault-v1"), info: enc.encode("vault-key") },
-    hk, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
-}
-
-async function vaultId(key) {
-  const raw = await C.exportKey("raw", key);
-  return b64(await C.digest("SHA-256", raw)).slice(0, 16);
-}
-
-async function passwordToWrapKey(pw, salt) {
-  const base = await C.importKey("raw", enc.encode(pw), "PBKDF2", false, ["deriveKey"]);
-  return C.deriveKey({ name: "PBKDF2", hash: "SHA-256", salt, iterations: PBKDF2_ITERS }, base,
-    { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
-}
-
-async function seal(key, bytes) {
-  const iv = rand(12);
-  const ct = await C.encrypt({ name: "AES-GCM", iv }, key, bytes);
-  return { iv: b64(iv), ct: b64(ct) };
-}
-async function open(key, box) {
-  return new Uint8Array(await C.decrypt({ name: "AES-GCM", iv: unb64(box.iv) }, key, unb64(box.ct)));
-}
-
-/* ================== Состояние ================== */
-let vaultKey = null, entries = [], pendingPhrase = null, pendingKey = null, verifyIdx = [];
-
-let currentId = null;
-const store = {
-  all() { try { return JSON.parse(localStorage.getItem(STORE)) || []; } catch { return []; } },
-  save(a) { localStorage.setItem(STORE, JSON.stringify(a)); },
-  get() { return this.all().find(p => p.id === currentId) || null; },
-  set(p) { const a = this.all(); const i = a.findIndex(x => x.id === p.id); if (i < 0) a.push(p); else a[i] = p; this.save(a); },
-  remove(id) { this.save(this.all().filter(x => x.id !== id)); }
-};
-// перенос хранилища из первой версии
-try {
-  const old = JSON.parse(localStorage.getItem("seif.v1"));
-  if (old && !store.all().some(p => p.id === old.id)) { old.name = "Мой профиль"; store.set(old); }
-  localStorage.removeItem("seif.v1");
-} catch {}
-
-async function persist() {
-  const s = store.get();
-  s.vault = await seal(vaultKey, enc.encode(JSON.stringify(entries)));
-  store.set(s);
-}
-
-async function setupDevice(key, pw, vaultBox, name) {
-  const salt = rand(16);
-  const wrapKey = await passwordToWrapKey(pw, salt);
-  const raw = new Uint8Array(await C.exportKey("raw", key));
-  const wrapped = await seal(wrapKey, raw);
-  raw.fill(0);
-  const id = await vaultId(key);
-  const prev = store.all().find(p => p.id === id);
-  store.set({ v: 1, id, name: name || (prev && prev.name) || "Профиль", salt: b64(salt), iters: PBKDF2_ITERS, wrapped,
-              vault: vaultBox || await seal(key, enc.encode("[]")) });
-  currentId = id;
-}
-
-/* ================== Интерфейс ================== */
-const $ = id => document.getElementById(id);
-const views = ["start", "phrase", "verify", "setpw", "restore", "unlock", "vault", "guide", "loading"];
-function show(v) { views.forEach(x => $("v-" + x).classList.toggle("hidden", x !== v)); }
-function busy(btn, on) { btn.disabled = on; }
-function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
-
-function home() {
-  const list = store.all();
-  $("profiles").innerHTML = list.length ? list.map(p => `
-    <div class="entry"><div><b>👤 ${esc(p.name || "Профиль")}</b></div>
-    <button data-pid="${esc(p.id)}" style="flex:0 0 auto">Войти</button></div>`).join("")
-    : `<p class="sub">На этом устройстве пока нет профилей.</p>`;
-  show("start");
-}
-$("profiles").onclick = e => {
-  const id = e.target.dataset.pid; if (!id) return;
-  currentId = id; $("unlock-name").textContent = store.get().name || "Профиль";
-  $("unlock-err").textContent = ""; show("unlock"); $("unlock-pw").focus();
-};
-// Отмена создания / возврат на главную
-function cancelToHome() {
-  pendingPhrase = null; pendingKey = null; verifyIdx = [];
-  $("words").innerHTML = ""; $("verify-fields").innerHTML = "";
-  ["pw1", "pw2", "p-name", "restore-words", "unlock-pw"].forEach(id => $(id).value = "");
-  $("restore-file").value = "";
-  if (vaultKey) lock(); else { currentId = null; home(); }
-}
-let guideFrom = "start";
-document.querySelectorAll("[data-guide]").forEach(b => b.onclick = () => { guideFrom = vaultKey ? "vault" : "start"; show("guide"); scrollTo(0, 0); });
-$("b-guide-back").onclick = () => { if (guideFrom === "vault" && vaultKey) show("vault"); else cancelToHome(); };
-document.querySelectorAll("[data-cancel]").forEach(b => b.onclick = cancelToHome);
-$("logo").onclick = () => { if (WORDS) cancelToHome(); };
-$("b-other").onclick = () => { currentId = null; home(); };
-function openVault() { $("vault-name").textContent = store.get().name || "Профиль"; render(); show("vault"); resetIdle(); }
-
-$("b-new").onclick = async () => {
-  pendingPhrase = await entropyToMnemonic(rand(16));
-  $("words").innerHTML = pendingPhrase.split(" ").map((w, i) => `<div><span>${i + 1}</span>${w}</div>`).join("");
-  show("phrase");
-};
-$("b-phrase-ok").onclick = () => {
-  const set = new Set(); while (set.size < 3) set.add(Math.floor(Math.random() * 12));
-  verifyIdx = [...set].sort((a, b) => a - b);
-  $("verify-fields").innerHTML = verifyIdx.map(i => `<label>Слово №${i + 1}</label><input data-i="${i}" autocomplete="off" spellcheck="false">`).join("");
-  $("verify-err").textContent = ""; show("verify");
-};
-$("b-back-phrase").onclick = () => show("phrase");
-$("b-verify").onclick = async () => {
-  const w = pendingPhrase.split(" ");
-  const ok = [...$("verify-fields").querySelectorAll("input")].every(inp => inp.value.trim().toLowerCase() === w[+inp.dataset.i]);
-  if (!ok) { $("verify-err").textContent = "Слова не совпадают. Проверьте записанную фразу."; return; }
-  pendingKey = await phraseToVaultKey(pendingPhrase);
-  pendingPhrase = null; $("words").innerHTML = "";
-  show("setpw");
-};
-
-$("b-setpw").onclick = async (e) => {
-  const p1 = $("pw1").value, p2 = $("pw2").value, pname = $("p-name").value.trim();
-  if (p1.length < 10) { $("setpw-err").textContent = "Минимум 10 символов"; return; }
-  if (p1 !== p2) { $("setpw-err").textContent = "Пароли не совпадают"; return; }
-  busy(e.target, true);
-  try {
-    const existing = pendingKey._vaultBox || null;
-    await setupDevice(pendingKey, p1, existing, pname);
-    vaultKey = pendingKey; pendingKey = null;
-    entries = JSON.parse(dec.decode(await open(vaultKey, store.get().vault)));
-    $("pw1").value = $("pw2").value = $("p-name").value = ""; openVault();
-  } catch (err) { $("setpw-err").textContent = "Ошибка: " + err.message; }
-  busy(e.target, false);
-};
-
-$("b-restore").onclick = $("b-forgot").onclick = () => { $("restore-err").textContent = ""; show("restore"); };
-$("b-restore-cancel").onclick = home;
-$("b-restore-go").onclick = async (e) => {
-  const phrase = normalizePhrase($("restore-words").value);
-  const bad = await validateMnemonic(phrase);
-  if (bad) { $("restore-err").textContent = bad; return; }
-  busy(e.target, true);
-  try {
-    const key = await phraseToVaultKey(phrase);
-    const id = await vaultId(key);
-    let box = null;
-    const f = $("restore-file").files[0];
-    if (f) {
-      const backup = JSON.parse(await f.text());
-      if (backup.id !== id) throw new Error("Эта резервная копия от другой фразы");
-      box = backup.vault;
-    } else {
-      const s = store.all().find(p => p.id === id);
-      if (s) box = s.vault;
-    }
-    if (box) await open(key, box); // проверка, что расшифровывается
-    key._vaultBox = box; // если копии нет — создастся пустое хранилище для этой фразы
-    pendingKey = key;
-    $("restore-words").value = ""; $("restore-file").value = "";
-    $("setpw-err").textContent = ""; show("setpw");
-  } catch (err) { $("restore-err").textContent = err.message.includes("operation") ? "Не удалось расшифровать" : err.message; }
-  busy(e.target, false);
-};
-
-$("b-unlock").onclick = async (e) => {
-  const s = store.get(); busy(e.target, true);
-  try {
-    const wrapKey = await passwordToWrapKey($("unlock-pw").value, unb64(s.salt));
-    const raw = await open(wrapKey, s.wrapped);
-    vaultKey = await C.importKey("raw", raw, { name: "AES-GCM" }, true, ["encrypt", "decrypt"]);
-    raw.fill(0);
-    entries = JSON.parse(dec.decode(await open(vaultKey, s.vault)));
-    $("unlock-pw").value = ""; $("unlock-err").textContent = "";
-    openVault();
-  } catch { $("unlock-err").textContent = "Неверный пароль"; }
-  busy(e.target, false);
-};
-$("unlock-pw").addEventListener("keydown", e => { if (e.key === "Enter") $("b-unlock").click(); });
-
-function genPassword(len = 20) {
-  const cs = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*-_=+?";
-  const out = []; const lim = 256 - (256 % cs.length);
-  while (out.length < len) for (const b of rand(len * 2)) if (b < lim && out.length < len) out.push(cs[b % cs.length]);
-  return out.join("");
-}
-$("b-gen").onclick = () => { $("e-pass").value = genPassword(); };
-
-$("b-add").onclick = async () => {
-  const site = $("e-site").value.trim(), login = $("e-login").value.trim(), pass = $("e-pass").value, note = $("e-note").value.trim();
-  if (!site || !pass) return;
-  entries.push({ id: b64(rand(9)), site, login, pass, note, t: Date.now() });
-  await persist();
-  $("e-site").value = $("e-login").value = $("e-pass").value = $("e-note").value = "";
-  render();
-};
-
-function render() {
-  const q = $("search").value.toLowerCase();
-  const list = entries.filter(x => (x.site + " " + x.login + " " + (x.note || "")).toLowerCase().includes(q));
-  $("list").innerHTML = list.length ? list.map(x => `
-    <div class="entry" data-id="${esc(x.id)}">
-      <div><b>${esc(x.site)}</b><small>${esc(x.login)}</small><div class="pw" data-pw>••••••••</div>${x.note ? `<div class="note">${esc(x.note)}</div>` : ""}</div>
-      <div style="flex:0 0 auto">
-        <button class="ghost" data-act="show">👁</button>
-        <button class="ghost" data-act="copy">Копировать</button>
-        <button class="ghost" data-act="del">✕</button>
-      </div>
-    </div>`).join("") : `<p class="sub">Пока пусто.</p>`;
-}
-$("search").oninput = render;
-$("list").onclick = async (e) => {
-  const act = e.target.dataset.act; if (!act) return;
-  const row = e.target.closest(".entry"); const x = entries.find(y => y.id === row.dataset.id);
-  if (act === "show") { const el = row.querySelector("[data-pw]"); el.textContent = el.textContent.startsWith("•") ? x.pass : "••••••••"; }
-  if (act === "copy") { await navigator.clipboard.writeText(x.pass); e.target.textContent = "✓"; setTimeout(() => e.target.textContent = "Копировать", 1200);
-                        setTimeout(() => navigator.clipboard.writeText("").catch(() => {}), 30000); }
-  if (act === "del" && confirmDel(x.site)) { entries = entries.filter(y => y !== x); await persist(); render(); }
-};
-function confirmDel(name) { return window.confirm("Удалить запись «" + name + "»?"); }
-
-$("b-export").onclick = () => {
-  const s = store.get();
-  const blob = new Blob([JSON.stringify({ v: 1, id: s.id, vault: s.vault }, null, 1)], { type: "application/json" });
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-  a.download = "vault-backup-" + new Date().toISOString().slice(0, 10) + ".json"; a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-};
-
-/* ===== Выгрузка в Excel (.xlsx без сторонних библиотек) ===== */
-const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
-function crc32(u8) { let c = 0xFFFFFFFF; for (const b of u8) c = CRC_T[(c ^ b) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
-function zip(files) { // ZIP без сжатия (STORE)
-  const parts = [], central = []; let off = 0;
-  const le = (n, len) => { const a = new Uint8Array(len); for (let i = 0; i < len; i++) a[i] = (n >>> (8 * i)) & 255; return a; };
-  for (const [name, text] of files) {
-    const nm = enc.encode(name), data = enc.encode(text), crc = crc32(data);
-    const common = [le(20, 2), le(0, 2), le(0, 2), le(0, 2), le(0x21, 2), le(crc, 4), le(data.length, 4), le(data.length, 4), le(nm.length, 2), le(0, 2)];
-    const local = [le(0x04034b50, 4), ...common, nm, data];
-    central.push([le(0x02014b50, 4), le(20, 2), ...common, le(0, 2), le(0, 2), le(0, 2), le(0, 4), le(off, 4), nm]);
-    parts.push(...local); off += local.reduce((s, x) => s + x.length, 0);
-  }
-  const cd = central.flat(), cdSize = cd.reduce((s, x) => s + x.length, 0);
-  parts.push(...cd, le(0x06054b50, 4), le(0, 2), le(0, 2), le(files.length, 2), le(files.length, 2), le(cdSize, 4), le(off, 4), le(0, 2));
-  return new Blob(parts, { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-}
-function xmlEsc(v) { return String(v ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
-function buildXlsx(rows) {
-  const col = i => String.fromCharCode(65 + i);
-  const sheetRows = rows.map((r, ri) => `<row r="${ri + 1}">` + r.map((v, ci) =>
-    `<c r="${col(ci)}${ri + 1}" t="inlineStr"${ri === 0 ? ' s="1"' : ""}><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`).join("") + "</row>").join("");
-  const X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-  return zip([
-    ["[Content_Types].xml", X + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
-    ["_rels/.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
-    ["xl/workbook.xml", X + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Пароли" sheetId="1" r:id="rId1"/></sheets></workbook>'],
-    ["xl/_rels/workbook.xml.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
-    ["xl/styles.xml", X + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="2"><xf/><xf fontId="1" applyFont="1"/></cellXfs></styleSheet>'],
-    ["xl/worksheets/sheet1.xml", X + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="1" width="30" customWidth="1"/><col min="2" max="2" width="28" customWidth="1"/><col min="3" max="3" width="28" customWidth="1"/><col min="4" max="4" width="40" customWidth="1"/><col min="5" max="5" width="18" customWidth="1"/></cols><sheetData>' + sheetRows + '</sheetData></worksheet>']
-  ]);
-}
-$("b-xlsx").onclick = () => {
-  if (!entries.length) { window.alert("В профиле пока нет паролей."); return; }
-  if (!window.confirm("Внимание: файл Excel НЕ зашифрован. Любой, кто получит его, увидит все пароли. Удалите файл, когда он станет не нужен. Продолжить?")) return;
-  const rows = [["Сайт / название", "Логин", "Пароль", "Заметки", "Добавлено"],
-    ...entries.map(x => [x.site, x.login, x.pass, x.note || "", x.t ? new Date(x.t).toLocaleString("ru-RU") : ""])];
-  const a = document.createElement("a"); a.href = URL.createObjectURL(buildXlsx(rows));
-  a.download = "vault-" + (store.get().name || "profile").replace(/[^\p{L}\p{N}_-]+/gu, "_") + "-" + new Date().toISOString().slice(0, 10) + ".xlsx";
-  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-};
-function lock() { vaultKey = null; entries = []; currentId = null; $("list").innerHTML = ""; $("search").value = ""; home(); }
-$("b-logout").onclick = lock;
-$("b-wipe").onclick = () => {
-  if (window.confirm("Удалить профиль «" + (store.get().name || "") + "» с этого устройства? Восстановить можно будет только по секретной фразе и резервной копии.")) { store.remove(currentId); lock(); }
-};
-// Автоблокировка через 5 минут бездействия
-let idle; const resetIdle = () => { clearTimeout(idle); if (vaultKey) idle = setTimeout(lock, 5 * 60 * 1000); };
-["click", "keydown", "mousemove", "touchstart"].forEach(ev => addEventListener(ev, resetIdle, { passive: true }));
-document.addEventListener("visibilitychange", () => { if (document.hidden) resetIdle(); });
-
-loadWordlist().then(home).catch(err => { $("loading-msg").textContent = "Ошибка: " + err.message + ". Обновите страницу."; });
-</script>
 </body>
 </html>
