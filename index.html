@@ -71,6 +71,11 @@
   .feats b { display:block; font-size:15px; margin-bottom:4px; }
   .feats span { color:var(--muted); font-size:13px; line-height:1.45; }
   @media (max-width:520px) { .feats { grid-template-columns:1fr; } }
+  .guide h3 { display:flex; align-items:center; gap:10px; font-size:16px; margin:26px 0 8px; }
+  .guide h3 i { font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace; color:var(--red); font-size:12px; font-weight:700; border:1px solid rgba(255,45,61,.45); border-radius:999px; padding:2px 8px; }
+  .guide ul { margin:0; padding-left:20px; color:#cfcfcf; } .guide li { margin:6px 0; } .guide li::marker { color:var(--red); }
+  .guide code { background:#000; border:1px solid var(--line); border-radius:6px; padding:1px 6px; font-size:13px; color:#fff; }
+  .guide .lead, .about .lead { font-size:17px; line-height:1.5; margin:0 0 8px; color:#ddd; }
 </style>
 </head>
 <body>
@@ -95,6 +100,7 @@
     <div id="profiles"></div>
     <button id="b-new">Создать новый профиль</button>
     <button class="ghost" id="b-restore">Восстановить по секретной фразе</button>
+    <button class="ghost" data-guide>📖 Инструкция по безопасности</button>
     </div>
   </section>
 
@@ -182,8 +188,69 @@
     <div class="card">
       <button class="ghost" id="b-export">Скачать резервную копию</button>
       <button class="ghost" id="b-xlsx">Выгрузить в Excel</button>
-            <button class="danger" id="b-wipe">Удалить профиль с устройства</button>
+            <button class="ghost" data-guide>📖 Инструкция</button>
+      <button class="danger" id="b-wipe">Удалить профиль с устройства</button>
       <p class="sub" style="margin:8px 0 0">Резервная копия зашифрована. Открыть её можно только вашей секретной фразой.</p>
+    </div>
+  </section>
+
+  <!-- Инструкция -->
+  <section id="v-guide" class="hidden">
+    <div class="card guide">
+      <h2>Как пользоваться Vault безопасно</h2>
+      <p class="lead">Vault шифрует всё на вашем устройстве. Взломать его можно только через вас: через вашу фразу, пароль или устройство. Эти правила закрывают такие пути.</p>
+
+      <h3><i>01</i>Секретная фраза из 12 слов</h3>
+      <ul>
+        <li><b>Запишите от руки на бумаге</b> и храните дома в надёжном месте. Можно сделать две копии в разных местах.</li>
+        <li><b>Никогда</b> не фотографируйте фразу, не храните в заметках телефона, облаке, почте или мессенджерах и не отправляйте её никому.</li>
+        <li>Фраза — это полный доступ к профилю. Тот, кто её знает, может открыть все ваши пароли без мастер-пароля.</li>
+      </ul>
+
+      <h3><i>02</i>Мастер-пароль</h3>
+      <ul>
+        <li>Делайте его <b>длинным</b>: лучше фраза из 4–5 случайных слов, например <code>лодка-ветер-синий-утюг-42</code>, чем короткий сложный пароль.</li>
+        <li>Не используйте его больше нигде: ни на сайтах, ни в почте.</li>
+        <li>Забыли пароль — войдите по секретной фразе и задайте новый.</li>
+      </ul>
+
+      <h3><i>03</i>Нас невозможно «попросить помочь»</h3>
+      <ul>
+        <li>У Vault нет поддержки, которая может восстановить доступ, и нет аккаунтов. <b>Никто от имени Vault никогда не попросит</b> вашу фразу, пароль или файл резервной копии.</li>
+        <li>Если кто-то пишет «от разработчика» и просит фразу — это мошенник.</li>
+      </ul>
+
+      <h3><i>04</i>Проверяйте адрес сайта</h3>
+      <ul>
+        <li>Открывайте Vault только по адресу <code>noname15092025-ctrl.github.io/seif</code>. Добавьте его в закладки и заходите оттуда, а не по ссылкам из писем и сообщений.</li>
+        <li>Мошенники делают копии сайтов, которые выглядят так же. Поддельный сайт может украсть то, что вы введёте.</li>
+        <li>Для максимальной надёжности сохраните страницу себе (Ctrl+S) и открывайте файл с компьютера: он работает без интернета.</li>
+      </ul>
+
+      <h3><i>05</i>Устройство</h3>
+      <ul>
+        <li>Пользуйтесь Vault только на своём устройстве. Не входите на чужих и общих компьютерах.</li>
+        <li>Обновляйте систему и браузер, поставьте блокировку экрана паролем или отпечатком.</li>
+        <li>Не устанавливайте сомнительные программы и расширения браузера: они могут подсматривать, что вы вводите.</li>
+        <li>Нажимайте «Выйти», когда закончили. Через 5 минут бездействия Vault закрывается сам.</li>
+      </ul>
+
+      <h3><i>06</i>Резервные копии и Excel</h3>
+      <ul>
+        <li><b>Скачивайте резервную копию</b> после важных изменений. Она зашифрована, открыть её можно только вашей фразой. Храните её на флешке или в облаке.</li>
+        <li>Данные хранятся в браузере. Если очистить данные сайта или переустановить браузер, без резервной копии записи пропадут.</li>
+        <li><b>Файл Excel не зашифрован.</b> Выгружайте его только при необходимости и удаляйте сразу после использования, включая корзину.</li>
+        <li>Скопированный пароль удаляется из буфера обмена через 30 секунд.</li>
+      </ul>
+
+      <h3><i>07</i>Если что-то пошло не так</h3>
+      <ul>
+        <li>Подозреваете, что фразу кто-то увидел, — создайте новый профиль, перенесите пароли и смените важные пароли на самих сайтах. Старый профиль удалите.</li>
+        <li>Потеряли устройство — ваши данные зашифрованы, но на всякий случай смените мастер-пароль на других устройствах, а пароли от важных сайтов — на самих сайтах.</li>
+      </ul>
+
+      <div class="warn">Помните: если потеряны и фраза, и пароль — доступ не восстановит никто, даже разработчик. Это и есть гарантия, что никто другой тоже не войдёт.</div>
+      <button id="b-guide-back">← На главную</button>
     </div>
   </section>
 
@@ -319,7 +386,7 @@ async function setupDevice(key, pw, vaultBox, name) {
 
 /* ================== Интерфейс ================== */
 const $ = id => document.getElementById(id);
-const views = ["start", "phrase", "verify", "setpw", "restore", "unlock", "vault", "loading"];
+const views = ["start", "phrase", "verify", "setpw", "restore", "unlock", "vault", "guide", "loading"];
 function show(v) { views.forEach(x => $("v-" + x).classList.toggle("hidden", x !== v)); }
 function busy(btn, on) { btn.disabled = on; }
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
@@ -345,6 +412,9 @@ function cancelToHome() {
   $("restore-file").value = "";
   if (vaultKey) lock(); else { currentId = null; home(); }
 }
+let guideFrom = "start";
+document.querySelectorAll("[data-guide]").forEach(b => b.onclick = () => { guideFrom = vaultKey ? "vault" : "start"; show("guide"); scrollTo(0, 0); });
+$("b-guide-back").onclick = () => { if (guideFrom === "vault" && vaultKey) show("vault"); else cancelToHome(); };
 document.querySelectorAll("[data-cancel]").forEach(b => b.onclick = cancelToHome);
 $("logo").onclick = () => { if (WORDS) cancelToHome(); };
 $("b-other").onclick = () => { currentId = null; home(); };
