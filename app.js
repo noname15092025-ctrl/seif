@@ -1,4 +1,6 @@
 "use strict";
+// Защита от кликджекинга: не отрисовываемся внутри чужого фрейма (CSP frame-ancestors нельзя задать через <meta>).
+if (self !== top) { try { top.location = self.location.href; } catch { document.documentElement.innerHTML = ""; throw new Error("framed"); } }
 /* =====================================================================
    Vault — zero-knowledge менеджер паролей
    Схема ключей:
@@ -10,7 +12,7 @@
    ===================================================================== */
 
 const STORE = "seif.v2";
-const KDF = { alg: "argon2id", m: 19456, t: 2, p: 1 };
+const KDF = { alg: "argon2id", m: 32768, t: 3, p: 1 }; // 32 МиБ, 3 прохода — дороже перебор, чем базовые 19 МиБ/2
 const LOCK_IDLE_MS = 5 * 60 * 1000, LOCK_HIDDEN_MS = 60 * 1000;
 const enc = new TextEncoder(), dec = new TextDecoder();
 const C = crypto.subtle;
@@ -144,13 +146,19 @@ async function wrapKeyFrom(pw, prof) {
 }
 async function seal(key, bytes) { const iv = rand(12); return { iv: b64(iv), ct: b64(await C.encrypt({ name: "AES-GCM", iv }, key, bytes)) }; }
 async function open(key, box) { return new Uint8Array(await C.decrypt({ name: "AES-GCM", iv: unb64(box.iv) }, key, unb64(box.ct))); }
-async function wrapVaultKey(key, pw) {
+async function wrapVaultKeyRaw(raw, pw) {
   const salt = rand(16), prof = { salt: b64(salt), kdf: { ...KDF } };
   const wk = await wrapKeyFrom(pw, prof);
-  const raw = new Uint8Array(await C.exportKey("raw", key));
-  prof.wrapped = await seal(wk, raw); raw.fill(0);
+  prof.wrapped = await seal(wk, raw);
   return prof;
 }
+async function wrapVaultKey(key, pw) {
+  const raw = new Uint8Array(await C.exportKey("raw", key));
+  const prof = await wrapVaultKeyRaw(raw, pw); raw.fill(0);
+  return prof;
+}
+// Боевой ключ сессии делаем НЕИЗВЛЕКАЕМЫМ: даже при выполнении кода в странице его нельзя выгрузить.
+function importVaultKey(raw) { return C.importKey("raw", raw, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]); }
 
 /* ---------------- Хранилище ---------------- */
 let vaultKey = null, entries = [], currentId = null, pendingPhrase = null, pendingKey = null, verifyIdx = [];
@@ -299,7 +307,8 @@ $("b-setpw").onclick = async e => {
   busy(e.target, true, T("Шифрую…", "Encrypting…"));
   try {
     await setupDevice(pendingKey, p1, pendingKey._vaultBox || null, pname);
-    vaultKey = pendingKey; pendingKey = null;
+    const raw = new Uint8Array(await C.exportKey("raw", pendingKey));
+    vaultKey = await importVaultKey(raw); raw.fill(0); pendingKey = null;
     entries = JSON.parse(dec.decode(await open(vaultKey, store.get().vault))).map(migrateEntry);
     $("pw1").value = $("pw2").value = $("p-name").value = ""; meterPw1();
     openVaultView();
@@ -343,10 +352,12 @@ $("b-unlock").onclick = async e => {
     const pw = $("unlock-pw").value;
     const wk = await wrapKeyFrom(pw, s);
     const raw = await open(wk, s.wrapped);
-    vaultKey = await C.importKey("raw", raw, { name: "AES-GCM" }, true, ["encrypt", "decrypt"]); raw.fill(0);
+    vaultKey = await importVaultKey(raw);
     entries = JSON.parse(dec.decode(await open(vaultKey, s.vault))).map(migrateEntry);
     s.fails = 0; s.lockUntil = 0; s.lastLogin = Date.now(); try { localStorage.setItem("vault.last", s.id); } catch {}
-    if (!s.kdf || s.kdf.alg !== "argon2id") Object.assign(s, await wrapVaultKey(vaultKey, pw), { iters: undefined }); // переход на Argon2id
+    // переход на текущие параметры Argon2id (со старого KDF или с устаревших параметров)
+    if (!s.kdf || s.kdf.alg !== "argon2id" || s.kdf.m !== KDF.m || s.kdf.t !== KDF.t) { Object.assign(s, await wrapVaultKeyRaw(raw, pw)); delete s.iters; }
+    raw.fill(0);
     store.set(s);
     $("unlock-pw").value = ""; $("unlock-err").textContent = ""; $("ldial-turn").style.transform = "";
     openVaultView();
@@ -778,8 +789,8 @@ $("b-cp").onclick = async e => {
   const bad = checkNewPassword(p1, p2); if (bad) { $("cp-err").textContent = bad; return; }
   busy(e.target, true, T("Проверяю…", "Checking…"));
   try {
-    await open(await wrapKeyFrom(oldPw, s), s.wrapped); // проверка текущего пароля
-    Object.assign(s, await wrapVaultKey(vaultKey, p1)); store.set(s);
+    const raw = await open(await wrapKeyFrom(oldPw, s), s.wrapped); // проверка текущего пароля и получение ключа заново
+    Object.assign(s, await wrapVaultKeyRaw(raw, p1)); raw.fill(0); store.set(s);
     ["cp-old", "cp-new1", "cp-new2"].forEach(id => $(id).value = ""); meterCp();
     toast(T("Пароль изменён", "Password changed")); openVaultView();
   } catch { $("cp-err").textContent = T("Текущий пароль неверный", "Current password is wrong"); }
