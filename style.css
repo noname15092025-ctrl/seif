@@ -614,3 +614,12 @@ h1, h2, h3, .brand, .p-title, .hero-h, .l-h2, .d-title, .wordmark, .wordmark-sm,
 }
 @media (max-width:860px) { .bento { grid-template-columns:1fr; } .bento>* { grid-column:auto; grid-row:auto; } .hero-h { font-size:52px; } .l-nav { display:none; } }
 @media (prefers-reduced-motion:reduce) { .rot, .marquee, .blink, .hero-art .dial, .art-panel .ldial, .art-panel .ring { animation:none !important; } }
+
+/* Полировка: без горизонтального выезда, авто-высота бенто на мобильном */
+.landing, body { overflow-x:clip; }
+@media (max-width:860px){
+  .bento { grid-auto-rows:auto; }
+  .tile { min-height:180px; }
+  .t-accent .big12 { font-size:84px; }
+  .marquee-wrap { margin-left:-16px; margin-right:-16px; }
+}
