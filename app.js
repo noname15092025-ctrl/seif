@@ -718,6 +718,9 @@ $("list").onclick = async e => {
     const x = tasksList().find(t => t.id === row.dataset.id); if (!x) return;
     if (e.target.closest("[data-task-toggle]")) { x.done = !x.done; x.updated = Date.now(); await persist(); renderNav(); renderTasks(); }
     else if (e.target.closest("[data-task-del]")) { x.deletedAt = Date.now(); await persist(); renderNav(); renderTasks(); }
+    else if (e.target.closest("[data-task-pri]")) { x.priority = ((x.priority || 0) + 1) % 4; x.updated = Date.now(); await persist(); renderTasks(); }
+    else if (e.target.closest("[data-task-cal]")) { const di = row.querySelector(".task-date"); di.showPicker ? di.showPicker() : di.focus(); }
+    else if (e.target.closest(".task-text")) { startRenameTask(row, x); }
     return;
   }
   if (view === "notes") {
@@ -859,7 +862,46 @@ function setView(v) {
   renderNav(); render();
 }
 
-/* Заметки — тип "page": заголовок + текст, автосохранение */
+/* ---- Markdown (безопасный: экранируем, затем расставляем свои теги) ---- */
+function mdInline(s) {
+  s = s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  s = s.replace(/`([^`]+)`/g, (m, c) => `<code>${c}</code>`);
+  s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(/(^|[^*\w])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+  s = s.replace(/~~([^~]+)~~/g, "<del>$1</del>");
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, t, u) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>`);
+  return s;
+}
+function mdToHtml(src) {
+  const escC = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const lines = (src || "").replace(/\r/g, "").split("\n");
+  let html = "", i = 0, listTag = null, cbIndex = 0;
+  const closeList = () => { if (listTag) { html += `</${listTag}>`; listTag = null; } };
+  while (i < lines.length) {
+    const ln = lines[i];
+    if (/^```/.test(ln)) { let code = ""; i++; while (i < lines.length && !/^```/.test(lines[i])) { code += lines[i] + "\n"; i++; } i++; closeList(); html += `<pre><code>${escC(code)}</code></pre>`; continue; }
+    if (/^(-{3,}|\*{3,})\s*$/.test(ln)) { closeList(); html += "<hr>"; i++; continue; }
+    const h = ln.match(/^(#{1,6})\s+(.*)$/);
+    if (h) { closeList(); html += `<h${h[1].length}>${mdInline(h[2])}</h${h[1].length}>`; i++; continue; }
+    const cb = ln.match(/^\s*[-*]\s+\[([ xX])\]\s+(.*)$/);
+    if (cb) { if (listTag !== "ul") { closeList(); html += '<ul class="md-check">'; listTag = "ul"; } const d = cb[1].toLowerCase() === "x"; html += `<li class="md-task${d ? " done" : ""}"><span class="md-box" data-cb="${cbIndex++}">${d ? "✓" : ""}</span><span>${mdInline(cb[2])}</span></li>`; i++; continue; }
+    const ul = ln.match(/^\s*[-*]\s+(.*)$/);
+    if (ul) { if (listTag !== "ul") { closeList(); html += "<ul>"; listTag = "ul"; } html += `<li>${mdInline(ul[1])}</li>`; i++; continue; }
+    const ol = ln.match(/^\s*\d+\.\s+(.*)$/);
+    if (ol) { if (listTag !== "ol") { closeList(); html += "<ol>"; listTag = "ol"; } html += `<li>${mdInline(ol[1])}</li>`; i++; continue; }
+    const q = ln.match(/^>\s?(.*)$/);
+    if (q) { closeList(); html += `<blockquote>${mdInline(q[1])}</blockquote>`; i++; continue; }
+    if (/^\s*$/.test(ln)) { closeList(); i++; continue; }
+    closeList(); let para = ln; i++;
+    while (i < lines.length && !/^\s*$/.test(lines[i]) && !/^(#{1,6}\s|```|>\s?|\s*[-*]\s|\s*\d+\.\s|(-{3,}|\*{3,})\s*$)/.test(lines[i])) { para += "\n" + lines[i]; i++; }
+    html += `<p>${mdInline(para).replace(/\n/g, "<br>")}</p>`;
+  }
+  closeList();
+  return html;
+}
+
+/* Заметки — тип "page": заголовок + текст (Markdown), автосохранение, режимы правки/просмотра */
+let noteMode = "preview";
 function renderNotes() {
   const all = notesList(), q = $("search").value.toLowerCase();
   const list = all.filter(x => (x.title + " " + (x.body || "")).toLowerCase().includes(q)).sort((a, b) => b.updated - a.updated);
@@ -869,20 +911,21 @@ function renderNotes() {
   $("list").innerHTML = list.length ? list.map(x => `
     <div class="note-row${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
       <b>${esc(x.title || T("Без названия", "Untitled"))}</b>
-      <small>${esc((x.body || "").replace(/\s+/g, " ").trim().slice(0, 70)) || T("Пустая заметка", "Empty note")}</small>
+      <small>${esc((x.body || "").replace(/[#*`>\-\[\]]/g, "").replace(/\s+/g, " ").trim().slice(0, 70)) || T("Пустая заметка", "Empty note")}</small>
     </div>`).join("") : `<div class="empty">${all.length ? T("Ничего не найдено", "Nothing found") : T("Заметок пока нет. Нажмите «+ Заметка».", "No notes yet. Click “+ Note”.")}</div>`;
   renderNoteEditor();
 }
 async function newNote() {
   const now = Date.now(), id = b64(rand(9));
   entries.push({ type: "page", id, title: "", body: "", created: now, updated: now });
-  selectedId = id; await persist(); renderNav(); renderNotes();
+  selectedId = id; noteMode = "edit"; await persist(); renderNav(); renderNotes();
   $("v-vault").classList.add("show-detail"); setTimeout(() => $("note-title") && $("note-title").focus(), 60);
 }
 const saveNote = debounce(async () => {
   const x = notesList().find(y => y.id === selectedId); if (!x) return;
-  x.title = $("note-title").value; x.body = $("note-body").value; x.updated = Date.now();
-  await persist();
+  if ($("note-title")) x.title = $("note-title").value;
+  if ($("note-body")) x.body = $("note-body").value;
+  x.updated = Date.now(); await persist();
   const b = $("list").querySelector(`.note-row[data-id="${CSS.escape(selectedId)}"] b`); if (b) b.textContent = x.title || T("Без названия", "Untitled");
   const st = $("note-saved"); if (st) st.textContent = T("Сохранено", "Saved");
 }, 400);
@@ -891,48 +934,81 @@ function renderNoteEditor() {
   $("detail-view").classList.add("hidden"); $("form-card").classList.add("hidden");
   const x = notesList().find(y => y.id === selectedId);
   if (!x) { ed.innerHTML = `<div class="d-empty"><svg class="ic accent"><use href="#i-logo"/></svg><div>${notesList().length ? T("Выберите заметку слева", "Select a note") : T("Создайте первую заметку — она будет зашифрована.", "Create your first note — it will be encrypted.")}</div>${notesList().length ? "" : `<button data-new-note>${T("+ Заметка", "+ Note")}</button>`}</div>`; return; }
+  const edit = noteMode === "edit";
   ed.innerHTML = `<div class="note-ed">
-    <button class="ib back" data-note-back aria-label="${T("Назад", "Back")}"><svg class="ic"><use href="#i-back"/></svg></button>
+    <div class="note-bar">
+      <button class="ib back" data-note-back aria-label="${T("Назад", "Back")}"><svg class="ic"><use href="#i-back"/></svg></button>
+      <div class="note-modes"><button class="seg${edit ? " on" : ""}" data-note-mode="edit">${T("✏ Правка", "✏ Edit")}</button><button class="seg${edit ? "" : " on"}" data-note-mode="preview">${T("👁 Просмотр", "👁 Preview")}</button></div>
+      <button class="ib danger-text" data-note-del>${T("Удалить", "Delete")}</button>
+    </div>
     <input id="note-title" class="note-title" maxlength="120" placeholder="${T("Без названия", "Untitled")}">
-    <textarea id="note-body" class="note-body" placeholder="${T("Пишите здесь…", "Write here…")}" spellcheck="true"></textarea>
-    <div class="note-foot"><span class="muted small" id="note-saved">${T("Изменено ", "Edited ") + new Date(x.updated).toLocaleString()}</span><button class="ib danger-text" data-note-del>${T("Удалить", "Delete")}</button></div>
+    ${edit ? `<textarea id="note-body" class="note-body" placeholder="${T("Пишите здесь… Поддерживается Markdown: # заголовок, **жирный**, - список, - [ ] задача", "Write here… Markdown supported: # heading, **bold**, - list, - [ ] task")}" spellcheck="true"></textarea>`
+      : `<div class="note-view md" id="note-view">${mdToHtml(x.body) || `<p class="muted">${T("Пусто. Нажмите «Правка».", "Empty. Click “Edit”.")}</p>`}</div>`}
+    <div class="note-foot"><span class="muted small" id="note-saved">${T("Изменено ", "Edited ") + new Date(x.updated).toLocaleString()}</span></div>
   </div>`;
-  $("note-title").value = x.title; $("note-body").value = x.body || "";
-  $("note-title").oninput = $("note-body").oninput = saveNote;
+  $("note-title").value = x.title; $("note-title").oninput = saveNote;
+  if (edit) { $("note-body").value = x.body || ""; $("note-body").oninput = saveNote; }
 }
 $("note-editor").addEventListener("click", async e => {
   if (e.target.closest("[data-new-note]")) return newNote();
   if (e.target.closest("[data-note-back]")) { $("v-vault").classList.remove("show-detail"); return; }
+  const mb = e.target.closest("[data-note-mode]"); if (mb) { noteMode = mb.dataset.noteMode; renderNoteEditor(); return; }
+  const box = e.target.closest(".md-box"); // клик по чекбоксу в режиме просмотра — переключает в тексте
+  if (box) {
+    const x = notesList().find(y => y.id === selectedId); if (!x) return;
+    let n = +box.dataset.cb, k = -1;
+    x.body = x.body.replace(/^(\s*[-*]\s+\[)([ xX])(\]\s+)/gm, (m, a, c, b2) => { k++; return k === n ? a + (c.toLowerCase() === "x" ? " " : "x") + b2 : m; });
+    x.updated = Date.now(); await persist(); renderNoteEditor(); return;
+  }
   if (e.target.closest("[data-note-del]")) {
     const x = notesList().find(y => y.id === selectedId); if (!x) return;
     if (await confirmBox(T("Удалить заметку?", "Delete this note?"), T("Удалить", "Delete"), true)) { x.deletedAt = Date.now(); selectedId = null; await persist(); renderNav(); renderNotes(); $("v-vault").classList.remove("show-detail"); }
   }
 });
 
-/* Задачи — тип "task": текст, галочка, срок */
+/* Задачи — тип "task": текст, галочка, приоритет, срок */
+const PRI = () => [{ l: "", c: "" }, { l: T("Низкий", "Low"), c: "low" }, { l: T("Средний", "Medium"), c: "med" }, { l: T("Высокий", "High"), c: "high" }];
 function renderTasks() {
   $("detail-view").classList.add("hidden"); $("form-card").classList.add("hidden"); $("note-editor").classList.add("hidden");
   $("v-vault").classList.remove("show-detail");
   const all = tasksList(), q = $("search").value.toLowerCase();
-  const list = all.filter(x => (x.title || "").toLowerCase().includes(q)).sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || b.created - a.created);
-  const done = all.filter(x => x.done).length;
+  const list = all.filter(x => (x.title || "").toLowerCase().includes(q)).sort((a, b) =>
+    (a.done ? 1 : 0) - (b.done ? 1 : 0) || (b.priority || 0) - (a.priority || 0) ||
+    ((a.due || "9999") < (b.due || "9999") ? -1 : (a.due || "9999") > (b.due || "9999") ? 1 : 0) || b.created - a.created);
+  const done = all.filter(x => x.done).length, pr = PRI();
   $("list-count").textContent = (all.length - done) + " " + T("активных", "active") + (done ? ` · ${done} ${T("выполнено", "done")}` : "");
   $("list").innerHTML = `<div class="task-add"><input id="task-new" class="field" maxlength="200" placeholder="${T("Новая задача…", "New task…")}"></div>` +
-    (list.length ? list.map(x => `
-      <div class="task-row${x.done ? " done" : ""}" data-id="${esc(x.id)}">
+    (list.length ? list.map(x => {
+      const p = pr[x.priority || 0], overdue = !x.done && x.due && new Date(x.due + "T23:59") < Date.now();
+      return `<div class="task-row${x.done ? " done" : ""}" data-id="${esc(x.id)}">
         <button class="task-check" data-task-toggle aria-label="${T("Готово", "Done")}">${x.done ? "✓" : ""}</button>
+        <button class="task-pri ${p.c}" data-task-pri title="${T("Приоритет", "Priority")}: ${p.l || T("нет", "none")}">⚑</button>
         <span class="task-text">${esc(x.title)}</span>
-        ${x.due ? `<span class="task-due${(!x.done && new Date(x.due + "T23:59") < Date.now()) ? " overdue" : ""}">${new Date(x.due + "T12:00").toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "short" })}</span>` : ""}
+        <button class="task-cal" data-task-cal title="${T("Срок", "Due date")}">${x.due ? `<span class="task-due${overdue ? " overdue" : ""}">${new Date(x.due + "T12:00").toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "short" })}</span>` : "🗓"}</button>
+        <input type="date" class="task-date" value="${esc(x.due || "")}">
         <button class="ib task-del" data-task-del aria-label="×">✕</button>
-      </div>`).join("") : `<div class="empty">${all.length ? T("Ничего не найдено", "Nothing found") : T("Задач пока нет. Напишите задачу и нажмите Enter.", "No tasks yet. Type one and press Enter.")}</div>`);
+      </div>`;
+    }).join("") : `<div class="empty">${all.length ? T("Ничего не найдено", "Nothing found") : T("Задач пока нет. Напишите задачу и нажмите Enter.", "No tasks yet. Type one and press Enter.")}</div>`);
   const inp = $("task-new");
   inp.onkeydown = async e => {
     if (e.key === "Enter" && inp.value.trim()) {
       const now = Date.now();
-      entries.push({ type: "task", id: b64(rand(9)), title: inp.value.trim(), done: false, created: now, updated: now });
+      entries.push({ type: "task", id: b64(rand(9)), title: inp.value.trim(), done: false, priority: 0, due: "", created: now, updated: now });
       await persist(); renderNav(); renderTasks(); setTimeout(() => $("task-new") && $("task-new").focus(), 30);
     }
   };
+  $("list").querySelectorAll(".task-date").forEach(di => di.onchange = async () => {
+    const x = tasksList().find(t => t.id === di.closest(".task-row").dataset.id); if (!x) return;
+    x.due = di.value; x.updated = Date.now(); await persist(); renderTasks();
+  });
+}
+function startRenameTask(row, x) {
+  const span = row.querySelector(".task-text");
+  const inp = document.createElement("input"); inp.className = "task-rename"; inp.value = x.title; inp.maxLength = 200;
+  span.replaceWith(inp); inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
+  const save = async () => { const v = inp.value.trim(); if (v && v !== x.title) { x.title = v; x.updated = Date.now(); await persist(); } renderTasks(); };
+  inp.onkeydown = e => { if (e.key === "Enter") inp.blur(); if (e.key === "Escape") { inp.value = x.title; inp.blur(); } };
+  inp.onblur = save;
 }
 
 /* ---------------- Настройки: смена пароля, имя ---------------- */
