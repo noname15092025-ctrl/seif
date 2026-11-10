@@ -982,7 +982,7 @@ const SYN = {
   title: ["name", "title", "account", "название", "сайт / название", "имя"],
   login: ["username", "login", "login_username", "login name", "user name", "email", "логин", "пользователь"],
   pass: ["password", "login_password", "пароль", "пароль / pin", "password / pin"],
-  url: ["url", "login_uri", "web site", "website", "uri", "адрес", "адрес сайта"],
+  url: ["url", "login_uri", "web site", "website", "uri", "адрес", "адрес сайта", "сайт"],
   note: ["note", "notes", "comments", "extra", "заметки", "заметка", "описание"],
   category: ["folder", "group", "grouping", "category", "категория", "папка"],
   totp: ["totp", "login_totp", "otp", "otpauth", "2fa"],
