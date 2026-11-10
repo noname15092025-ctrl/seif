@@ -271,7 +271,7 @@ function cancelToHome(toLanding) {
   pendingPhrase = null; pendingKey = null; verifyIdx = [];
   $("words").innerHTML = ""; $("verify-fields").innerHTML = "";
   ["pw1", "pw2", "p-name", "restore-words", "unlock-pw", "cp-old", "cp-new1", "cp-new2"].forEach(id => $(id).value = "");
-  $("restore-file").value = ""; meterPw1(); meterCp();
+  $("restore-file").value = ""; $("print-kit").innerHTML = ""; meterPw1(); meterCp();
   if (vaultKey) lock(); else if (toLanding === true) landing(); else home();
 }
 document.querySelectorAll("[data-cancel]").forEach(b => b.onclick = () => cancelToHome());
@@ -301,6 +301,7 @@ $("b-print-kit").onclick = () => {
     <ol class="pk-words">${words.map(w => `<li>${esc(w)}</li>`).join("")}</ol>
     <p class="pk-note">${T("Создано", "Created")}: ${new Date().toLocaleDateString()} · noname15092025-ctrl.github.io/seif</p>
     <p class="pk-warn">${T("Мастер-пароль сюда НЕ записывайте — держите его только в памяти.", "Do NOT write your master password here — keep it only in your memory.")}</p>`;
+  addEventListener("afterprint", () => { $("print-kit").innerHTML = ""; }, { once: true });
   window.print();
 };
 $("b-back-phrase").onclick = () => show("phrase");
