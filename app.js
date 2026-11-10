@@ -44,7 +44,7 @@ function applyLang() {
   document.querySelectorAll("[data-lang-toggle]").forEach(b => b.textContent = lang === "en" ? "RU" : "EN");
   $("guide-ru").classList.toggle("hidden", lang === "en");
   $("guide-en").classList.toggle("hidden", lang !== "en");
-  document.title = T("Vault — хранилище паролей", "Vault — password manager");
+  document.title = T("Vault — хранилище", "Vault — storage");
   applyTypeLabels();
   if (vaultKey) { renderNav(); render(); }
   if (!$("v-unlock").classList.contains("hidden")) renderProfiles();

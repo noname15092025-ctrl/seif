@@ -1,5 +1,5 @@
 {
-  "name": "Vault — хранилище паролей",
+  "name": "Vault — хранилище",
   "short_name": "Vault",
   "description": "Zero-knowledge менеджер паролей. Всё шифруется на устройстве.",
   "start_url": "./",
