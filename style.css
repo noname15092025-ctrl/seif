@@ -342,3 +342,4 @@ label.chk { display:flex; align-items:center; color:var(--text); font-size:14px;
 .badge-warn { color:var(--accent) !important; }
 .nav-item.trash { margin-top:8px; }
 .exp-soon { color:var(--accent); }
+.row .t small.exp-soon { color:var(--accent); }
