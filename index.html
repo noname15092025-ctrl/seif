@@ -54,6 +54,7 @@
   .entry:hover { border-color:rgba(255,45,61,.45); background:rgba(255,45,61,.04); }
   .entry b { display:block; font-weight:700; } .entry small { color:var(--muted); }
   .entry .pw { font-family:"JetBrains Mono",ui-monospace,monospace; color:#fff; margin-top:2px; }
+  .entry .note { color:#bbb; font-size:13px; margin-top:6px; padding-left:10px; border-left:2px solid var(--red); white-space:pre-wrap; word-break:break-word; }
   .entry button { padding:8px 12px; font-size:13px; }
   .row { display:flex; gap:10px; } .row > * { flex:1; }
   @media (max-width:520px) { h1 { font-size:34px; } .row { flex-direction:column; gap:0; } .words { grid-template-columns:repeat(2,1fr); } .entry { flex-wrap:wrap; } }
@@ -169,6 +170,8 @@
       </div>
       <label>Пароль</label>
       <div class="row"><input id="e-pass" autocomplete="off"><button class="ghost" id="b-gen" style="flex:0 0 auto">Сгенерировать</button></div>
+      <label>Заметки / описание</label>
+      <textarea id="e-note" style="min-height:64px;font-family:inherit" placeholder="Например: рабочая почта, ответ на секретный вопрос…"></textarea>
       <button id="b-add">Добавить</button>
     </div>
     <div class="card">
@@ -436,20 +439,20 @@ function genPassword(len = 20) {
 $("b-gen").onclick = () => { $("e-pass").value = genPassword(); };
 
 $("b-add").onclick = async () => {
-  const site = $("e-site").value.trim(), login = $("e-login").value.trim(), pass = $("e-pass").value;
+  const site = $("e-site").value.trim(), login = $("e-login").value.trim(), pass = $("e-pass").value, note = $("e-note").value.trim();
   if (!site || !pass) return;
-  entries.push({ id: b64(rand(9)), site, login, pass, t: Date.now() });
+  entries.push({ id: b64(rand(9)), site, login, pass, note, t: Date.now() });
   await persist();
-  $("e-site").value = $("e-login").value = $("e-pass").value = "";
+  $("e-site").value = $("e-login").value = $("e-pass").value = $("e-note").value = "";
   render();
 };
 
 function render() {
   const q = $("search").value.toLowerCase();
-  const list = entries.filter(x => (x.site + " " + x.login).toLowerCase().includes(q));
+  const list = entries.filter(x => (x.site + " " + x.login + " " + (x.note || "")).toLowerCase().includes(q));
   $("list").innerHTML = list.length ? list.map(x => `
     <div class="entry" data-id="${esc(x.id)}">
-      <div><b>${esc(x.site)}</b><small>${esc(x.login)}</small><div class="pw" data-pw>••••••••</div></div>
+      <div><b>${esc(x.site)}</b><small>${esc(x.login)}</small><div class="pw" data-pw>••••••••</div>${x.note ? `<div class="note">${esc(x.note)}</div>` : ""}</div>
       <div style="flex:0 0 auto">
         <button class="ghost" data-act="show">👁</button>
         <button class="ghost" data-act="copy">Копировать</button>
@@ -505,14 +508,14 @@ function buildXlsx(rows) {
     ["xl/workbook.xml", X + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Пароли" sheetId="1" r:id="rId1"/></sheets></workbook>'],
     ["xl/_rels/workbook.xml.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
     ["xl/styles.xml", X + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="2"><xf/><xf fontId="1" applyFont="1"/></cellXfs></styleSheet>'],
-    ["xl/worksheets/sheet1.xml", X + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="1" width="30" customWidth="1"/><col min="2" max="2" width="28" customWidth="1"/><col min="3" max="3" width="28" customWidth="1"/><col min="4" max="4" width="18" customWidth="1"/></cols><sheetData>' + sheetRows + '</sheetData></worksheet>']
+    ["xl/worksheets/sheet1.xml", X + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="1" width="30" customWidth="1"/><col min="2" max="2" width="28" customWidth="1"/><col min="3" max="3" width="28" customWidth="1"/><col min="4" max="4" width="40" customWidth="1"/><col min="5" max="5" width="18" customWidth="1"/></cols><sheetData>' + sheetRows + '</sheetData></worksheet>']
   ]);
 }
 $("b-xlsx").onclick = () => {
   if (!entries.length) { window.alert("В профиле пока нет паролей."); return; }
   if (!window.confirm("Внимание: файл Excel НЕ зашифрован. Любой, кто получит его, увидит все пароли. Удалите файл, когда он станет не нужен. Продолжить?")) return;
-  const rows = [["Сайт / название", "Логин", "Пароль", "Добавлено"],
-    ...entries.map(x => [x.site, x.login, x.pass, x.t ? new Date(x.t).toLocaleString("ru-RU") : ""])];
+  const rows = [["Сайт / название", "Логин", "Пароль", "Заметки", "Добавлено"],
+    ...entries.map(x => [x.site, x.login, x.pass, x.note || "", x.t ? new Date(x.t).toLocaleString("ru-RU") : ""])];
   const a = document.createElement("a"); a.href = URL.createObjectURL(buildXlsx(rows));
   a.download = "vault-" + (store.get().name || "profile").replace(/[^\p{L}\p{N}_-]+/gu, "_") + "-" + new Date().toISOString().slice(0, 10) + ".xlsx";
   a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
