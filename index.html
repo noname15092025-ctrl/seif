@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="dark">
+<html lang="ru" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.pwnedpasswords.com; base-uri 'none'; form-action 'none'; frame-src 'none'; child-src 'none'; object-src 'none'; media-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0A0A0A">
+<meta name="theme-color" content="#ffffff">
 <title>Vault — хранилище</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -241,6 +241,8 @@
   <section class="detail" id="detail">
     <!-- Просмотр записи -->
     <div id="detail-view"></div>
+    <!-- Редактор заметки -->
+    <div id="note-editor" class="hidden"></div>
     <div class="copied hidden" id="copied" role="status">
       <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" class="t-bg"/><circle class="timer" id="copy-timer" cx="10" cy="10" r="8"/></svg>
       <span data-en="Copied. Clipboard clears in 30 s">Скопировано. Буфер очистится через 30 с</span>

@@ -53,11 +53,11 @@ const toggleLang = () => { lang = lang === "en" ? "ru" : "en"; try { localStorag
 document.querySelectorAll("[data-lang-toggle]").forEach(b => b.onclick = toggleLang);
 
 /* ---------------- Тема ---------------- */
-let theme = (() => { try { return localStorage.getItem("vault.theme") || "dark"; } catch { return "dark"; } })();
+let theme = (() => { try { return localStorage.getItem("vault.theme") || "light"; } catch { return "light"; } })();
 function applyTheme() {
   document.documentElement.dataset.theme = theme;
   document.querySelectorAll("[data-theme-toggle]").forEach(b => b.textContent = theme === "dark" ? "☀" : "☾");
-  document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#0A0A0A" : "#FAFAF9";
+  document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#0A0A0A" : "#ffffff";
 }
 const toggleTheme = () => { theme = theme === "dark" ? "light" : "dark"; try { localStorage.setItem("vault.theme", theme); } catch {} applyTheme(); };
 document.querySelectorAll("[data-theme-toggle]").forEach(b => b.onclick = toggleTheme);
@@ -528,6 +528,10 @@ function expiryOf(x) {
 const EXPIRE_SOON_MS = 90 * 864e5;
 const expiringSoon = x => { const d = expiryOf(x); return d && d - Date.now() < EXPIRE_SOON_MS; };
 const live = () => entries.filter(x => !x.deletedAt);
+const pwEntries = () => live().filter(x => x.type !== "page" && x.type !== "task");
+const notesList = () => live().filter(x => x.type === "page");
+const tasksList = () => live().filter(x => x.type === "task");
+const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 function attentionSet() {
   const withPass = live().filter(x => x.pass && x.type !== "card");
   const counts = {}; withPass.forEach(x => counts[x.pass] = (counts[x.pass] || 0) + 1);
@@ -612,7 +616,7 @@ $("b-add").onclick = async () => {
 $("b-edit-cancel").onclick = () => { clearForm(); showDetail(); };
 function showForm() { $("detail-view").classList.add("hidden"); $("form-card").classList.remove("hidden"); $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; setTimeout(() => $("e-title").focus(), 50); }
 function showDetail() { $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); renderDetail(); }
-$("b-new-entry").onclick = () => { clearForm(); showForm(); };
+$("b-new-entry").onclick = () => { if (view === "notes") return newNote(); if (view === "tasks") return $("task-new")?.focus(); clearForm(); showForm(); };
 document.addEventListener("click", e => { if (e.target.closest("[data-detail-back]")) { clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail"); renderDetail(); } });
 function startEdit(x) {
   editingId = x.id; formType = x.type;
@@ -624,9 +628,9 @@ function startEdit(x) {
 }
 
 /* ---------------- Список ---------------- */
-let filter = "all", selectedId = null;
+let filter = "all", selectedId = null, view = "vault";
 function renderNav() {
-  const L = live(), cats = [...new Set(L.map(x => x.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const L = pwEntries(), cats = [...new Set(L.map(x => x.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   $("cat-list").innerHTML = cats.map(c => `<option value="${esc(c)}">`).join("");
   const n = f => L.filter(f).length, att = attentionSet();
   const top = [["all", T("Все записи", "All entries"), L.length], ["fav", T("Избранное", "Favorites"), n(x => x.fav)],
@@ -641,14 +645,22 @@ function renderNav() {
   const trash = entries.length - L.length;
   const valid = new Set([...top, ...types, ...checks].map(i => i[0]).concat(cats.map(c => "c:" + c), ["trash"]));
   if (!valid.has(filter)) filter = "all";
-  const link = ([v, l, c, w]) => `<a class="nav-item${v === filter ? " active" : ""}${v === "trash" ? " trash" : ""}" data-filter="${esc(v)}">${esc(l)}<span${w === "warn" && c ? ' class="badge-warn"' : ""}>${c}</span></a>`;
-  $("nav").innerHTML = top.map(link).join("") +
+  const link = ([v, l, c, w]) => `<a class="nav-item${v === filter && view === "vault" ? " active" : ""}${v === "trash" ? " trash" : ""}" data-filter="${esc(v)}">${esc(l)}<span${w === "warn" && c ? ' class="badge-warn"' : ""}>${c}</span></a>`;
+  const activeTasks = tasksList().filter(t => !t.done).length;
+  const ws = `<a class="nav-item ws${view === "notes" ? " active" : ""}" data-view="notes"><span class="wsico">\u{1F4DD}</span> ${T("Заметки", "Notes")}<span>${notesList().length || ""}</span></a>`
+    + `<a class="nav-item ws${view === "tasks" ? " active" : ""}" data-view="tasks"><span class="wsico">\u2705</span> ${T("Задачи", "Tasks")}<span>${activeTasks || ""}</span></a>`;
+  $("nav").innerHTML = ws + `<div class="nav-head">${T("ПАРОЛИ", "PASSWORDS")}</div>` + top.map(link).join("") +
     `<div class="nav-head">${T("ТИПЫ", "TYPES")}</div>` + types.map(link).join("") +
     `<div class="nav-head">${T("ПРОВЕРКА", "CHECKS")}</div>` + checks.map(link).join("") +
     (cats.length ? `<div class="nav-head">${T("КАТЕГОРИИ", "CATEGORIES")}</div>` + cats.map(c => link(["c:" + c, c, n(x => x.category === c)])).join("") : "") +
     link(["trash", T("Корзина", "Trash"), trash]);
 }
-$("nav").onclick = e => { const a = e.target.closest("[data-filter]"); if (!a) return; filter = a.dataset.filter; renderNav(); render(); };
+$("nav").onclick = e => {
+  const w = e.target.closest("[data-view]"); if (w) { setView(w.dataset.view); return; }
+  const a = e.target.closest("[data-filter]"); if (!a) return;
+  if (view !== "vault") setViewChrome("vault");
+  view = "vault"; filter = a.dataset.filter; renderNav(); render();
+};
 function maskCard(n) { const d = (n || "").replace(/\D/g, ""); return d ? "•••• " + d.slice(-4) : ""; }
 const subline = x => {
   const f = x.f || {};
@@ -668,7 +680,7 @@ const subline = x => {
 function visibleList() {
   const q = $("search").value.toLowerCase(), sort = $("sort").value;
   const searchable = x => [x.title, x.login, x.note, x.category, x.url, ...Object.entries(x.f || {}).filter(([k]) => !["seed", "wpass", "key", "account", "number"].includes(k)).map(e => e[1]), ...(x.custom || []).filter(c => !c.s).flatMap(c => [c.k, c.v])].join(" ").toLowerCase();
-  let list = (filter === "trash" ? entries.filter(x => x.deletedAt) : live()).filter(x => searchable(x).includes(q));
+  let list = (filter === "trash" ? entries.filter(x => x.deletedAt) : pwEntries()).filter(x => searchable(x).includes(q));
   if (filter === "fav") list = list.filter(x => x.fav);
   else if (filter === "recent") return list.filter(x => x.used || x.updated !== x.created).sort((a, b) => Math.max(b.used || 0, b.updated) - Math.max(a.used || 0, a.updated)).slice(0, 20);
   else if (filter === "attention") { const a = attentionSet(); list = list.filter(x => a.has(x.id)); }
@@ -682,6 +694,9 @@ function visibleList() {
   return list.sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0) || cmp(a, b));
 }
 function render() {
+  if (view === "notes") return renderNotes();
+  if (view === "tasks") return renderTasks();
+  $("note-editor").classList.add("hidden");
   const list = visibleList();
   if (!list.some(x => x.id === selectedId)) selectedId = null;
   if (!selectedId && list.length && innerWidth > 980) selectedId = list[0].id;
@@ -697,7 +712,19 @@ function render() {
 }
 function plural(n, one, few, many) { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; }
 $("search").oninput = render; $("sort").onchange = render;
-$("list").onclick = e => {
+$("list").onclick = async e => {
+  if (view === "tasks") {
+    const row = e.target.closest(".task-row"); if (!row) return;
+    const x = tasksList().find(t => t.id === row.dataset.id); if (!x) return;
+    if (e.target.closest("[data-task-toggle]")) { x.done = !x.done; x.updated = Date.now(); await persist(); renderNav(); renderTasks(); }
+    else if (e.target.closest("[data-task-del]")) { x.deletedAt = Date.now(); await persist(); renderNav(); renderTasks(); }
+    return;
+  }
+  if (view === "notes") {
+    const r = e.target.closest(".note-row"); if (!r) return;
+    selectedId = r.dataset.id; $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; renderNotes();
+    return;
+  }
   const r = e.target.closest(".row"); if (!r) return;
   selectedId = r.dataset.id; clearForm(); showDetail();
   $("list").querySelectorAll(".row").forEach(x => x.classList.toggle("active", x.dataset.id === selectedId));
@@ -814,9 +841,98 @@ function openVaultView() {
   const s = store.get();
   $("vault-name").textContent = s.name || T("Профиль", "Profile");
   $("vault-avatar").textContent = initial(s.name);
-  clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail");
+  view = "vault"; setViewChrome("vault");
+  clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("note-editor").classList.add("hidden"); $("v-vault").classList.remove("show-detail");
   if (purgeTrash()) persist();
   renderNav(); render(); show("vault"); resetIdle();
+}
+
+/* ---------------- Заметки и Задачи (воркспейс в стиле Notion) ---------------- */
+function setViewChrome(v) {
+  $("b-new-entry").textContent = v === "notes" ? T("+ Заметка", "+ Note") : v === "tasks" ? T("+ Задача", "+ Task") : T("+ Добавить", "+ Add");
+  $("sort").classList.toggle("hidden", v !== "vault");
+  $("search").placeholder = v === "notes" ? T("Поиск заметок", "Search notes") : v === "tasks" ? T("Поиск задач", "Search tasks") : T("Поиск по хранилищу", "Search the vault");
+}
+function setView(v) {
+  view = v; selectedId = null; $("search").value = ""; setViewChrome(v);
+  if (v !== "vault") { $("detail-view").classList.add("hidden"); $("form-card").classList.add("hidden"); }
+  renderNav(); render();
+}
+
+/* Заметки — тип "page": заголовок + текст, автосохранение */
+function renderNotes() {
+  const all = notesList(), q = $("search").value.toLowerCase();
+  const list = all.filter(x => (x.title + " " + (x.body || "")).toLowerCase().includes(q)).sort((a, b) => b.updated - a.updated);
+  if (!list.some(x => x.id === selectedId)) selectedId = null;
+  if (!selectedId && list.length && innerWidth > 980) selectedId = list[0].id;
+  $("list-count").textContent = all.length + " " + T(plural(all.length, "заметка", "заметки", "заметок"), all.length === 1 ? "note" : "notes");
+  $("list").innerHTML = list.length ? list.map(x => `
+    <div class="note-row${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
+      <b>${esc(x.title || T("Без названия", "Untitled"))}</b>
+      <small>${esc((x.body || "").replace(/\s+/g, " ").trim().slice(0, 70)) || T("Пустая заметка", "Empty note")}</small>
+    </div>`).join("") : `<div class="empty">${all.length ? T("Ничего не найдено", "Nothing found") : T("Заметок пока нет. Нажмите «+ Заметка».", "No notes yet. Click “+ Note”.")}</div>`;
+  renderNoteEditor();
+}
+async function newNote() {
+  const now = Date.now(), id = b64(rand(9));
+  entries.push({ type: "page", id, title: "", body: "", created: now, updated: now });
+  selectedId = id; await persist(); renderNav(); renderNotes();
+  $("v-vault").classList.add("show-detail"); setTimeout(() => $("note-title") && $("note-title").focus(), 60);
+}
+const saveNote = debounce(async () => {
+  const x = notesList().find(y => y.id === selectedId); if (!x) return;
+  x.title = $("note-title").value; x.body = $("note-body").value; x.updated = Date.now();
+  await persist();
+  const b = $("list").querySelector(`.note-row[data-id="${CSS.escape(selectedId)}"] b`); if (b) b.textContent = x.title || T("Без названия", "Untitled");
+  const st = $("note-saved"); if (st) st.textContent = T("Сохранено", "Saved");
+}, 400);
+function renderNoteEditor() {
+  const ed = $("note-editor"); ed.classList.remove("hidden");
+  $("detail-view").classList.add("hidden"); $("form-card").classList.add("hidden");
+  const x = notesList().find(y => y.id === selectedId);
+  if (!x) { ed.innerHTML = `<div class="d-empty"><svg class="ic accent"><use href="#i-logo"/></svg><div>${notesList().length ? T("Выберите заметку слева", "Select a note") : T("Создайте первую заметку — она будет зашифрована.", "Create your first note — it will be encrypted.")}</div>${notesList().length ? "" : `<button data-new-note>${T("+ Заметка", "+ Note")}</button>`}</div>`; return; }
+  ed.innerHTML = `<div class="note-ed">
+    <button class="ib back" data-note-back aria-label="${T("Назад", "Back")}"><svg class="ic"><use href="#i-back"/></svg></button>
+    <input id="note-title" class="note-title" maxlength="120" placeholder="${T("Без названия", "Untitled")}">
+    <textarea id="note-body" class="note-body" placeholder="${T("Пишите здесь…", "Write here…")}" spellcheck="true"></textarea>
+    <div class="note-foot"><span class="muted small" id="note-saved">${T("Изменено ", "Edited ") + new Date(x.updated).toLocaleString()}</span><button class="ib danger-text" data-note-del>${T("Удалить", "Delete")}</button></div>
+  </div>`;
+  $("note-title").value = x.title; $("note-body").value = x.body || "";
+  $("note-title").oninput = $("note-body").oninput = saveNote;
+}
+$("note-editor").addEventListener("click", async e => {
+  if (e.target.closest("[data-new-note]")) return newNote();
+  if (e.target.closest("[data-note-back]")) { $("v-vault").classList.remove("show-detail"); return; }
+  if (e.target.closest("[data-note-del]")) {
+    const x = notesList().find(y => y.id === selectedId); if (!x) return;
+    if (await confirmBox(T("Удалить заметку?", "Delete this note?"), T("Удалить", "Delete"), true)) { x.deletedAt = Date.now(); selectedId = null; await persist(); renderNav(); renderNotes(); $("v-vault").classList.remove("show-detail"); }
+  }
+});
+
+/* Задачи — тип "task": текст, галочка, срок */
+function renderTasks() {
+  $("detail-view").classList.add("hidden"); $("form-card").classList.add("hidden"); $("note-editor").classList.add("hidden");
+  $("v-vault").classList.remove("show-detail");
+  const all = tasksList(), q = $("search").value.toLowerCase();
+  const list = all.filter(x => (x.title || "").toLowerCase().includes(q)).sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || b.created - a.created);
+  const done = all.filter(x => x.done).length;
+  $("list-count").textContent = (all.length - done) + " " + T("активных", "active") + (done ? ` · ${done} ${T("выполнено", "done")}` : "");
+  $("list").innerHTML = `<div class="task-add"><input id="task-new" class="field" maxlength="200" placeholder="${T("Новая задача…", "New task…")}"></div>` +
+    (list.length ? list.map(x => `
+      <div class="task-row${x.done ? " done" : ""}" data-id="${esc(x.id)}">
+        <button class="task-check" data-task-toggle aria-label="${T("Готово", "Done")}">${x.done ? "✓" : ""}</button>
+        <span class="task-text">${esc(x.title)}</span>
+        ${x.due ? `<span class="task-due${(!x.done && new Date(x.due + "T23:59") < Date.now()) ? " overdue" : ""}">${new Date(x.due + "T12:00").toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "short" })}</span>` : ""}
+        <button class="ib task-del" data-task-del aria-label="×">✕</button>
+      </div>`).join("") : `<div class="empty">${all.length ? T("Ничего не найдено", "Nothing found") : T("Задач пока нет. Напишите задачу и нажмите Enter.", "No tasks yet. Type one and press Enter.")}</div>`);
+  const inp = $("task-new");
+  inp.onkeydown = async e => {
+    if (e.key === "Enter" && inp.value.trim()) {
+      const now = Date.now();
+      entries.push({ type: "task", id: b64(rand(9)), title: inp.value.trim(), done: false, created: now, updated: now });
+      await persist(); renderNav(); renderTasks(); setTimeout(() => $("task-new") && $("task-new").focus(), 30);
+    }
+  };
 }
 
 /* ---------------- Настройки: смена пароля, имя ---------------- */
@@ -938,9 +1054,9 @@ const EX_COLS = () => [
   ["dates", T("Даты", "Dates"), 22, x => T("Добавлено ", "Added ") + new Date(x.created).toLocaleDateString() + (x.updated !== x.created ? "\n" + T("Изменено ", "Changed ") + new Date(x.updated).toLocaleDateString() : "")]
 ];
 let exSel = new Set(), exTypes = new Set(), exCats = new Set(), exCols = new Set(["type", "title", "login", "pass", "url", "category", "note", "card", "extra", "custom"]);
-function exPool() { return live().filter(x => (!exTypes.size || exTypes.has(x.type)) && (!exCats.size || exCats.has(x.category || "\u0000"))); }
+function exPool() { return pwEntries().filter(x => (!exTypes.size || exTypes.has(x.type)) && (!exCats.size || exCats.has(x.category || "\u0000"))); }
 function renderExport() {
-  const L = live(), types = [...new Set(L.map(x => x.type))], cats = [...new Set(L.map(x => x.category || "\u0000"))];
+  const L = pwEntries(), types = [...new Set(L.map(x => x.type))], cats = [...new Set(L.map(x => x.category || "\u0000"))];
   const chip = (group, v, label, count, on) => `<button type="button" class="chip-t${on ? " on" : ""}" data-g="${group}" data-v="${esc(v)}">${esc(label)}${count !== undefined ? ` <span>${count}</span>` : ""}</button>`;
   $("ex-types").innerHTML = chip("t", "*", T("Все типы", "All types"), undefined, !exTypes.size) + types.map(t => chip("t", t, TYPE_NAME(t), L.filter(x => x.type === t).length, exTypes.has(t))).join("");
   $("ex-cats").innerHTML = cats.length > 1 || cats[0] !== "\u0000" ? chip("c", "*", T("Все категории", "All categories"), undefined, !exCats.size) +
@@ -1084,7 +1200,7 @@ $("b-import-go").onclick = async () => {
 
 /* ---------------- Выход, удаление, автоблокировка ---------------- */
 function lock() {
-  vaultKey = null; entries = []; selectedId = null; breached = new Map(); totpKeys.clear();
+  vaultKey = null; entries = []; selectedId = null; view = "vault"; breached = new Map(); totpKeys.clear();
   $("list").innerHTML = ""; $("detail-view").innerHTML = ""; $("search").value = ""; $("audit-body").innerHTML = ""; $("import-body").innerHTML = ""; importRows = [];
   clearForm(); home();
 }
