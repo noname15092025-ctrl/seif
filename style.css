@@ -142,3 +142,82 @@ button:disabled { opacity:.45; cursor:wait; }
 }
 ::selection { background:var(--red); color:#fff; }
 .card, .entry, button, input { box-shadow:none; }
+
+/* ===== Пропорции и выравнивание (единая сетка 4/8 px, высота контролов 42 px) ===== */
+body { font-size:15px; line-height:1.5; }
+main { max-width:720px; padding:28px 20px 72px; }
+.top { padding-bottom:16px; margin-bottom:20px !important; }
+.sub { font-size:14px; margin:0 0 20px; }
+.card { padding:28px; margin-bottom:16px; }
+.card.bar { padding:14px 20px; }
+.card.bar > div { display:flex; gap:8px; flex-wrap:wrap; }
+.card.bar button { margin:0; }
+h2 { margin:0 0 20px; }
+h3 { margin:24px 0 10px; }
+
+label { display:block; margin:0 0 6px; }
+label.chk { display:flex; margin:0; padding:8px 0; }
+input, select { height:42px; padding:0 12px; margin:0 0 18px; }
+textarea { padding:10px 12px; margin:0 0 18px; }
+input[type=file] { height:auto; padding:9px 12px; }
+input[type=range] { height:auto; margin:4px 0 12px; }
+input[type=checkbox], input[type=radio] { height:auto; margin:0 8px 0 0; }
+.meter { margin:-12px 0 6px; }
+.meter-text { margin-bottom:14px; }
+
+button { height:42px; padding:0 18px; margin:0 8px 8px 0; display:inline-flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap; }
+button.small { height:34px; padding:0 12px; font-size:13px; margin:0; }
+.toggles { gap:8px; } .toggles button.small { min-width:40px; }
+.row { gap:16px; }
+.row.nogap { gap:8px; align-items:flex-start; }
+.row.nogap > button { margin:0 0 18px; }
+.fav-wrap { padding-bottom:18px; align-items:flex-end; }
+.gen-opts { padding:12px 16px 4px; margin:0 0 18px; }
+
+.tabs { gap:0; margin-bottom:24px; border-bottom:1px solid var(--line); }
+.tabs .tab { height:38px; border:0; border-radius:0; padding:0 16px; margin:0 0 -1px; background:transparent; }
+.tabs .tab.active { box-shadow:inset 0 -2px 0 var(--red); color:var(--strong); }
+.chips { gap:6px; margin:0 0 8px; }
+.chip { height:30px; padding:0 12px; font-size:12px; margin:0; }
+
+/* Поиск и сортировка в одну строку */
+#v-vault .row.nogap select.shrink { width:200px; }
+
+/* Записи: информация слева, действия — аккуратной строкой ссылок */
+.entry { display:block; padding:16px 0; }
+.entry:first-child { padding-top:8px; }
+.entry:hover { background:transparent; }
+.entry b { font-size:15px; }
+.entry small { margin-top:2px; }
+.entry .pw { margin-top:8px; font-size:14px; }
+.entry .note { margin-top:10px; }
+.totp { margin-top:8px; }
+.entry-actions { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:2px 16px; margin-top:12px; }
+.entry-actions button { height:auto; padding:2px 0; margin:0; border:0; background:none; color:var(--muted); font-size:13px; font-weight:500; border-radius:0; }
+.entry-actions button:hover { color:var(--strong); border:0; }
+.entry-actions button.danger-text:hover { color:var(--red); }
+.entry.compact { display:flex; align-items:center; justify-content:space-between; padding:12px 0; }
+.entry.compact button { height:32px; margin:0; font-size:13px; }
+#profiles .entry { display:flex; align-items:center; justify-content:space-between; padding:12px 0; }
+#profiles .entry button { height:34px; margin:0; }
+#profiles { margin-bottom:20px; }
+
+.feats { gap:0 32px; }
+.feats div { padding:18px 0 8px; }
+.about .lead { margin-bottom:24px; }
+
+.warn { padding:12px 16px; margin:16px 0; line-height:1.5; }
+.modal-box { padding:28px; } .modal-box p { margin:0 0 20px; line-height:1.55; }
+.modal-box button { margin:0 8px 0 0; }
+
+@media (max-width:560px) {
+  main { padding:20px 14px 60px; }
+  .card { padding:20px; }
+  .card.bar { flex-direction:column; align-items:flex-start; gap:12px; }
+  .row { gap:0; }
+  #v-vault .row.nogap select.shrink { width:100%; }
+  .row.nogap > button { flex:1 1 0; }
+  .feats { gap:0; }
+  .entry { flex-direction:initial; }
+  .tabs .tab { padding:0 12px; flex:1 1 0; }
+}
