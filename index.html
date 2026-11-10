@@ -57,13 +57,14 @@
   .row { display:flex; gap:10px; } .row > * { flex:1; }
   @media (max-width:520px) { h1 { font-size:34px; } .row { flex-direction:column; gap:0; } .words { grid-template-columns:repeat(2,1fr); } .entry { flex-wrap:wrap; } }
   ::selection { background:var(--red); color:#fff; }
-  .logo { display:flex; align-items:center; gap:14px; }
+  .logo { display:flex; align-items:center; gap:14px; cursor:pointer; user-select:none; width:max-content; transition:opacity .15s; }
+  .logo:hover { opacity:.85; }
   .logo svg { flex:0 0 auto; filter:drop-shadow(0 0 16px var(--glow)); }
 </style>
 </head>
 <body>
 <main>
-  <h1 class="logo"><svg viewBox="0 0 64 64" width="52" height="52" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="8" width="52" height="46" rx="8" fill="#000" stroke="#ff2d3d" stroke-width="4"/><rect x="13" y="15" width="38" height="32" rx="4" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><circle cx="32" cy="31" r="9" stroke="#fff" stroke-width="3"/><circle cx="32" cy="31" r="2.5" fill="#ff2d3d"/><path d="M32 20v3M32 39v3M21 31h3M40 31h3" stroke="#fff" stroke-width="3" stroke-linecap="round"/><rect x="14" y="54" width="8" height="4" rx="1" fill="#ff2d3d"/><rect x="42" y="54" width="8" height="4" rx="1" fill="#ff2d3d"/></svg><span>Vault</span></h1>
+  <h1 class="logo" id="logo" title="На главную"><svg viewBox="0 0 64 64" width="52" height="52" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="8" width="52" height="46" rx="8" fill="#000" stroke="#ff2d3d" stroke-width="4"/><rect x="13" y="15" width="38" height="32" rx="4" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><circle cx="32" cy="31" r="9" stroke="#fff" stroke-width="3"/><circle cx="32" cy="31" r="2.5" fill="#ff2d3d"/><path d="M32 20v3M32 39v3M21 31h3M40 31h3" stroke="#fff" stroke-width="3" stroke-linecap="round"/><rect x="14" y="54" width="8" height="4" rx="1" fill="#ff2d3d"/><rect x="42" y="54" width="8" height="4" rx="1" fill="#ff2d3d"/></svg><span>Vault</span></h1>
   <p class="sub">Пароли шифруются прямо в браузере. Ничего не отправляется на сервер. Без фразы и пароля восстановить доступ невозможно.</p>
 
   <!-- Старт -->
@@ -80,6 +81,7 @@
     <div class="warn">Запишите эти 12 слов на бумагу по порядку и храните в надёжном месте. Это единственный способ восстановить хранилище. Никто, включая разработчика, не сможет помочь, если вы их потеряете.</div>
     <div class="words" id="words"></div>
     <button id="b-phrase-ok">Я записал(а)</button>
+    <button class="ghost" data-cancel>Отмена</button>
   </section>
 
   <!-- Проверка фразы -->
@@ -90,6 +92,7 @@
     <div class="err" id="verify-err"></div>
     <button id="b-verify">Проверить</button>
     <button class="ghost" id="b-back-phrase">Показать фразу снова</button>
+    <button class="ghost" data-cancel>Отмена</button>
   </section>
 
   <!-- Установка пароля -->
@@ -104,6 +107,7 @@
     <input type="password" id="pw2" autocomplete="new-password">
     <div class="err" id="setpw-err"></div>
     <button id="b-setpw">Сохранить</button>
+    <button class="ghost" data-cancel>Отмена</button>
   </section>
 
   <!-- Восстановление -->
@@ -305,6 +309,16 @@ $("profiles").onclick = e => {
   currentId = id; $("unlock-name").textContent = store.get().name || "Профиль";
   $("unlock-err").textContent = ""; show("unlock"); $("unlock-pw").focus();
 };
+// Отмена создания / возврат на главную
+function cancelToHome() {
+  pendingPhrase = null; pendingKey = null; verifyIdx = [];
+  $("words").innerHTML = ""; $("verify-fields").innerHTML = "";
+  ["pw1", "pw2", "p-name", "restore-words", "unlock-pw"].forEach(id => $(id).value = "");
+  $("restore-file").value = "";
+  if (vaultKey) lock(); else { currentId = null; home(); }
+}
+document.querySelectorAll("[data-cancel]").forEach(b => b.onclick = cancelToHome);
+$("logo").onclick = () => { if (WORDS) cancelToHome(); };
 $("b-other").onclick = () => { currentId = null; home(); };
 function openVault() { $("vault-name").textContent = store.get().name || "Профиль"; render(); show("vault"); resetIdle(); }
 
