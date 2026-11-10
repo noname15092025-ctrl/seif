@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://raw.githubusercontent.com; img-src data:;">
+<title>Сейф — хранилище паролей</title>
+<style>
+  :root { --bg:#0f1115; --card:#181b22; --line:#2a2f3a; --text:#e8eaf0; --muted:#8a91a3; --accent:#4f8cff; --danger:#ff5c5c; --ok:#3ecf8e; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--text); }
+  main { max-width:640px; margin:0 auto; padding:32px 16px 64px; }
+  h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:18px; margin:0 0 12px; }
+  .sub { color:var(--muted); margin:0 0 24px; font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:16px; }
+  .hidden { display:none !important; }
+  input, textarea { width:100%; background:#0c0e12; color:var(--text); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font:inherit; margin:4px 0 12px; }
+  textarea { min-height:90px; resize:vertical; font-family:ui-monospace,monospace; }
+  label { font-size:13px; color:var(--muted); }
+  button { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:10px 16px; font:inherit; font-weight:600; cursor:pointer; margin:4px 6px 4px 0; }
+  button.ghost { background:transparent; border:1px solid var(--line); color:var(--text); }
+  button.danger { background:var(--danger); }
+  button:disabled { opacity:.5; cursor:wait; }
+  .words { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:12px 0; }
+  .words div { background:#0c0e12; border:1px solid var(--line); border-radius:6px; padding:6px 8px; font-family:ui-monospace,monospace; font-size:14px; }
+  .words span { color:var(--muted); margin-right:6px; font-size:12px; }
+  .warn { background:#2a1d10; border:1px solid #6b4a1e; color:#ffcf8a; border-radius:8px; padding:10px 12px; font-size:13px; margin:12px 0; }
+  .err { color:var(--danger); font-size:13px; min-height:18px; }
+  .entry { border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; gap:8px; align-items:center; }
+  .entry b { display:block; } .entry small { color:var(--muted); }
+  .entry .pw { font-family:ui-monospace,monospace; }
+  .row { display:flex; gap:8px; } .row > * { flex:1; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🔐 Сейф</h1>
+  <p class="sub">Пароли шифруются прямо в браузере. Ничего не отправляется на сервер. Без фразы и пароля восстановить доступ невозможно.</p>
+
+  <!-- Старт -->
+  <section id="v-start" class="card hidden">
+    <h2>Добро пожаловать</h2>
+    <button id="b-new">Создать новое хранилище</button>
+    <button class="ghost" id="b-restore">Восстановить по секретной фразе</button>
+  </section>
+
+  <!-- Показ фразы -->
+  <section id="v-phrase" class="card hidden">
+    <h2>Ваша секретная фраза</h2>
+    <div class="warn">Запишите эти 12 слов на бумагу по порядку и храните в надёжном месте. Это единственный способ восстановить хранилище. Никто, включая разработчика, не сможет помочь, если вы их потеряете.</div>
+    <div class="words" id="words"></div>
+    <button id="b-phrase-ok">Я записал(а)</button>
+  </section>
+
+  <!-- Проверка фразы -->
+  <section id="v-verify" class="card hidden">
+    <h2>Проверка</h2>
+    <p class="sub">Введите слова с указанными номерами.</p>
+    <div id="verify-fields"></div>
+    <div class="err" id="verify-err"></div>
+    <button id="b-verify">Проверить</button>
+    <button class="ghost" id="b-back-phrase">Показать фразу снова</button>
+  </section>
+
+  <!-- Установка пароля -->
+  <section id="v-setpw" class="card hidden">
+    <h2>Мастер-пароль</h2>
+    <p class="sub">Нужен для входа на этом устройстве. Если забудете, войдите по секретной фразе.</p>
+    <label>Пароль (минимум 10 символов)</label>
+    <input type="password" id="pw1" autocomplete="new-password">
+    <label>Повторите пароль</label>
+    <input type="password" id="pw2" autocomplete="new-password">
+    <div class="err" id="setpw-err"></div>
+    <button id="b-setpw">Сохранить</button>
+  </section>
+
+  <!-- Восстановление -->
+  <section id="v-restore" class="card hidden">
+    <h2>Восстановление</h2>
+    <label>Секретная фраза (12 слов) через пробел</label>
+    <textarea id="restore-words" autocomplete="off" spellcheck="false"></textarea>
+    <label>Файл резервной копии (необязательно, если хранилище уже есть в этом браузере)</label>
+    <input type="file" id="restore-file" accept=".json,application/json">
+    <div class="err" id="restore-err"></div>
+    <button id="b-restore-go">Восстановить</button>
+    <button class="ghost" id="b-restore-cancel">Назад</button>
+  </section>
+
+  <!-- Вход -->
+  <section id="v-unlock" class="card hidden">
+    <h2>Разблокировать</h2>
+    <label>Мастер-пароль</label>
+    <input type="password" id="unlock-pw" autocomplete="current-password">
+    <div class="err" id="unlock-err"></div>
+    <button id="b-unlock">Открыть</button>
+    <button class="ghost" id="b-forgot">Забыл пароль (войти по секретной фразе)</button>
+  </section>
+
+  <!-- Хранилище -->
+  <section id="v-vault" class="hidden">
+    <div class="card">
+      <h2>Новая запись</h2>
+      <div class="row">
+        <div><label>Сайт / название</label><input id="e-site"></div>
+        <div><label>Логин</label><input id="e-login" autocomplete="off"></div>
+      </div>
+      <label>Пароль</label>
+      <div class="row"><input id="e-pass" autocomplete="off"><button class="ghost" id="b-gen" style="flex:0 0 auto">Сгенерировать</button></div>
+      <button id="b-add">Добавить</button>
+    </div>
+    <div class="card">
+      <h2>Мои пароли</h2>
+      <input id="search" placeholder="Поиск…">
+      <div id="list"></div>
+    </div>
+    <div class="card">
+      <button class="ghost" id="b-export">Скачать резервную копию</button>
+      <button class="ghost" id="b-lock">Заблокировать</button>
+      <button class="danger" id="b-wipe">Удалить с этого устройства</button>
+      <p class="sub" style="margin:8px 0 0">Резервная копия зашифрована. Открыть её можно только вашей секретной фразой.</p>
+    </div>
+  </section>
+
+  <section id="v-loading" class="card"><p class="sub" id="loading-msg">Загрузка словаря BIP39…</p></section>
+</main>
+
+<script>
+"use strict";
+/* ================== Криптография ==================
+   Схема:
+   - энтропия 128 бит → 12 слов (BIP39); при восстановлении принимаются 12/15/18/21/24
+   - фраза → seed (PBKDF2-SHA512, 2048 итераций, стандарт BIP39)
+   - seed → vaultKey (HKDF-SHA256) — шифрует данные (AES-256-GCM)
+   - мастер-пароль → wrapKey (PBKDF2-SHA256, 600 000 итераций) — шифрует vaultKey на этом устройстве
+   В localStorage лежат только зашифрованные данные. Ключи живут лишь в памяти вкладки.
+*/
+const WORDLIST_URL = "https://raw.githubusercontent.com/bitcoin/bips/master/bip-0039/english.txt";
+const STORE = "seif.v1";
+const PBKDF2_ITERS = 600000;
+const enc = new TextEncoder(), dec = new TextDecoder();
+const C = crypto.subtle;
+let WORDS = null;
+
+const b64 = u8 => btoa(String.fromCharCode(...new Uint8Array(u8)));
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const rand = n => crypto.getRandomValues(new Uint8Array(n));
+
+async function loadWordlist() {
+  const res = await fetch(WORDLIST_URL, { cache: "force-cache" });
+  if (!res.ok) throw new Error("Не удалось загрузить словарь");
+  const list = (await res.text()).trim().split("\n").map(w => w.trim());
+  if (list.length !== 2048 || list[0] !== "abandon" || list[2047] !== "zoo") throw new Error("Словарь повреждён");
+  WORDS = list;
+  // Самопроверка по официальному тест-вектору BIP39 (128 бит нулей → "abandon ×11 about")
+  const t = await entropyToMnemonic(new Uint8Array(16));
+  if (t !== Array(11).fill("abandon").concat("about").join(" ")) throw new Error("Самопроверка BIP39 не пройдена");
+}
+
+async function entropyToMnemonic(ent) {
+  const hash = new Uint8Array(await C.digest("SHA-256", ent));
+  let bits = [...ent].map(b => b.toString(2).padStart(8, "0")).join("");
+  bits += hash[0].toString(2).padStart(8, "0").slice(0, ent.length / 4); // контрольная сумма: 1 бит на 32 бита энтропии
+  const out = [];
+  for (let i = 0; i < bits.length; i += 11) out.push(WORDS[parseInt(bits.slice(i, i + 11), 2)]);
+  return out.join(" ");
+}
+
+function normalizePhrase(s) { return s.normalize("NFKD").toLowerCase().trim().split(/\s+/).join(" "); }
+
+async function validateMnemonic(phrase) {
+  const words = phrase.split(" ");
+  if (![12, 15, 18, 21, 24].includes(words.length)) return "Нужно 12 слов (сейчас " + words.length + ")";
+  let bits = "";
+  for (const w of words) {
+    const i = WORDS.indexOf(w);
+    if (i < 0) return "Неизвестное слово: «" + w + "»";
+    bits += i.toString(2).padStart(11, "0");
+  }
+  const csLen = words.length / 3, entBits = bits.length - csLen;
+  const ent = new Uint8Array(entBits / 8);
+  for (let i = 0; i < ent.length; i++) ent[i] = parseInt(bits.slice(i * 8, i * 8 + 8), 2);
+  const hash = new Uint8Array(await C.digest("SHA-256", ent));
+  if (hash[0].toString(2).padStart(8, "0").slice(0, csLen) !== bits.slice(entBits)) return "Ошибка контрольной суммы. Проверьте порядок и написание слов";
+  return null;
+}
+
+async function phraseToVaultKey(phrase) {
+  const base = await C.importKey("raw", enc.encode(phrase), "PBKDF2", false, ["deriveBits"]);
+  const seed = await C.deriveBits({ name: "PBKDF2", hash: "SHA-512", salt: enc.encode("mnemonic"), iterations: 2048 }, base, 512);
+  const hk = await C.importKey("raw", seed, "HKDF", false, ["deriveKey"]);
+  return C.deriveKey({ name: "HKDF", hash: "SHA-256", salt: enc.encode("seif-vault-v1"), info: enc.encode("vault-key") },
+    hk, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+}
+
+async function vaultId(key) {
+  const raw = await C.exportKey("raw", key);
+  return b64(await C.digest("SHA-256", raw)).slice(0, 16);
+}
+
+async function passwordToWrapKey(pw, salt) {
+  const base = await C.importKey("raw", enc.encode(pw), "PBKDF2", false, ["deriveKey"]);
+  return C.deriveKey({ name: "PBKDF2", hash: "SHA-256", salt, iterations: PBKDF2_ITERS }, base,
+    { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+
+async function seal(key, bytes) {
+  const iv = rand(12);
+  const ct = await C.encrypt({ name: "AES-GCM", iv }, key, bytes);
+  return { iv: b64(iv), ct: b64(ct) };
+}
+async function open(key, box) {
+  return new Uint8Array(await C.decrypt({ name: "AES-GCM", iv: unb64(box.iv) }, key, unb64(box.ct)));
+}
+
+/* ================== Состояние ================== */
+let vaultKey = null, entries = [], pendingPhrase = null, pendingKey = null, verifyIdx = [];
+
+const store = {
+  get() { try { return JSON.parse(localStorage.getItem(STORE)); } catch { return null; } },
+  set(v) { localStorage.setItem(STORE, JSON.stringify(v)); },
+  clear() { localStorage.removeItem(STORE); }
+};
+
+async function persist() {
+  const s = store.get();
+  s.vault = await seal(vaultKey, enc.encode(JSON.stringify(entries)));
+  store.set(s);
+}
+
+async function setupDevice(key, pw, vaultBox) {
+  const salt = rand(16);
+  const wrapKey = await passwordToWrapKey(pw, salt);
+  const raw = new Uint8Array(await C.exportKey("raw", key));
+  const wrapped = await seal(wrapKey, raw);
+  raw.fill(0);
+  store.set({ v: 1, id: await vaultId(key), salt: b64(salt), iters: PBKDF2_ITERS, wrapped,
+              vault: vaultBox || await seal(key, enc.encode("[]")) });
+}
+
+/* ================== Интерфейс ================== */
+const $ = id => document.getElementById(id);
+const views = ["start", "phrase", "verify", "setpw", "restore", "unlock", "vault", "loading"];
+function show(v) { views.forEach(x => $("v-" + x).classList.toggle("hidden", x !== v)); }
+function busy(btn, on) { btn.disabled = on; }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+function home() { show(store.get() ? "unlock" : "start"); }
+
+$("b-new").onclick = async () => {
+  pendingPhrase = await entropyToMnemonic(rand(16));
+  $("words").innerHTML = pendingPhrase.split(" ").map((w, i) => `<div><span>${i + 1}</span>${w}</div>`).join("");
+  show("phrase");
+};
+$("b-phrase-ok").onclick = () => {
+  const set = new Set(); while (set.size < 3) set.add(Math.floor(Math.random() * 12));
+  verifyIdx = [...set].sort((a, b) => a - b);
+  $("verify-fields").innerHTML = verifyIdx.map(i => `<label>Слово №${i + 1}</label><input data-i="${i}" autocomplete="off" spellcheck="false">`).join("");
+  $("verify-err").textContent = ""; show("verify");
+};
+$("b-back-phrase").onclick = () => show("phrase");
+$("b-verify").onclick = async () => {
+  const w = pendingPhrase.split(" ");
+  const ok = [...$("verify-fields").querySelectorAll("input")].every(inp => inp.value.trim().toLowerCase() === w[+inp.dataset.i]);
+  if (!ok) { $("verify-err").textContent = "Слова не совпадают. Проверьте записанную фразу."; return; }
+  pendingKey = await phraseToVaultKey(pendingPhrase);
+  pendingPhrase = null; $("words").innerHTML = "";
+  show("setpw");
+};
+
+$("b-setpw").onclick = async (e) => {
+  const p1 = $("pw1").value, p2 = $("pw2").value;
+  if (p1.length < 10) { $("setpw-err").textContent = "Минимум 10 символов"; return; }
+  if (p1 !== p2) { $("setpw-err").textContent = "Пароли не совпадают"; return; }
+  busy(e.target, true);
+  try {
+    const existing = pendingKey._vaultBox || null;
+    await setupDevice(pendingKey, p1, existing);
+    vaultKey = pendingKey; pendingKey = null;
+    entries = JSON.parse(dec.decode(await open(vaultKey, store.get().vault)));
+    $("pw1").value = $("pw2").value = ""; render(); show("vault");
+  } catch (err) { $("setpw-err").textContent = "Ошибка: " + err.message; }
+  busy(e.target, false);
+};
+
+$("b-restore").onclick = $("b-forgot").onclick = () => { $("restore-err").textContent = ""; show("restore"); };
+$("b-restore-cancel").onclick = home;
+$("b-restore-go").onclick = async (e) => {
+  const phrase = normalizePhrase($("restore-words").value);
+  const bad = await validateMnemonic(phrase);
+  if (bad) { $("restore-err").textContent = bad; return; }
+  busy(e.target, true);
+  try {
+    const key = await phraseToVaultKey(phrase);
+    const id = await vaultId(key);
+    let box = null;
+    const f = $("restore-file").files[0];
+    if (f) {
+      const backup = JSON.parse(await f.text());
+      if (backup.id !== id) throw new Error("Эта резервная копия от другой фразы");
+      box = backup.vault;
+    } else {
+      const s = store.get();
+      if (s && s.id === id) box = s.vault;
+    }
+    if (box) await open(key, box); // проверка, что расшифровывается
+    key._vaultBox = box; // если копии нет — создастся пустое хранилище для этой фразы
+    pendingKey = key;
+    $("restore-words").value = ""; $("restore-file").value = "";
+    $("setpw-err").textContent = ""; show("setpw");
+  } catch (err) { $("restore-err").textContent = err.message.includes("operation") ? "Не удалось расшифровать" : err.message; }
+  busy(e.target, false);
+};
+
+$("b-unlock").onclick = async (e) => {
+  const s = store.get(); busy(e.target, true);
+  try {
+    const wrapKey = await passwordToWrapKey($("unlock-pw").value, unb64(s.salt));
+    const raw = await open(wrapKey, s.wrapped);
+    vaultKey = await C.importKey("raw", raw, { name: "AES-GCM" }, true, ["encrypt", "decrypt"]);
+    raw.fill(0);
+    entries = JSON.parse(dec.decode(await open(vaultKey, s.vault)));
+    $("unlock-pw").value = ""; $("unlock-err").textContent = "";
+    render(); show("vault");
+  } catch { $("unlock-err").textContent = "Неверный пароль"; }
+  busy(e.target, false);
+};
+$("unlock-pw").addEventListener("keydown", e => { if (e.key === "Enter") $("b-unlock").click(); });
+
+function genPassword(len = 20) {
+  const cs = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*-_=+?";
+  const out = []; const lim = 256 - (256 % cs.length);
+  while (out.length < len) for (const b of rand(len * 2)) if (b < lim && out.length < len) out.push(cs[b % cs.length]);
+  return out.join("");
+}
+$("b-gen").onclick = () => { $("e-pass").value = genPassword(); };
+
+$("b-add").onclick = async () => {
+  const site = $("e-site").value.trim(), login = $("e-login").value.trim(), pass = $("e-pass").value;
+  if (!site || !pass) return;
+  entries.push({ id: b64(rand(9)), site, login, pass, t: Date.now() });
+  await persist();
+  $("e-site").value = $("e-login").value = $("e-pass").value = "";
+  render();
+};
+
+function render() {
+  const q = $("search").value.toLowerCase();
+  const list = entries.filter(x => (x.site + " " + x.login).toLowerCase().includes(q));
+  $("list").innerHTML = list.length ? list.map(x => `
+    <div class="entry" data-id="${x.id}">
+      <div><b>${esc(x.site)}</b><small>${esc(x.login)}</small><div class="pw" data-pw>••••••••</div></div>
+      <div style="flex:0 0 auto">
+        <button class="ghost" data-act="show">👁</button>
+        <button class="ghost" data-act="copy">Копировать</button>
+        <button class="ghost" data-act="del">✕</button>
+      </div>
+    </div>`).join("") : `<p class="sub">Пока пусто.</p>`;
+}
+$("search").oninput = render;
+$("list").onclick = async (e) => {
+  const act = e.target.dataset.act; if (!act) return;
+  const row = e.target.closest(".entry"); const x = entries.find(y => y.id === row.dataset.id);
+  if (act === "show") { const el = row.querySelector("[data-pw]"); el.textContent = el.textContent.startsWith("•") ? x.pass : "••••••••"; }
+  if (act === "copy") { await navigator.clipboard.writeText(x.pass); e.target.textContent = "✓"; setTimeout(() => e.target.textContent = "Копировать", 1200);
+                        setTimeout(() => navigator.clipboard.writeText("").catch(() => {}), 30000); }
+  if (act === "del" && confirmDel(x.site)) { entries = entries.filter(y => y !== x); await persist(); render(); }
+};
+function confirmDel(name) { return window.confirm("Удалить запись «" + name + "»?"); }
+
+$("b-export").onclick = () => {
+  const s = store.get();
+  const blob = new Blob([JSON.stringify({ v: 1, id: s.id, vault: s.vault }, null, 1)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+  a.download = "seif-backup-" + new Date().toISOString().slice(0, 10) + ".json"; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+function lock() { vaultKey = null; entries = []; $("list").innerHTML = ""; home(); }
+$("b-lock").onclick = lock;
+$("b-wipe").onclick = () => {
+  if (window.confirm("Удалить хранилище с этого устройства? Восстановить можно будет только по секретной фразе и резервной копии.")) { store.clear(); lock(); }
+};
+// Автоблокировка через 5 минут бездействия
+let idle; const resetIdle = () => { clearTimeout(idle); if (vaultKey) idle = setTimeout(lock, 5 * 60 * 1000); };
+["click", "keydown", "mousemove", "touchstart"].forEach(ev => addEventListener(ev, resetIdle, { passive: true }));
+document.addEventListener("visibilitychange", () => { if (document.hidden) resetIdle(); });
+
+loadWordlist().then(home).catch(err => { $("loading-msg").textContent = "Ошибка: " + err.message + ". Проверьте подключение к интернету и обновите страницу."; });
+</script>
+</body>
+</html>
