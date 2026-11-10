@@ -6,7 +6,7 @@
   --block:#F5F5F4; --block-text:#0A0A0A; --block-soft:#44403C; --block-line:#D6D3D1;
 }
 /* Светлая тема в духе Notion: белая страница, серая боковая панель, тёплый тёмно-серый текст */
-:root, [data-theme="light"] {
+[data-theme="light"] {
   --bg:#ffffff; --side:#f7f7f5; --panel:#ffffff; --panel2:#f7f7f5; --hover:rgba(55,53,47,.06); --line:#ededec; --line2:#e4e3e0; --line3:#d9d8d4;
   --text:#37352f; --soft:#6b6a65; --muted:#9b9a97; --faint:#b6b5b1; --inv:#ffffff;
   --accent:#E5202E; --accent-soft:rgba(229,32,46,.12); --ring:rgba(229,32,46,.14);

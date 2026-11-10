@@ -53,7 +53,7 @@ const toggleLang = () => { lang = lang === "en" ? "ru" : "en"; try { localStorag
 document.querySelectorAll("[data-lang-toggle]").forEach(b => b.onclick = toggleLang);
 
 /* ---------------- Тема ---------------- */
-let theme = (() => { try { return localStorage.getItem("vault.theme") || "light"; } catch { return "light"; } })();
+let theme = (() => { try { return localStorage.getItem("vault.theme") || "dark"; } catch { return "dark"; } })();
 function applyTheme() {
   document.documentElement.dataset.theme = theme;
   document.querySelectorAll("[data-theme-toggle]").forEach(b => b.textContent = theme === "dark" ? "☀" : "☾");
