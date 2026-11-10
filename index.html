@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://raw.githubusercontent.com; img-src data:;">
-<title>Сейф — хранилище паролей</title>
+<title>Vault — хранилище паролей</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%2064%2064%22%20width%3D%2264%22%20height%3D%2264%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Crect%20x%3D%226%22%20y%3D%228%22%20width%3D%2252%22%20height%3D%2246%22%20rx%3D%228%22%20fill%3D%22%23000%22%20stroke%3D%22%23ff2d3d%22%20stroke-width%3D%224%22/%3E%3Crect%20x%3D%2213%22%20y%3D%2215%22%20width%3D%2238%22%20height%3D%2232%22%20rx%3D%224%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.35%22%20stroke-width%3D%222%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2231%22%20r%3D%229%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2231%22%20r%3D%222.5%22%20fill%3D%22%23ff2d3d%22/%3E%3Cpath%20d%3D%22M32%2020v3M32%2039v3M21%2031h3M40%2031h3%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22/%3E%3Crect%20x%3D%2214%22%20y%3D%2254%22%20width%3D%228%22%20height%3D%224%22%20rx%3D%221%22%20fill%3D%22%23ff2d3d%22/%3E%3Crect%20x%3D%2242%22%20y%3D%2254%22%20width%3D%228%22%20height%3D%224%22%20rx%3D%221%22%20fill%3D%22%23ff2d3d%22/%3E%3C/svg%3E">
 <style>
   :root { --bg:#070707; --card:rgba(255,255,255,.035); --line:rgba(255,255,255,.09); --text:#f5f5f5; --muted:#8c8c8c;
           --red:#ff2d3d; --red2:#c8101f; --glow:rgba(255,45,61,.35); }
@@ -19,7 +20,7 @@
            var(--bg); }
   main { max-width:660px; margin:0 auto; padding:56px 18px 80px; }
   h1 { font-size:44px; line-height:1; letter-spacing:-.04em; font-weight:800; margin:0 0 10px; text-transform:uppercase; }
-  h1::after { content:""; display:inline-block; width:12px; height:12px; background:var(--red); border-radius:50%; margin-left:8px; box-shadow:0 0 18px var(--glow); }
+  h1 span::after { content:""; display:inline-block; width:12px; height:12px; background:var(--red); border-radius:50%; margin-left:8px; box-shadow:0 0 18px var(--glow); }
   h2 { font-size:13px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; margin:0 0 16px; color:#fff; }
   .sub { color:var(--muted); margin:0 0 28px; font-size:14px; max-width:520px; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:24px; margin-bottom:14px;
@@ -56,11 +57,13 @@
   .row { display:flex; gap:10px; } .row > * { flex:1; }
   @media (max-width:520px) { h1 { font-size:34px; } .row { flex-direction:column; gap:0; } .words { grid-template-columns:repeat(2,1fr); } .entry { flex-wrap:wrap; } }
   ::selection { background:var(--red); color:#fff; }
+  .logo { display:flex; align-items:center; gap:14px; }
+  .logo svg { flex:0 0 auto; filter:drop-shadow(0 0 16px var(--glow)); }
 </style>
 </head>
 <body>
 <main>
-  <h1>Сейф</h1>
+  <h1 class="logo"><svg viewBox="0 0 64 64" width="52" height="52" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="8" width="52" height="46" rx="8" fill="#000" stroke="#ff2d3d" stroke-width="4"/><rect x="13" y="15" width="38" height="32" rx="4" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><circle cx="32" cy="31" r="9" stroke="#fff" stroke-width="3"/><circle cx="32" cy="31" r="2.5" fill="#ff2d3d"/><path d="M32 20v3M32 39v3M21 31h3M40 31h3" stroke="#fff" stroke-width="3" stroke-linecap="round"/><rect x="14" y="54" width="8" height="4" rx="1" fill="#ff2d3d"/><rect x="42" y="54" width="8" height="4" rx="1" fill="#ff2d3d"/></svg><span>Vault</span></h1>
   <p class="sub">Пароли шифруются прямо в браузере. Ничего не отправляется на сервер. Без фразы и пароля восстановить доступ невозможно.</p>
 
   <!-- Старт -->
@@ -430,7 +433,7 @@ $("b-export").onclick = () => {
   const s = store.get();
   const blob = new Blob([JSON.stringify({ v: 1, id: s.id, vault: s.vault }, null, 1)], { type: "application/json" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-  a.download = "seif-backup-" + new Date().toISOString().slice(0, 10) + ".json"; a.click();
+  a.download = "vault-backup-" + new Date().toISOString().slice(0, 10) + ".json"; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
 function lock() { vaultKey = null; entries = []; currentId = null; $("list").innerHTML = ""; $("search").value = ""; home(); }
