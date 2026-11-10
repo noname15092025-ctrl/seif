@@ -39,8 +39,9 @@
 
   <!-- Старт -->
   <section id="v-start" class="card hidden">
-    <h2>Добро пожаловать</h2>
-    <button id="b-new">Создать новое хранилище</button>
+    <h2>Профили</h2>
+    <div id="profiles"></div>
+    <button id="b-new">Создать новый профиль</button>
     <button class="ghost" id="b-restore">Восстановить по секретной фразе</button>
   </section>
 
@@ -66,6 +67,8 @@
   <section id="v-setpw" class="card hidden">
     <h2>Мастер-пароль</h2>
     <p class="sub">Нужен для входа на этом устройстве. Если забудете, войдите по секретной фразе.</p>
+    <label>Название профиля</label>
+    <input id="p-name" placeholder="Например: Личное" maxlength="40">
     <label>Пароль (минимум 10 символов)</label>
     <input type="password" id="pw1" autocomplete="new-password">
     <label>Повторите пароль</label>
@@ -88,16 +91,21 @@
 
   <!-- Вход -->
   <section id="v-unlock" class="card hidden">
-    <h2>Разблокировать</h2>
+    <h2>Вход: <span id="unlock-name"></span></h2>
     <label>Мастер-пароль</label>
     <input type="password" id="unlock-pw" autocomplete="current-password">
     <div class="err" id="unlock-err"></div>
     <button id="b-unlock">Открыть</button>
     <button class="ghost" id="b-forgot">Забыл пароль (войти по секретной фразе)</button>
+    <button class="ghost" id="b-other">← Другой профиль</button>
   </section>
 
   <!-- Хранилище -->
   <section id="v-vault" class="hidden">
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <h2 style="margin:0">👤 <span id="vault-name"></span></h2>
+      <button class="ghost" id="b-logout" style="margin:0">Выйти</button>
+    </div>
     <div class="card">
       <h2>Новая запись</h2>
       <div class="row">
@@ -115,8 +123,7 @@
     </div>
     <div class="card">
       <button class="ghost" id="b-export">Скачать резервную копию</button>
-      <button class="ghost" id="b-lock">Заблокировать</button>
-      <button class="danger" id="b-wipe">Удалить с этого устройства</button>
+            <button class="danger" id="b-wipe">Удалить профиль с устройства</button>
       <p class="sub" style="margin:8px 0 0">Резервная копия зашифрована. Открыть её можно только вашей секретной фразой.</p>
     </div>
   </section>
@@ -135,7 +142,7 @@
    В localStorage лежат только зашифрованные данные. Ключи живут лишь в памяти вкладки.
 */
 const WORDLIST_URL = "https://raw.githubusercontent.com/bitcoin/bips/master/bip-0039/english.txt";
-const STORE = "seif.v1";
+const STORE = "seif.v2";
 const PBKDF2_ITERS = 600000;
 const enc = new TextEncoder(), dec = new TextDecoder();
 const C = crypto.subtle;
@@ -215,11 +222,20 @@ async function open(key, box) {
 /* ================== Состояние ================== */
 let vaultKey = null, entries = [], pendingPhrase = null, pendingKey = null, verifyIdx = [];
 
+let currentId = null;
 const store = {
-  get() { try { return JSON.parse(localStorage.getItem(STORE)); } catch { return null; } },
-  set(v) { localStorage.setItem(STORE, JSON.stringify(v)); },
-  clear() { localStorage.removeItem(STORE); }
+  all() { try { return JSON.parse(localStorage.getItem(STORE)) || []; } catch { return []; } },
+  save(a) { localStorage.setItem(STORE, JSON.stringify(a)); },
+  get() { return this.all().find(p => p.id === currentId) || null; },
+  set(p) { const a = this.all(); const i = a.findIndex(x => x.id === p.id); if (i < 0) a.push(p); else a[i] = p; this.save(a); },
+  remove(id) { this.save(this.all().filter(x => x.id !== id)); }
 };
+// перенос хранилища из первой версии
+try {
+  const old = JSON.parse(localStorage.getItem("seif.v1"));
+  if (old && !store.all().some(p => p.id === old.id)) { old.name = "Мой профиль"; store.set(old); }
+  localStorage.removeItem("seif.v1");
+} catch {}
 
 async function persist() {
   const s = store.get();
@@ -227,14 +243,17 @@ async function persist() {
   store.set(s);
 }
 
-async function setupDevice(key, pw, vaultBox) {
+async function setupDevice(key, pw, vaultBox, name) {
   const salt = rand(16);
   const wrapKey = await passwordToWrapKey(pw, salt);
   const raw = new Uint8Array(await C.exportKey("raw", key));
   const wrapped = await seal(wrapKey, raw);
   raw.fill(0);
-  store.set({ v: 1, id: await vaultId(key), salt: b64(salt), iters: PBKDF2_ITERS, wrapped,
+  const id = await vaultId(key);
+  const prev = store.all().find(p => p.id === id);
+  store.set({ v: 1, id, name: name || (prev && prev.name) || "Профиль", salt: b64(salt), iters: PBKDF2_ITERS, wrapped,
               vault: vaultBox || await seal(key, enc.encode("[]")) });
+  currentId = id;
 }
 
 /* ================== Интерфейс ================== */
@@ -244,7 +263,21 @@ function show(v) { views.forEach(x => $("v-" + x).classList.toggle("hidden", x !
 function busy(btn, on) { btn.disabled = on; }
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
-function home() { show(store.get() ? "unlock" : "start"); }
+function home() {
+  const list = store.all();
+  $("profiles").innerHTML = list.length ? list.map(p => `
+    <div class="entry"><div><b>👤 ${esc(p.name || "Профиль")}</b></div>
+    <button data-pid="${esc(p.id)}" style="flex:0 0 auto">Войти</button></div>`).join("")
+    : `<p class="sub">На этом устройстве пока нет профилей.</p>`;
+  show("start");
+}
+$("profiles").onclick = e => {
+  const id = e.target.dataset.pid; if (!id) return;
+  currentId = id; $("unlock-name").textContent = store.get().name || "Профиль";
+  $("unlock-err").textContent = ""; show("unlock"); $("unlock-pw").focus();
+};
+$("b-other").onclick = () => { currentId = null; home(); };
+function openVault() { $("vault-name").textContent = store.get().name || "Профиль"; render(); show("vault"); resetIdle(); }
 
 $("b-new").onclick = async () => {
   pendingPhrase = await entropyToMnemonic(rand(16));
@@ -268,16 +301,16 @@ $("b-verify").onclick = async () => {
 };
 
 $("b-setpw").onclick = async (e) => {
-  const p1 = $("pw1").value, p2 = $("pw2").value;
+  const p1 = $("pw1").value, p2 = $("pw2").value, pname = $("p-name").value.trim();
   if (p1.length < 10) { $("setpw-err").textContent = "Минимум 10 символов"; return; }
   if (p1 !== p2) { $("setpw-err").textContent = "Пароли не совпадают"; return; }
   busy(e.target, true);
   try {
     const existing = pendingKey._vaultBox || null;
-    await setupDevice(pendingKey, p1, existing);
+    await setupDevice(pendingKey, p1, existing, pname);
     vaultKey = pendingKey; pendingKey = null;
     entries = JSON.parse(dec.decode(await open(vaultKey, store.get().vault)));
-    $("pw1").value = $("pw2").value = ""; render(); show("vault");
+    $("pw1").value = $("pw2").value = $("p-name").value = ""; openVault();
   } catch (err) { $("setpw-err").textContent = "Ошибка: " + err.message; }
   busy(e.target, false);
 };
@@ -299,8 +332,8 @@ $("b-restore-go").onclick = async (e) => {
       if (backup.id !== id) throw new Error("Эта резервная копия от другой фразы");
       box = backup.vault;
     } else {
-      const s = store.get();
-      if (s && s.id === id) box = s.vault;
+      const s = store.all().find(p => p.id === id);
+      if (s) box = s.vault;
     }
     if (box) await open(key, box); // проверка, что расшифровывается
     key._vaultBox = box; // если копии нет — создастся пустое хранилище для этой фразы
@@ -320,7 +353,7 @@ $("b-unlock").onclick = async (e) => {
     raw.fill(0);
     entries = JSON.parse(dec.decode(await open(vaultKey, s.vault)));
     $("unlock-pw").value = ""; $("unlock-err").textContent = "";
-    render(); show("vault");
+    openVault();
   } catch { $("unlock-err").textContent = "Неверный пароль"; }
   busy(e.target, false);
 };
@@ -374,10 +407,10 @@ $("b-export").onclick = () => {
   a.download = "seif-backup-" + new Date().toISOString().slice(0, 10) + ".json"; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
-function lock() { vaultKey = null; entries = []; $("list").innerHTML = ""; home(); }
-$("b-lock").onclick = lock;
+function lock() { vaultKey = null; entries = []; currentId = null; $("list").innerHTML = ""; $("search").value = ""; home(); }
+$("b-logout").onclick = lock;
 $("b-wipe").onclick = () => {
-  if (window.confirm("Удалить хранилище с этого устройства? Восстановить можно будет только по секретной фразе и резервной копии.")) { store.clear(); lock(); }
+  if (window.confirm("Удалить профиль «" + (store.get().name || "") + "» с этого устройства? Восстановить можно будет только по секретной фразе и резервной копии.")) { store.remove(currentId); lock(); }
 };
 // Автоблокировка через 5 минут бездействия
 let idle; const resetIdle = () => { clearTimeout(idle); if (vaultKey) idle = setTimeout(lock, 5 * 60 * 1000); };
