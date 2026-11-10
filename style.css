@@ -343,3 +343,18 @@ label.chk { display:flex; align-items:center; color:var(--text); font-size:14px;
 .nav-item.trash { margin-top:8px; }
 .exp-soon { color:var(--accent); }
 .row .t small.exp-soon { color:var(--accent); }
+
+/* Выгрузка */
+.chips-row { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
+.chip-t { height:36px; padding:0 14px; border-radius:999px; border:1px solid var(--line2); background:transparent; color:var(--soft); font-weight:500; font-size:13px; }
+.chip-t:hover { transform:none; filter:none; color:var(--text); border-color:var(--soft); }
+.chip-t.on { background:var(--text); color:var(--inv); border-color:var(--text); }
+.chip-t span { opacity:.6; margin-left:2px; }
+.ex-tools { display:flex; align-items:center; gap:16px; margin:12px 0 8px; font-size:14px; }
+.ex-tools .field { flex:1; margin:0; height:44px; }
+.ex-list { max-height:340px; overflow-y:auto; border:1px solid var(--line); border-radius:14px; padding:6px; margin-bottom:8px; }
+.ex-item { display:flex; align-items:center; gap:12px; padding:10px 10px; border-radius:10px; cursor:pointer; margin:0; color:var(--text); font-size:14px; letter-spacing:0; }
+.ex-item:hover { background:var(--hover); }
+.ex-item input { margin:0; flex:0 0 auto; }
+.ex-item .t { flex:1; min-width:0; line-height:1.35; } .ex-item small { display:block; color:var(--muted); font-size:12px; }
+.ex-item .k { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); }

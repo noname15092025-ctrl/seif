@@ -362,6 +362,26 @@
   </div>
 </section>
 
+<!-- ============ Выгрузка ============ -->
+<section id="v-export" class="center-page hidden">
+  <div class="panel wide-panel rise">
+    <a class="p-back" data-back-vault><svg class="ic"><use href="#i-back"/></svg><span data-en="Back to vault">К хранилищу</span></a>
+    <h1 class="p-title left" data-en="Export to Excel">Выгрузка в Excel</h1>
+    <h3 data-en="What to export">Что выгрузить</h3>
+    <div class="chips-row" id="ex-types"></div>
+    <div class="chips-row" id="ex-cats"></div>
+    <div class="ex-tools">
+      <input id="ex-search" class="field" data-en-ph="Find an entry…" placeholder="Найти запись…">
+      <a id="ex-all" data-en="Select all">Выбрать все</a><a id="ex-none" data-en="Clear">Снять все</a>
+    </div>
+    <div class="ex-list" id="ex-list"></div>
+    <h3 data-en="Columns">Колонки</h3>
+    <div class="chips-row" id="ex-cols"></div>
+    <div class="note-box" data-en="The Excel file is NOT encrypted. Anyone who gets it will see the selected passwords. Delete it as soon as you no longer need it.">Файл Excel НЕ зашифрован. Любой, кто получит его, увидит выбранные пароли. Удалите его, как только он станет не нужен.</div>
+    <button class="wide" id="ex-go"></button>
+  </div>
+</section>
+
 <!-- ============ Импорт ============ -->
 <section id="v-import" class="center-page hidden">
   <div class="panel wide-panel rise">
@@ -444,7 +464,7 @@
       <h3><i>I</i>Импорт и Excel</h3>
       <ul>
         <li><b>«Импорт CSV / Excel»</b> в настройках принимает CSV из Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password и файлы Excel (.xlsx). Повторы пропускаются. После импорта удалите исходный файл.</li>
-        <li><b>«Выгрузить в Excel»</b> — таблица со всеми записями. Файл не зашифрован.</li>
+        <li><b>«Выгрузить в Excel»</b> открывает экран выбора: отметьте типы, категории или конкретные записи и нужные колонки — в файл попадёт только выбранное. Файл не зашифрован.</li>
       </ul>
       <h3><i>J</i>Приложение, тема и язык</h3>
       <ul>
@@ -561,7 +581,7 @@
       <h3><i>I</i>Import and Excel</h3>
       <ul>
         <li><b>“Import CSV / Excel”</b> in settings accepts CSV from Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password and Excel (.xlsx) files. Duplicates are skipped. Delete the source file afterwards.</li>
-        <li><b>“Export to Excel”</b> — a table with all entries. The file is not encrypted.</li>
+        <li><b>“Export to Excel”</b> opens a selection screen: pick types, categories or specific entries and the columns you need — only the selection goes into the file. The file is not encrypted.</li>
       </ul>
       <h3><i>J</i>App, theme and language</h3>
       <ul>

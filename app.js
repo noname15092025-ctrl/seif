@@ -224,7 +224,7 @@ function checkNewPassword(p1, p2) {
 }
 
 /* ---------------- Экраны ---------------- */
-const views = ["start", "phrase", "verify", "setpw", "restore", "unlock", "vault", "settings", "audit", "import", "guide", "generator", "loading"];
+const views = ["start", "phrase", "verify", "setpw", "restore", "unlock", "vault", "settings", "audit", "import", "guide", "generator", "export", "loading"];
 function show(v) { views.forEach(x => $("v-" + x).classList.toggle("hidden", x !== v)); scrollTo(0, 0); }
 const busy = (btn, on, label) => { btn.disabled = on; if (label !== undefined) { if (on) { btn.dataset.l = btn.textContent; btn.textContent = label; } else if (btn.dataset.l) btn.textContent = btn.dataset.l; } };
 
@@ -878,14 +878,58 @@ function buildXlsx(rows, widths) {
 }
 const TYPE_NAME = t => ({ login: T("Пароль", "Password"), note: T("Заметка", "Note"), card: T("Карта", "Card"), wifi: "Wi-Fi", doc: T("Документ", "Document"),
   crypto: T("Криптокошелёк", "Crypto wallet"), key: T("Ключ", "Key"), bank: T("Счёт", "Bank account"), contact: T("Контакт", "Contact") }[t] || t);
-$("b-xlsx").onclick = async () => {
+/* Выгрузка: выбор записей и колонок */
+const EX_COLS = () => [
+  ["type", T("Тип", "Type"), 10, x => TYPE_NAME(x.type)], ["title", T("Название", "Name"), 28, x => x.title],
+  ["login", T("Логин", "Login"), 26, x => x.login], ["pass", T("Пароль / PIN", "Password / PIN"), 24, x => x.pass],
+  ["url", T("Сайт", "Website"), 30, x => x.url], ["category", T("Категория", "Category"), 14, x => x.category],
+  ["note", T("Заметки", "Notes"), 40, x => x.note], ["card", T("Данные карты", "Card details"), 28, x => [x.number, x.exp, x.cvv && "CVV " + x.cvv].filter(Boolean).join(" · ")],
+  ["totp", T("Ключ 2FA", "2FA key"), 22, x => x.totp], ["extra", T("Доп. поля", "Extra fields"), 40, x => (EXTRA[x.type] || []).filter(f => (x.f || {})[f.k]).map(f => exLabel(f) + ": " + x.f[f.k]).join("\n")],
+  ["dates", T("Даты", "Dates"), 22, x => T("Добавлено ", "Added ") + new Date(x.created).toLocaleDateString() + (x.updated !== x.created ? "\n" + T("Изменено ", "Changed ") + new Date(x.updated).toLocaleDateString() : "")]
+];
+let exSel = new Set(), exTypes = new Set(), exCats = new Set(), exCols = new Set(["type", "title", "login", "pass", "url", "category", "note", "card", "extra"]);
+function exPool() { return live().filter(x => (!exTypes.size || exTypes.has(x.type)) && (!exCats.size || exCats.has(x.category || "\u0000"))); }
+function renderExport() {
+  const L = live(), types = [...new Set(L.map(x => x.type))], cats = [...new Set(L.map(x => x.category || "\u0000"))];
+  const chip = (group, v, label, count, on) => `<button type="button" class="chip-t${on ? " on" : ""}" data-g="${group}" data-v="${esc(v)}">${esc(label)}${count !== undefined ? ` <span>${count}</span>` : ""}</button>`;
+  $("ex-types").innerHTML = chip("t", "*", T("Все типы", "All types"), undefined, !exTypes.size) + types.map(t => chip("t", t, TYPE_NAME(t), L.filter(x => x.type === t).length, exTypes.has(t))).join("");
+  $("ex-cats").innerHTML = cats.length > 1 || cats[0] !== "\u0000" ? chip("c", "*", T("Все категории", "All categories"), undefined, !exCats.size) +
+    cats.map(c => chip("c", c, c === "\u0000" ? T("Без категории", "Uncategorized") : c, L.filter(x => (x.category || "\u0000") === c).length, exCats.has(c))).join("") : "";
+  const q = $("ex-search").value.toLowerCase(), pool = exPool();
+  $("ex-list").innerHTML = pool.filter(x => (x.title + " " + (x.login || "")).toLowerCase().includes(q)).sort((a, b) => a.title.localeCompare(b.title)).map(x =>
+    `<label class="ex-item"><input type="checkbox" data-id="${esc(x.id)}"${exSel.has(x.id) ? " checked" : ""}><span class="t">${esc(x.title)}<small>${esc(subline(x))}</small></span><span class="k">${esc(TYPE_NAME(x.type))}</span></label>`).join("")
+    || `<p class="muted small">${T("Нет записей под выбранные условия", "No entries match")}</p>`;
+  $("ex-cols").innerHTML = EX_COLS().map(([k, l]) => chip("col", k, l, undefined, exCols.has(k))).join("");
+  const n = pool.filter(x => exSel.has(x.id)).length;
+  $("ex-go").textContent = n ? T("Выгрузить ", "Export ") + n + " " + T(plural(n, "запись", "записи", "записей"), n === 1 ? "entry" : "entries") : T("Выберите записи", "Select entries");
+  $("ex-go").disabled = !n || !exCols.size;
+}
+$("b-xlsx").onclick = () => {
   if (!live().length) { alertBox(T("В профиле пока нет записей.", "This profile has no entries yet.")); return; }
-  if (!await confirmBox(T("Внимание: файл Excel НЕ зашифрован. Любой, кто получит его, увидит все пароли. Удалите файл, когда он станет не нужен. Продолжить?",
-    "Warning: the Excel file is NOT encrypted. Anyone who gets it will see all passwords. Delete the file when you no longer need it. Continue?"), T("Выгрузить", "Export"))) return;
-  const rows = [[T("Тип", "Type"), T("Название", "Name"), T("Логин", "Login"), T("Пароль", "Password"), T("Сайт", "Website"), T("Категория", "Category"), T("Заметки", "Notes"), T("Номер карты", "Card number"), T("Срок", "Expiry"), "CVV", "2FA", T("Дополнительные поля", "Extra fields"), T("Добавлено", "Added")],
-    ...live().map(x => [TYPE_NAME(x.type), x.title, x.login, x.pass, x.url, x.category, x.note, x.number, x.exp, x.cvv, x.totp,
-      (EXTRA[x.type] || []).filter(f => (x.f || {})[f.k]).map(f => exLabel(f) + ": " + x.f[f.k]).join("\n"), new Date(x.created).toLocaleString()])];
-  download(buildXlsx(rows, [10, 28, 26, 24, 30, 14, 40, 20, 8, 6, 20, 40, 18]), "vault-" + fileSafe(store.get().name) + "-" + new Date().toISOString().slice(0, 10) + ".xlsx");
+  exTypes = new Set(); exCats = new Set(); exSel = new Set(live().map(x => x.id)); $("ex-search").value = "";
+  renderExport(); show("export");
+};
+$("v-export").addEventListener("click", e => {
+  const b = e.target.closest(".chip-t"); if (!b) return;
+  const g = b.dataset.g, v = b.dataset.v;
+  if (g === "col") { exCols.has(v) ? exCols.delete(v) : exCols.add(v); }
+  else {
+    const set = g === "t" ? exTypes : exCats;
+    if (v === "*") set.clear(); else set.has(v) ? set.delete(v) : set.add(v);
+    exSel = new Set(exPool().map(x => x.id)); // при смене фильтра выбираем всё, что под него попало
+  }
+  renderExport();
+});
+$("ex-list").addEventListener("change", e => { const id = e.target.dataset.id; if (!id) return; e.target.checked ? exSel.add(id) : exSel.delete(id); renderExport(); });
+$("ex-search").oninput = renderExport;
+$("ex-all").onclick = () => { exPool().forEach(x => exSel.add(x.id)); renderExport(); };
+$("ex-none").onclick = () => { exSel.clear(); renderExport(); };
+$("ex-go").onclick = () => {
+  const cols = EX_COLS().filter(c => exCols.has(c[0])), list = exPool().filter(x => exSel.has(x.id)).sort((a, b) => a.title.localeCompare(b.title));
+  if (!list.length || !cols.length) return;
+  const rows = [cols.map(c => c[1]), ...list.map(x => cols.map(c => c[3](x) || ""))];
+  download(buildXlsx(rows, cols.map(c => c[2])), "vault-" + fileSafe(store.get().name) + "-" + new Date().toISOString().slice(0, 10) + ".xlsx");
+  toast(T("Файл скачан. Удалите его после использования", "File downloaded. Delete it after use"));
 };
 
 /* ---------------- Импорт CSV / Excel ---------------- */
@@ -935,9 +979,9 @@ async function parseXlsx(buf) {
   }).filter(r => r.some(v => String(v).trim()));
 }
 const SYN = {
-  title: ["name", "title", "account", "название", "сайт / название", "сайт", "имя"],
+  title: ["name", "title", "account", "название", "сайт / название", "имя"],
   login: ["username", "login", "login_username", "login name", "user name", "email", "логин", "пользователь"],
-  pass: ["password", "login_password", "пароль"],
+  pass: ["password", "login_password", "пароль", "пароль / pin", "password / pin"],
   url: ["url", "login_uri", "web site", "website", "uri", "адрес", "адрес сайта"],
   note: ["note", "notes", "comments", "extra", "заметки", "заметка", "описание"],
   category: ["folder", "group", "grouping", "category", "категория", "папка"],
