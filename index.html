@@ -60,6 +60,15 @@
   .logo { display:flex; align-items:center; gap:14px; cursor:pointer; user-select:none; width:max-content; transition:opacity .15s; }
   .logo:hover { opacity:.85; }
   .logo svg { flex:0 0 auto; filter:drop-shadow(0 0 16px var(--glow)); }
+  .about .lead { font-size:17px; line-height:1.5; margin:0 0 20px; color:#ddd; }
+  .about .lead b { color:#fff; background:linear-gradient(transparent 60%, rgba(255,45,61,.45) 60%); }
+  .feats { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .feats div { background:rgba(0,0,0,.4); border:1px solid var(--line); border-radius:14px; padding:16px; transition:border-color .15s; }
+  .feats div:hover { border-color:rgba(255,45,61,.45); }
+  .feats i { display:block; font-style:normal; font-family:"JetBrains Mono",ui-monospace,monospace; color:var(--red); font-size:12px; font-weight:700; margin-bottom:8px; }
+  .feats b { display:block; font-size:15px; margin-bottom:4px; }
+  .feats span { color:var(--muted); font-size:13px; line-height:1.45; }
+  @media (max-width:520px) { .feats { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -68,11 +77,23 @@
   <p class="sub">Пароли шифруются прямо в браузере. Ничего не отправляется на сервер. Без фразы и пароля восстановить доступ невозможно.</p>
 
   <!-- Старт -->
-  <section id="v-start" class="card hidden">
+  <section id="v-start" class="hidden">
+    <div class="card about">
+      <h2>Что такое Vault</h2>
+      <p class="lead">Менеджер паролей, где ключ есть <b>только у вас</b>. Ваши пароли не видит никто: ни сервер, ни хакеры, ни даже создатель приложения.</p>
+      <div class="feats">
+        <div><i>01</i><b>Шифрование на устройстве</b><span>Пароли шифруются AES-256 прямо в браузере, до того как куда-либо попасть.</span></div>
+        <div><i>02</i><b>Без сервера и аккаунтов</b><span>Нет email, логинов и базы данных. Нечего взламывать и нечего передавать третьим лицам.</span></div>
+        <div><i>03</i><b>Создатель не имеет доступа</b><span>Разработчик не знает ваших паролей и секретной фразы и физически не может их узнать.</span></div>
+        <div><i>04</i><b>Восстановление только по фразе</b><span>12 слов — ваш единственный ключ. Потеряли фразу и пароль — доступ не восстановит никто.</span></div>
+      </div>
+    </div>
+    <div class="card">
     <h2>Профили</h2>
     <div id="profiles"></div>
     <button id="b-new">Создать новый профиль</button>
     <button class="ghost" id="b-restore">Восстановить по секретной фразе</button>
+    </div>
   </section>
 
   <!-- Показ фразы -->
