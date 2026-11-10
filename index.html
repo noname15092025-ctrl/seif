@@ -44,7 +44,7 @@
       <div id="profiles"></div>
       <button id="b-new" data-en="Create new profile">Создать новый профиль</button>
       <button class="ghost" id="b-restore" data-en="Restore with secret phrase">Восстановить по секретной фразе</button>
-      <button class="ghost" data-guide data-en="📖 Guide">📖 Инструкция</button>
+      <button class="ghost" data-guide data-en="Guide">Инструкция</button>
     </div>
   </section>
 
@@ -111,10 +111,10 @@
   <!-- Хранилище -->
   <section id="v-vault" class="hidden">
     <div class="card bar">
-      <h2 class="nomargin">👤 <span id="vault-name"></span></h2>
+      <h2 class="nomargin"><span id="vault-name"></span></h2>
       <div>
-        <button class="ghost small" id="b-audit" data-en="🛡 Audit">🛡 Аудит</button>
-        <button class="ghost small" id="b-settings" data-en="⚙ Settings">⚙ Настройки</button>
+        <button class="ghost small" id="b-audit" data-en="Audit">Аудит</button>
+        <button class="ghost small" id="b-settings" data-en="Settings">Настройки</button>
         <button class="ghost small" id="b-logout" data-en="Log out">Выйти</button>
       </div>
     </div>
@@ -123,10 +123,10 @@
     <div class="card" id="form-card">
       <h2 id="form-title" data-en="New entry">Новая запись</h2>
       <div class="tabs" id="type-tabs">
-        <button class="tab active" data-type="login" data-en="🔑 Password">🔑 Пароль</button>
-        <button class="tab" data-type="note" data-en="📝 Note">📝 Заметка</button>
-        <button class="tab" data-type="card" data-en="💳 Card">💳 Карта</button>
-        <button class="tab" data-type="wifi" data-en="📶 Wi-Fi">📶 Wi-Fi</button>
+        <button class="tab active" data-type="login" data-en="Password">Пароль</button>
+        <button class="tab" data-type="note" data-en="Note">Заметка</button>
+        <button class="tab" data-type="card" data-en="Card">Карта</button>
+        <button class="tab" data-type="wifi" data-en="Wi-Fi">Wi-Fi</button>
       </div>
       <div class="row">
         <div><label data-f="title" data-en="Site / name">Сайт / название</label><input id="e-title"></div>
@@ -142,7 +142,7 @@
       </div>
       <div data-show="login wifi card">
         <label data-f="pass" data-en="Password">Пароль</label>
-        <div class="row nogap"><input id="e-pass" autocomplete="off"><button class="ghost shrink" id="b-gen" data-en="Generate">Сгенерировать</button><button class="ghost shrink" id="b-gen-opts" title="Настройки генератора">⚙</button></div>
+        <div class="row nogap"><input id="e-pass" autocomplete="off"><button class="ghost shrink" id="b-gen" data-en="Generate">Сгенерировать</button><button class="ghost shrink" id="b-gen-opts" data-en="Options">Параметры</button></div>
         <div class="meter"><div class="meter-bar" id="e-pass-bar"></div></div>
         <div class="meter-text" id="e-pass-text"></div>
         <div class="gen-opts hidden" id="gen-opts">
@@ -166,7 +166,7 @@
       </div>
       <div class="row">
         <div><label data-en="Category">Категория</label><input id="e-cat" list="cat-list" data-en-ph="Social, Banks, Work…" placeholder="Соцсети, Банки, Работа…"><datalist id="cat-list"></datalist></div>
-        <div class="fav-wrap"><label class="chk"><input type="checkbox" id="e-fav"> <span data-en="★ Favorite">★ Избранное</span></label></div>
+        <div class="fav-wrap"><label class="chk"><input type="checkbox" id="e-fav"> <span data-en="Favorite">Избранное</span></label></div>
       </div>
       <label data-en="Notes / description">Заметки / описание</label>
       <textarea id="e-note" class="note-input" data-en-ph="For example: work email, security question answer…" placeholder="Например: рабочая почта, ответ на секретный вопрос…"></textarea>
@@ -196,7 +196,7 @@
       <button class="ghost" id="b-xlsx" data-en="Export to Excel">Выгрузить в Excel</button>
       <button class="ghost" id="b-import" data-en="Import">Импорт</button>
       <input type="file" id="import-file" class="hidden" accept=".csv,.xlsx,text/csv">
-      <button class="ghost" data-guide data-en="📖 Guide">📖 Инструкция</button>
+      <button class="ghost" data-guide data-en="Guide">Инструкция</button>
       <button class="danger" id="b-wipe" data-en="Delete profile from device">Удалить профиль с устройства</button>
       <p class="sub tight" data-en="The backup is encrypted. Only your secret phrase can open it.">Резервная копия зашифрована. Открыть её можно только вашей секретной фразой.</p>
     </div>
@@ -256,13 +256,13 @@
       </ul>
       <h3><i>B</i>Типы записей</h3>
       <ul>
-        <li>Вкладки над формой: <b>🔑 Пароль</b> (сайты и приложения), <b>📝 Заметка</b> (любой секретный текст), <b>💳 Карта</b> (номер, срок, CVV, PIN), <b>📶 Wi-Fi</b>.</li>
-        <li>Для паролей можно указать адрес сайта — появится кнопка <b>↗</b>, которая откроет его.</li>
-        <li><b>Категория</b> (например «Банки») и <b>★ Избранное</b> помогают навести порядок: избранное всегда сверху.</li>
+        <li>Вкладки над формой: <b>Пароль</b> (сайты и приложения), <b>Заметка</b> (любой секретный текст), <b>Карта</b> (номер, срок, CVV, PIN), <b>Wi-Fi</b>.</li>
+        <li>Для паролей можно указать адрес сайта — появится кнопка <b>«Открыть»</b>.</li>
+        <li><b>Категория</b> (например «Банки») и <b>Избранное</b> помогают навести порядок: избранное всегда сверху.</li>
       </ul>
       <h3><i>C</i>Генератор паролей</h3>
       <ul>
-        <li>Кнопка <b>«Сгенерировать»</b> создаёт случайный пароль. Кнопка <b>⚙</b> рядом открывает настройки: длина, наборы символов или режим <b>«Слова»</b> — легко запоминаемый пароль вида <code>Лодка-ветер-синий-42</code> на английских словах.</li>
+        <li>Кнопка <b>«Сгенерировать»</b> создаёт случайный пароль. Кнопка <b>«Параметры»</b> рядом открывает настройки: длина, наборы символов или режим <b>«Слова»</b> — легко запоминаемый пароль вида <code>Лодка-ветер-синий-42</code> на английских словах.</li>
       </ul>
       <h3><i>D</i>Коды двухфакторной защиты (2FA)</h3>
       <ul>
@@ -272,19 +272,19 @@
       <h3><i>E</i>Работа с записями</h3>
       <ul>
         <li><b>Поиск</b> — по названию, логину, сайту, категории и заметкам. <b>Фильтры</b> под поиском — по типу, категории и избранному. Справа — сортировка.</li>
-        <li><b>👁</b> показать, <b>👤</b> копировать логин, <b>«Пароль»</b> копировать пароль, <b>2FA</b> копировать код, <b>↗</b> открыть сайт, <b>☆</b> избранное, <b>✎</b> изменить, <b>✕</b> удалить.</li>
+        <li><b>«Показать»</b>, <b>«Логин»</b> и <b>«Пароль»</b> — показать и скопировать, <b>«2FA»</b> — скопировать код, <b>«Открыть»</b> — перейти на сайт, <b>☆</b> — избранное, <b>«Изменить»</b>, <b>«Удалить»</b>.</li>
         <li>Скопированное удаляется из буфера обмена через 30 секунд.</li>
       </ul>
       <h3><i>F</i>Аудит паролей</h3>
       <ul>
-        <li>Кнопка <b>🛡 Аудит</b> вверху показывает оценку из 100 и списки: слабые, повторяющиеся и не менявшиеся больше года пароли. Нажмите ✎, чтобы сразу исправить.</li>
+        <li>Кнопка <b>Аудит</b> вверху показывает оценку из 100 и списки: слабые, повторяющиеся и не менявшиеся больше года пароли. Нажмите «Изменить», чтобы сразу исправить.</li>
         <li><b>«Проверить утечки»</b> сверяет пароли с базой утёкших паролей Have I Been Pwned. Сами пароли никуда не отправляются — только первые 5 символов их хеша.</li>
       </ul>
       <h3><i>G</i>Вход, выход, профили, настройки</h3>
       <ul>
         <li>На главной выберите профиль и введите мастер-пароль. После 3 неверных попыток вход временно блокируется, и с каждой ошибкой пауза растёт.</li>
         <li><b>«Выйти»</b> или клик по логотипу закрывают профиль. Vault закрывается сам через 5 минут бездействия или через минуту после ухода с вкладки.</li>
-        <li><b>⚙ Настройки</b> — смена мастер-пароля и названия профиля.</li>
+        <li><b>Настройки</b> — смена мастер-пароля и названия профиля.</li>
       </ul>
       <h3><i>H</i>Резервная копия и перенос</h3>
       <ul>
@@ -354,13 +354,13 @@
       </ul>
       <h3><i>B</i>Entry types</h3>
       <ul>
-        <li>Tabs above the form: <b>🔑 Password</b> (sites and apps), <b>📝 Note</b> (any secret text), <b>💳 Card</b> (number, expiry, CVV, PIN), <b>📶 Wi-Fi</b>.</li>
-        <li>For passwords you can add a website address — a <b>↗</b> button will open it.</li>
-        <li><b>Category</b> (e.g. “Banks”) and <b>★ Favorite</b> keep things organized: favorites are always on top.</li>
+        <li>Tabs above the form: <b>Password</b> (sites and apps), <b>Note</b> (any secret text), <b>Card</b> (number, expiry, CVV, PIN), <b>Wi-Fi</b>.</li>
+        <li>For passwords you can add a website address — an <b>“Open”</b> button will appear.</li>
+        <li><b>Category</b> (e.g. “Banks”) and <b>Favorite</b> keep things organized: favorites are always on top.</li>
       </ul>
       <h3><i>C</i>Password generator</h3>
       <ul>
-        <li><b>“Generate”</b> creates a random password. The <b>⚙</b> button next to it opens options: length, character sets, or <b>“Words”</b> mode for a memorable password like <code>Boat-wind-blue-42</code>.</li>
+        <li><b>“Generate”</b> creates a random password. The <b>“Options”</b> button next to it opens options: length, character sets, or <b>“Words”</b> mode for a memorable password like <code>Boat-wind-blue-42</code>.</li>
       </ul>
       <h3><i>D</i>Two-factor codes (2FA)</h3>
       <ul>
@@ -370,19 +370,19 @@
       <h3><i>E</i>Working with entries</h3>
       <ul>
         <li><b>Search</b> covers name, login, site, category and notes. <b>Filters</b> below it — by type, category and favorites. Sorting is on the right.</li>
-        <li><b>👁</b> show, <b>👤</b> copy login, <b>“Password”</b> copy password, <b>2FA</b> copy code, <b>↗</b> open site, <b>☆</b> favorite, <b>✎</b> edit, <b>✕</b> delete.</li>
+        <li><b>“Show”</b>, <b>“Login”</b> and <b>“Password”</b> — show and copy, <b>“2FA”</b> — copy code, <b>“Open”</b> — go to the site, <b>☆</b> — favorite, <b>“Edit”</b>, <b>“Delete”</b>.</li>
         <li>Copied data is cleared from the clipboard after 30 seconds.</li>
       </ul>
       <h3><i>F</i>Password audit</h3>
       <ul>
-        <li><b>🛡 Audit</b> at the top shows a score out of 100 and lists of weak, reused and year-old passwords. Click ✎ to fix one right away.</li>
+        <li><b>Audit</b> at the top shows a score out of 100 and lists of weak, reused and year-old passwords. Click “Edit” to fix one right away.</li>
         <li><b>“Check for leaks”</b> compares your passwords with the Have I Been Pwned database. Passwords are never sent — only the first 5 characters of their hash.</li>
       </ul>
       <h3><i>G</i>Sign in, log out, profiles, settings</h3>
       <ul>
         <li>On the home screen pick a profile and enter its master password. After 3 wrong attempts sign-in is paused, and the pause grows with each mistake.</li>
         <li><b>“Log out”</b> or clicking the logo closes the profile. Vault also closes itself after 5 minutes of inactivity or a minute after you leave the tab.</li>
-        <li><b>⚙ Settings</b> — change the master password and profile name.</li>
+        <li><b>Settings</b> — change the master password and profile name.</li>
       </ul>
       <h3><i>H</i>Backup and moving devices</h3>
       <ul>

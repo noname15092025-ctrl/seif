@@ -229,7 +229,7 @@ const busy = (btn, on, label) => { btn.disabled = on; if (label !== undefined) {
 function home() {
   const list = store.all();
   $("profiles").innerHTML = list.length ? list.map(p => `
-    <div class="entry"><div><b>👤 ${esc(p.name || T("Профиль", "Profile"))}</b></div>
+    <div class="entry"><div><b>${esc(p.name || T("Профиль", "Profile"))}</b></div>
     <button class="shrink" data-pid="${esc(p.id)}">${T("Войти", "Sign in")}</button></div>`).join("")
     : `<p class="sub">${T("На этом устройстве пока нет профилей.", "No profiles on this device yet.")}</p>`;
   show("start");
@@ -479,13 +479,12 @@ let filter = "all";
 function renderChips() {
   const cats = [...new Set(entries.map(x => x.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   $("cat-list").innerHTML = cats.map(c => `<option value="${esc(c)}">`).join("");
-  const types = [["login", T("🔑 Пароли", "🔑 Passwords")], ["note", T("📝 Заметки", "📝 Notes")], ["card", T("💳 Карты", "💳 Cards")], ["wifi", "📶 Wi-Fi"]].filter(([t]) => entries.some(x => x.type === t));
-  const chips = [["all", T("Все", "All")], ["fav", T("★ Избранное", "★ Favorites")], ...types.map(([t, l]) => ["t:" + t, l]), ...cats.map(c => ["c:" + c, "# " + c])];
+  const types = [["login", T("Пароли", "Passwords")], ["note", T("Заметки", "Notes")], ["card", T("Карты", "Cards")], ["wifi", "Wi-Fi"]].filter(([t]) => entries.some(x => x.type === t));
+  const chips = [["all", T("Все", "All")], ["fav", T("Избранное", "Favorites")], ...types.map(([t, l]) => ["t:" + t, l]), ...cats.map(c => ["c:" + c, c])];
   if (!chips.some(c => c[0] === filter)) filter = "all";
   $("chips").innerHTML = chips.map(([v, l]) => `<button class="chip${v === filter ? " active" : ""}" data-filter="${esc(v)}">${esc(l)}</button>`).join("");
 }
 $("chips").onclick = e => { const f = e.target.dataset.filter; if (f === undefined) return; filter = f; renderChips(); render(); };
-const ICON = { login: "🔑", note: "📝", card: "💳", wifi: "📶" };
 function maskCard(n) { const d = (n || "").replace(/\D/g, ""); return d ? "•••• " + d.slice(-4) : ""; }
 function render() {
   const q = $("search").value.toLowerCase(), sort = $("sort").value;
@@ -500,7 +499,7 @@ function render() {
     const sub = x.type === "card" ? [maskCard(x.number), x.exp].filter(Boolean).join(" · ") : x.login;
     return `<div class="entry" data-id="${esc(x.id)}">
       <div class="entry-main">
-        <b>${x.fav ? '<span class="star">★</span> ' : ""}${ICON[x.type] || ""} ${esc(x.title)}</b>
+        <b>${x.fav ? '<span class="star">★</span> ' : ""}${esc(x.title)} <span class="kind">${TYPE_NAME(x.type)}</span></b>
         ${sub ? `<small>${esc(sub)}</small>` : ""}
         ${x.category ? `<span class="tag">#${esc(x.category)}</span>` : ""}
         ${hasPass ? `<div class="pw" data-pw>••••••••</div>` : ""}
@@ -509,15 +508,15 @@ function render() {
         ${x.note ? `<div class="note">${esc(x.note)}</div>` : ""}
       </div>
       <div class="entry-actions">
-        ${hasPass || x.type === "card" ? `<button class="ghost" data-act="show" title="${T("Показать", "Show")}">👁</button>` : ""}
-        ${x.login ? `<button class="ghost" data-act="copy-login" title="${T("Копировать логин", "Copy login")}">👤</button>` : ""}
+        ${hasPass || x.type === "card" ? `<button class="ghost" data-act="show">${T("Показать", "Show")}</button>` : ""}
+        ${x.login ? `<button class="ghost" data-act="copy-login">${T("Логин", "Login")}</button>` : ""}
         ${hasPass ? `<button class="ghost" data-act="copy">${T("Пароль", "Password")}</button>` : ""}
         ${cfg ? `<button class="ghost" data-act="copy-totp">2FA</button>` : ""}
         ${x.type === "card" && x.number ? `<button class="ghost" data-act="copy-number">${T("Номер", "Number")}</button>` : ""}
-        ${x.url ? `<button class="ghost" data-act="open" title="${T("Открыть сайт", "Open site")}">↗</button>` : ""}
+        ${x.url ? `<button class="ghost" data-act="open">${T("Открыть", "Open")}</button>` : ""}
         <button class="ghost" data-act="fav" title="${T("Избранное", "Favorite")}">${x.fav ? "★" : "☆"}</button>
-        <button class="ghost" data-act="edit" title="${T("Изменить", "Edit")}">✎</button>
-        <button class="ghost" data-act="del" title="${T("Удалить", "Delete")}">✕</button>
+        <button class="ghost" data-act="edit">${T("Изменить", "Edit")}</button>
+        <button class="ghost" data-act="del" class="ghost danger-text">${T("Удалить", "Delete")}</button>
       </div>
     </div>`;
   }).join("") : `<p class="sub">${entries.length ? T("Ничего не найдено.", "Nothing found.") : T("Пока пусто.", "Nothing here yet.")}</p>`;
@@ -581,7 +580,7 @@ function audit() {
   const old = withPass.filter(x => Date.now() - (x.pwChanged || x.created) > 365 * 864e5);
   const leaked = withPass.filter(x => breached.get(x.id) > 0);
   const sec = (title, list, why) => `<h3>${title} <span class="count${list.length ? " bad" : ""}">${list.length}</span></h3>` +
-    (list.length ? `<div>${list.map(x => `<div class="entry compact"><div><b>${esc(x.title)}</b><small>${esc(why(x))}</small></div><button class="ghost shrink" data-audit-edit="${esc(x.id)}">✎</button></div>`).join("")}</div>`
+    (list.length ? `<div>${list.map(x => `<div class="entry compact"><div><b>${esc(x.title)}</b><small>${esc(why(x))}</small></div><button class="ghost shrink" data-audit-edit="${esc(x.id)}">${T("Изменить", "Edit")}</button></div>`).join("")}</div>`
       : `<p class="sub tight">${T("Всё в порядке", "All good")}</p>`);
   const score = withPass.length ? Math.round(100 * (1 - new Set([...weak, ...reused, ...old, ...leaked]).size / withPass.length)) : 100;
   $("audit-body").innerHTML = `<div class="score"><b>${score}</b><span>${T("из 100 — общая оценка", "out of 100 — overall score")}</span></div>` +
@@ -753,7 +752,7 @@ $("import-file").onchange = async () => {
     const keys = new Set(entries.map(x => x.title + "\u0000" + x.login + "\u0000" + x.pass));
     const dup = importRows.filter(x => keys.has(x.title + "\u0000" + x.login + "\u0000" + x.pass)).length;
     $("import-body").innerHTML = `<p>${T("Файл: ", "File: ")}<b>${esc(f.name)}</b></p><p>${T("Найдено записей: ", "Entries found: ")}<b>${importRows.length}</b>${dup ? T(", из них уже есть: ", ", already present: ") + dup + T(" (будут пропущены)", " (will be skipped)") : ""}</p>` +
-      `<div class="preview">${importRows.slice(0, 5).map(x => `<div class="entry compact"><div><b>${ICON[x.type]} ${esc(x.title)}</b><small>${esc(x.login)}</small></div></div>`).join("")}${importRows.length > 5 ? `<p class="sub tight">${T("и ещё ", "and ")}${importRows.length - 5}${T("…", " more…")}</p>` : ""}</div>` +
+      `<div class="preview">${importRows.slice(0, 5).map(x => `<div class="entry compact"><div><b>${esc(x.title)}</b><small>${esc(x.login)}</small></div></div>`).join("")}${importRows.length > 5 ? `<p class="sub tight">${T("и ещё ", "and ")}${importRows.length - 5}${T("…", " more…")}</p>` : ""}</div>` +
       `<div class="warn">${T("Поддерживаются CSV из Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password и Excel-выгрузка из Vault. После импорта удалите исходный файл — он не зашифрован.", "Supports CSV from Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password and Vault's Excel export. Delete the source file after import — it is not encrypted.")}</div>`;
     show("import");
   } catch (err) { alertBox(T("Не удалось прочитать файл: ", "Could not read the file: ") + err.message); }
