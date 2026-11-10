@@ -177,6 +177,7 @@
     </div>
     <div class="card">
       <button class="ghost" id="b-export">Скачать резервную копию</button>
+      <button class="ghost" id="b-xlsx">Выгрузить в Excel</button>
             <button class="danger" id="b-wipe">Удалить профиль с устройства</button>
       <p class="sub" style="margin:8px 0 0">Резервная копия зашифрована. Открыть её можно только вашей секретной фразой.</p>
     </div>
@@ -470,6 +471,48 @@ $("b-export").onclick = () => {
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
   a.download = "vault-backup-" + new Date().toISOString().slice(0, 10) + ".json"; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+/* ===== Выгрузка в Excel (.xlsx без сторонних библиотек) ===== */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xFFFFFFFF; for (const b of u8) c = CRC_T[(c ^ b) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zip(files) { // ZIP без сжатия (STORE)
+  const parts = [], central = []; let off = 0;
+  const le = (n, len) => { const a = new Uint8Array(len); for (let i = 0; i < len; i++) a[i] = (n >>> (8 * i)) & 255; return a; };
+  for (const [name, text] of files) {
+    const nm = enc.encode(name), data = enc.encode(text), crc = crc32(data);
+    const common = [le(20, 2), le(0, 2), le(0, 2), le(0, 2), le(0x21, 2), le(crc, 4), le(data.length, 4), le(data.length, 4), le(nm.length, 2), le(0, 2)];
+    const local = [le(0x04034b50, 4), ...common, nm, data];
+    central.push([le(0x02014b50, 4), le(20, 2), ...common, le(0, 2), le(0, 2), le(0, 2), le(0, 4), le(off, 4), nm]);
+    parts.push(...local); off += local.reduce((s, x) => s + x.length, 0);
+  }
+  const cd = central.flat(), cdSize = cd.reduce((s, x) => s + x.length, 0);
+  parts.push(...cd, le(0x06054b50, 4), le(0, 2), le(0, 2), le(files.length, 2), le(files.length, 2), le(cdSize, 4), le(off, 4), le(0, 2));
+  return new Blob(parts, { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+function xmlEsc(v) { return String(v ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function buildXlsx(rows) {
+  const col = i => String.fromCharCode(65 + i);
+  const sheetRows = rows.map((r, ri) => `<row r="${ri + 1}">` + r.map((v, ci) =>
+    `<c r="${col(ci)}${ri + 1}" t="inlineStr"${ri === 0 ? ' s="1"' : ""}><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`).join("") + "</row>").join("");
+  const X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  return zip([
+    ["[Content_Types].xml", X + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+    ["_rels/.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ["xl/workbook.xml", X + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Пароли" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ["xl/_rels/workbook.xml.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ["xl/styles.xml", X + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="2"><xf/><xf fontId="1" applyFont="1"/></cellXfs></styleSheet>'],
+    ["xl/worksheets/sheet1.xml", X + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="1" width="30" customWidth="1"/><col min="2" max="2" width="28" customWidth="1"/><col min="3" max="3" width="28" customWidth="1"/><col min="4" max="4" width="18" customWidth="1"/></cols><sheetData>' + sheetRows + '</sheetData></worksheet>']
+  ]);
+}
+$("b-xlsx").onclick = () => {
+  if (!entries.length) { window.alert("В профиле пока нет паролей."); return; }
+  if (!window.confirm("Внимание: файл Excel НЕ зашифрован. Любой, кто получит его, увидит все пароли. Удалите файл, когда он станет не нужен. Продолжить?")) return;
+  const rows = [["Сайт / название", "Логин", "Пароль", "Добавлено"],
+    ...entries.map(x => [x.site, x.login, x.pass, x.t ? new Date(x.t).toLocaleString("ru-RU") : ""])];
+  const a = document.createElement("a"); a.href = URL.createObjectURL(buildXlsx(rows));
+  a.download = "vault-" + (store.get().name || "profile").replace(/[^\p{L}\p{N}_-]+/gu, "_") + "-" + new Date().toISOString().slice(0, 10) + ".xlsx";
+  a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
 function lock() { vaultKey = null; entries = []; currentId = null; $("list").innerHTML = ""; $("search").value = ""; home(); }
 $("b-logout").onclick = lock;
