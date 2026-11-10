@@ -250,16 +250,18 @@ function renderProfiles() {
       <span class="who">${esc(p.name || T("Профиль", "Profile"))}${when ? `<br><small>${esc(when)}</small>` : ""}</span></button>`;
   }).join("");
 }
-function home() {
-  if (store.all().length) { renderProfiles(); $("unlock-err").textContent = ""; show("unlock"); setTimeout(() => $("unlock-pw").focus(), 50); }
-  else landing();
-}
+// Всегда сначала показываем лендинг; вход — по кнопке «Войти».
+function home() { landing(); }
 function landing() { $("b-signin").hidden = !store.all().length; show("start"); }
+function gotoUnlock() {
+  if (!store.all().length) return landing();
+  renderProfiles(); $("unlock-err").textContent = ""; show("unlock"); setTimeout(() => $("unlock-pw").focus(), 50);
+}
 $("profiles").onclick = e => {
   const b = e.target.closest("[data-pid]"); if (!b) return;
   currentId = b.dataset.pid; renderProfiles(); $("unlock-err").textContent = ""; $("unlock-pw").focus();
 };
-$("b-signin").onclick = home;
+$("b-signin").onclick = gotoUnlock;
 $("b-new2").onclick = () => $("b-new").click();
 document.querySelectorAll("[data-home]").forEach(a => a.onclick = () => { if (WORDS) { cancelToHome(true); } });
 document.querySelectorAll("[data-home-lock]").forEach(a => a.onclick = () => lock());
