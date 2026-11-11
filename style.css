@@ -623,3 +623,7 @@ h1, h2, h3, .brand, .p-title, .hero-h, .l-h2, .d-title, .wordmark, .wordmark-sm,
   .t-accent .big12 { font-size:84px; }
   .marquee-wrap { margin-left:-16px; margin-right:-16px; }
 }
+
+/* Кремовый фон страницы под лендингом и экранами входа (убирает чёрные поля по бокам) */
+html:has(.landing:not(.hidden)), body:has(.landing:not(.hidden)),
+html:has(.center-page:not(.hidden)), body:has(.center-page:not(.hidden)) { background:#F2F1EC; }
