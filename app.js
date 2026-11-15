@@ -650,6 +650,7 @@ function startEdit(x) {
 
 /* ---------------- Список ---------------- */
 let filter = "all", selectedId = null, view = "vault";
+const navOpen = new Set();
 function renderNav() {
   const L = pwEntries(), cats = [...new Set(L.map(x => x.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   $("cat-list").innerHTML = cats.map(c => `<option value="${esc(c)}">`).join("");
@@ -670,13 +671,21 @@ function renderNav() {
   const activeTasks = tasksList().filter(t => !t.done).length;
   const ws = `<a class="nav-item ws${view === "notes" ? " active" : ""}" data-view="notes"><svg class="ic wsico"><use href="#i-note"/></svg> ${T("Заметки", "Notes")}<span>${notesList().length || ""}</span></a>`
     + `<a class="nav-item ws${view === "tasks" ? " active" : ""}" data-view="tasks"><svg class="ic wsico"><use href="#i-check"/></svg> ${T("Задачи", "Tasks")}<span>${activeTasks || ""}</span></a>`;
-  $("nav").innerHTML = ws + `<div class="nav-head">${T("ПАРОЛИ", "PASSWORDS")}</div>` + top.map(link).join("") +
-    `<div class="nav-head">${T("ТИПЫ", "TYPES")}</div>` + types.map(link).join("") +
-    `<div class="nav-head">${T("ПРОВЕРКА", "CHECKS")}</div>` + checks.map(link).join("") +
-    (cats.length ? `<div class="nav-head">${T("КАТЕГОРИИ", "CATEGORIES")}</div>` + cats.map(c => link(["c:" + c, c, n(x => x.category === c)])).join("") : "") +
+  const topK = new Set(top.map(i => i[0])), typeK = new Set(types.map(i => i[0])), checkK = new Set(checks.map(i => i[0]));
+  const activeSec = view === "vault" ? (topK.has(filter) ? "pw" : typeK.has(filter) ? "types" : checkK.has(filter) ? "checks" : filter.startsWith("c:") ? "cats" : null) : null;
+  const isOpen = k => navOpen.has(k) || k === activeSec;
+  const chev = `<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>`;
+  const sec = (k, title, items) => `<div class="nav-sec${isOpen(k) ? " open" : ""}" data-sec="${k}"><button type="button" class="nav-head" data-sec-toggle="${k}"><span>${title}</span>${chev}</button><div class="nav-items">${items}</div></div>`;
+  $("nav").innerHTML = ws +
+    sec("pw", T("ПАРОЛИ", "PASSWORDS"), top.map(link).join("")) +
+    sec("types", T("ТИПЫ", "TYPES"), types.map(link).join("")) +
+    sec("checks", T("ПРОВЕРКА", "CHECKS"), checks.map(link).join("")) +
+    (cats.length ? sec("cats", T("КАТЕГОРИИ", "CATEGORIES"), cats.map(c => link(["c:" + c, c, n(x => x.category === c)])).join("")) : "") +
     link(["trash", T("Корзина", "Trash"), trash]);
 }
 $("nav").onclick = e => {
+  const st = e.target.closest("[data-sec-toggle]");
+  if (st) { const k = st.dataset.secToggle, secEl = st.closest(".nav-sec"); if (secEl.classList.toggle("open")) navOpen.add(k); else navOpen.delete(k); return; }
   $("v-vault").classList.remove("nav-open");
   const w = e.target.closest("[data-view]"); if (w) { setView(w.dataset.view); scrollTo(0, 0); return; }
   const a = e.target.closest("[data-filter]"); if (!a) return;

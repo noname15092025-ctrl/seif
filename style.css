@@ -1204,3 +1204,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 /* Скрытый раздел всегда скрыт (перебивает display:block на .app) */
 #v-vault.hidden, .app.hidden{ display:none !important; }
+
+/* Сворачиваемые разделы навигации */
+.nav-sec .nav-head{ display:flex !important; align-items:center; justify-content:space-between; width:100%;
+  background:transparent !important; border:0 !important; box-shadow:none !important; cursor:pointer;
+  padding:10px 12px !important; margin:8px 0 2px; font-size:12px; font-weight:600; letter-spacing:.1em;
+  text-transform:uppercase; color:#8A9079 !important; }
+.nav-sec .nav-head:hover{ color:#CFD4C2 !important; background:transparent !important; transform:none !important; filter:none !important; }
+.nav-sec .chev{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; transition:transform .22s; flex:0 0 auto; }
+.nav-sec.open .chev{ transform:rotate(180deg); }
+.nav-sec .nav-items{ display:none; }
+.nav-sec.open .nav-items{ display:block; }
