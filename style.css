@@ -857,3 +857,13 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 .app .side-foot .who{ color:#EDEDED; } .app .side-foot .who a{ color:var(--lime); }
 .app .list-sub .muted{ color:#8A8A90; }
 .app .list-sub .field.slim{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff; border-radius:12px; }
+
+/* D34: кнопки действий в просмотре записи — ясная иерархия */
+.app .detail .d-btns{ gap:8px; margin-top:22px; }
+.app .detail .d-btns button{ height:46px; border-radius:999px; padding:0 22px; font-weight:600; font-size:14px; }
+.app .detail .d-btns button[data-act="edit"]{ background:var(--lime); color:#111; border:0; }
+.app .detail .d-btns button[data-act="edit"]:hover{ filter:brightness(1.05); transform:translateY(-1px); }
+.app .detail .d-btns button[data-act="fav"]{ background:rgba(255,255,255,.07); color:#EDEDED; border:1px solid rgba(255,255,255,.2); }
+.app .detail .d-btns button[data-act="fav"]:hover{ background:rgba(255,255,255,.13); color:#fff; }
+.app .detail .d-btns .danger{ background:transparent; color:#E5484D; border:1px solid rgba(229,72,77,.5); }
+.app .detail .d-btns .danger:hover{ background:#E5484D; color:#fff; }
