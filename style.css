@@ -1129,3 +1129,23 @@ select option, .center-page select option, .app .list-sub select option{ backgro
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible{
   outline:2px solid var(--lime) !important; outline-offset:2px; border-radius:8px; }
 .row:focus-visible, .nav-item:focus-visible{ outline:2px solid var(--lime) !important; outline-offset:-2px; }
+
+/* ============ Единый центральный раздел: деталь/форма — модалка по центру ============ */
+.app .list-pane{ border-right:0 !important; }
+.app .detail{ position:fixed !important; inset:0 !important; width:auto !important; z-index:60; display:none !important;
+  padding:48px 20px; overflow:auto; background:rgba(0,0,0,.6); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
+.app.show-detail .detail{ display:flex !important; align-items:flex-start; justify-content:center; }
+.app .detail > #detail-view, .app .detail > #form-card, .app .detail > #note-editor{
+  width:100%; max-width:660px; margin:0 auto; background:#242428; border:1px solid #34343A; border-radius:26px;
+  padding:30px 28px; box-shadow:0 40px 120px -20px rgba(0,0,0,.75); }
+.app .detail > #note-editor{ padding:24px 26px; }
+.app .detail .ib.back{ display:inline-flex !important; }
+/* тёмные поля формы (были белые) */
+.app .detail .field, .app .detail input:not([type=checkbox]):not([type=radio]),
+.app .detail textarea, .app .detail select{ background:#303036 !important; color:#ECECEE !important; border:1px solid #3A3A40 !important; }
+.app .detail .field::placeholder, .app .detail textarea::placeholder, .app .detail input::placeholder{ color:#80808A !important; }
+.app .detail label{ color:#C7C7CD !important; }
+.app .detail .input-group{ background:#303036 !important; border:1px solid #3A3A40 !important; }
+/* на узком экране — почти на весь экран, как было */
+@media (max-width:980px){ .app .detail{ padding:0; background:var(--d-bg); }
+  .app .detail > #detail-view, .app .detail > #form-card, .app .detail > #note-editor{ max-width:none; border:0; border-radius:0; min-height:100vh; box-shadow:none; } }

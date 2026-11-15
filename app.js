@@ -634,6 +634,7 @@ $("b-edit-cancel").onclick = () => { clearForm(); showDetail(); };
 function showForm() { $("detail-view").classList.add("hidden"); $("form-card").classList.remove("hidden"); $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; setTimeout(() => $("e-title").focus(), 50); }
 function showDetail() { $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); renderDetail(); }
 $("b-new-entry").onclick = () => { if (view === "notes") return newNote(); if (view === "tasks") return $("task-new")?.focus(); clearForm(); showForm(); };
+$("detail").addEventListener("click", e => { if (e.target === $("detail")) { clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail"); } });
 document.addEventListener("click", e => { if (e.target.closest("[data-detail-back]")) { clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail"); renderDetail(); } });
 function startEdit(x) {
   editingId = x.id; formType = x.type;
@@ -716,7 +717,7 @@ function render() {
   $("note-editor").classList.add("hidden");
   const list = visibleList();
   if (!list.some(x => x.id === selectedId)) selectedId = null;
-  if (!selectedId && list.length && innerWidth > 980) selectedId = list[0].id;
+  // запись выбирается кликом — модалка не открывается автоматически
   $("list-count").textContent = list.length + " " + T(plural(list.length, "запись", "записи", "записей"), list.length === 1 ? "entry" : "entries");
   const att = attentionSet();
   $("list").innerHTML = list.length ? list.map((x, i) => `
@@ -929,7 +930,7 @@ function renderNotes() {
   const all = notesList(), q = $("search").value.toLowerCase();
   const list = all.filter(x => (x.title + " " + (x.body || "")).toLowerCase().includes(q)).sort((a, b) => b.updated - a.updated);
   if (!list.some(x => x.id === selectedId)) selectedId = null;
-  if (!selectedId && list.length && innerWidth > 980) selectedId = list[0].id;
+  // запись выбирается кликом — модалка не открывается автоматически
   $("list-count").textContent = all.length + " " + T(plural(all.length, "заметка", "заметки", "заметок"), all.length === 1 ? "note" : "notes");
   $("list").innerHTML = list.length ? list.map(x => `
     <div class="note-row${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
