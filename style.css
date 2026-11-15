@@ -1180,3 +1180,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .app .side-brand{ padding:4px 10px 16px; }
 .app .side::-webkit-scrollbar{ width:7px; } .app .side::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.12); border-radius:4px; }
 .menu-btn{ border-radius:999px !important; }
+
+/* Модалка записи: спокойная единая гамма вкладок и полей */
+.app .detail .tabs{ gap:8px; }
+.app .detail .tab{ background:#2C2C32 !important; color:#CBCBD1 !important; border:1px solid #3A3A40 !important;
+  border-radius:12px !important; font-weight:500 !important; box-shadow:none !important; }
+.app .detail .tab:hover{ background:#34343B !important; color:#fff !important; transform:none !important; }
+.app .detail .tab.active{ background:var(--lime) !important; color:#111 !important; border-color:var(--lime) !important; }
+.app .detail .field:focus, .app .detail input:focus, .app .detail textarea:focus, .app .detail select:focus{
+  border-color:#7FA33A !important; box-shadow:0 0 0 3px rgba(200,226,122,.18) !important; outline:none !important; }
+.app .detail .input-group:focus-within{ border-color:#7FA33A !important; box-shadow:0 0 0 3px rgba(200,226,122,.18) !important; }
