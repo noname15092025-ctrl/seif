@@ -1193,3 +1193,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 /* Бренд на тёмном не гаснет при наведении */
 .brand:hover, .l-head .brand:hover, .app .side-brand:hover, .app .side a.brand:hover{ color:#fff !important; }
+
+/* Профиль — наверху панели, под названием */
+.app .side{ display:flex; flex-direction:column; }
+.app .side-brand{ order:0; }
+.app .side-foot{ order:1; margin:4px 0 10px !important; padding:12px 10px !important; border-top:0 !important;
+  border-bottom:1px solid rgba(255,255,255,.08); }
+.app .side #nav{ order:2; }
+.app .side-tools{ order:3; margin-top:auto; }
