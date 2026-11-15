@@ -1078,3 +1078,21 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 
 /* Светлой темы нет — убираем переключатель темы */
 [data-theme-toggle]{ display:none !important; }
+
+/* ======= Контраст текста на тёмно-сером ======= */
+.center-page .p-sub, .center-page .panel p.muted, .center-page .muted{ color:#AEAEB5 !important; }
+.center-page .panel .p-links a, .p-links a{ color:#CBCBD1 !important; font-weight:500; }
+.center-page .panel .p-links a:hover, .p-links a:hover{ color:var(--lime) !important; }
+.center-page label{ color:#CDCDD3 !important; }
+.center-page .field, .center-page input, .center-page textarea, .center-page select{ color:#F0F0F2 !important; }
+.app .row .t small, .app #list .note-row small{ color:#A6A6AC !important; }
+.app .detail label{ color:#B2B2B8 !important; }
+.app .detail .d-meta, .app .detail .muted{ color:#A6A6AC !important; }
+.app .side .nav-item{ color:#DADFcc !important; }
+.app .side .nav-item span{ color:#9AA08C !important; }
+.app .side .side-sec, .app .side h4{ color:#8A9079 !important; }
+.app .side-tools .nav-item{ color:#CFD4C2 !important; }
+#compare .them{ color:#AEAEB5 !important; }
+#compare .cf{ color:#EDEDEF !important; }
+.app #list .task-due{ color:#A6A6AC !important; }
+.err, .center-page .err{ color:#E0A23C !important; }
