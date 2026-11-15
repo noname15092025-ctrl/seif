@@ -1190,3 +1190,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .app .detail .field:focus, .app .detail input:focus, .app .detail textarea:focus, .app .detail select:focus{
   border-color:#7FA33A !important; box-shadow:0 0 0 3px rgba(200,226,122,.18) !important; outline:none !important; }
 .app .detail .input-group:focus-within{ border-color:#7FA33A !important; box-shadow:0 0 0 3px rgba(200,226,122,.18) !important; }
+
+/* Бренд на тёмном не гаснет при наведении */
+.brand:hover, .l-head .brand:hover, .app .side-brand:hover, .app .side a.brand:hover{ color:#fff !important; }
