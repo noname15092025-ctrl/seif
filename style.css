@@ -1170,3 +1170,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .app{ height:auto !important; min-height:100vh; overflow:visible !important; }
 .app .list-pane{ height:auto !important; overflow:visible !important; }
 .app #list.rows{ overflow:visible !important; }
+
+/* Меню — плавающая скруглённая панель с отступами */
+.app .side{ top:14px; left:14px; height:calc(100vh - 28px); width:258px; border-radius:26px;
+  border:1px solid #2E2E34 !important; background:#171C0E !important; overflow-y:auto; overflow-x:hidden;
+  transform:translateX(calc(-100% - 20px)); box-shadow:none; padding:20px 14px 16px; }
+.app.nav-open .side{ transform:none; box-shadow:0 30px 90px rgba(0,0,0,.6); }
+.app .side .nav-item{ border-radius:14px; }
+.app .side-brand{ padding:4px 10px 16px; }
+.app .side::-webkit-scrollbar{ width:7px; } .app .side::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.12); border-radius:4px; }
+.menu-btn{ border-radius:999px !important; }
