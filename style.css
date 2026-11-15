@@ -1118,3 +1118,14 @@ select option, .center-page select option, .app .list-sub select option{ backgro
 .gp-history{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
 .gp-hchip{ max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:8px 12px; border-radius:12px; background:#24242A; color:#C7C7CD; border:1px solid #33333A; font-size:13px; box-shadow:none; }
 .gp-hchip:hover{ background:#2E2E34; color:var(--lime); transform:none; filter:none; }
+
+/* TOTP-код в строке списка */
+.row-totp{ display:flex; align-items:center; gap:7px; padding:5px 10px; border-radius:999px; background:rgba(200,226,122,.1); border:1px solid rgba(200,226,122,.28); cursor:pointer; flex:0 0 auto; }
+.row-totp:hover{ background:rgba(200,226,122,.18); }
+.row-totp .totp-code{ font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:14px; font-weight:600; letter-spacing:.06em; color:#C8E27A; }
+.row-totp .left{ font-size:11px; color:#9A9AA0; min-width:26px; text-align:right; }
+
+/* Доступность: видимый фокус */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible{
+  outline:2px solid var(--lime) !important; outline-offset:2px; border-radius:8px; }
+.row:focus-visible, .nav-item:focus-visible{ outline:2px solid var(--lime) !important; outline-offset:-2px; }

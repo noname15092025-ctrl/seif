@@ -712,6 +712,7 @@ function render() {
       <span class="ava">${esc(initial(x.title))}</span>
       <span class="t"><b>${esc(x.title)}</b><small${expiringSoon(x) ? ' class="exp-soon"' : ""}>${esc(subline(x))}</small></span>
       ${att.has(x.id) ? `<span class="row-warn" title="${T("Требует внимания", "Needs attention")}"></span>` : ""}
+      ${(x.type === "login" && parseTotp(x.totp)) ? `<span class="row-totp" data-totp="${esc(x.id)}" data-copy-totp title="${T("Код 2FA — скопировать", "2FA code — copy")}"><span class="totp-code code">···&nbsp;···</span><span class="left"></span></span>` : ""}
       ${x.login ? `<button type="button" class="row-copy" data-copy-login aria-label="${T("Скопировать логин", "Copy login")}" title="${T("Скопировать логин", "Copy login")}"><svg class="ic"><use href="#i-copy"/></svg></button>` : ""}
       ${x.fav ? `<svg class="ic fav"><use href="#i-star"/></svg>` : ""}
     </div>`).join("") : `<div class="empty">${filter === "trash" ? T("Корзина пуста", "Trash is empty") : filter === "attention" ? T("Всё в порядке — проблемных паролей нет", "All good — no problem passwords") : live().length ? T("Ничего не найдено", "Nothing found") : T("Сейф пока пуст. Нажмите «+ Добавить».", "The safe is empty. Click “+ Add”.")}</div>`;
@@ -737,6 +738,7 @@ $("list").onclick = async e => {
     return;
   }
   const r = e.target.closest(".row"); if (!r) return;
+  if (e.target.closest("[data-copy-totp]")) { const xt = entries.find(y => y.id === r.dataset.id); const cfg = xt && parseTotp(xt.totp); if (cfg) totpCode(cfg).then(rr => { copySecret(rr.code); markUsed(xt); }); return; }
   if (e.target.closest("[data-copy-login]")) { const xi = entries.find(y => y.id === r.dataset.id); if (xi && xi.login) { copySecret(xi.login); markUsed(xi); } return; }
   selectedId = r.dataset.id; clearForm(); showDetail();
   $("list").querySelectorAll(".row").forEach(x => x.classList.toggle("active", x.dataset.id === selectedId));
