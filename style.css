@@ -1096,3 +1096,8 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 #compare .cf{ color:#EDEDEF !important; }
 .app #list .task-due{ color:#A6A6AC !important; }
 .err, .center-page .err{ color:#E0A23C !important; }
+
+/* Нативный выпадающий список сортировки — тёмный */
+select, .field.slim{ color:#EDEDEF !important; }
+select option, .center-page select option, .app .list-sub select option{ background:#2A2A2E !important; color:#EDEDEF !important; }
+.app .list-sub .field.slim{ background:#2A2A2E !important; border:1px solid #3A3A40 !important; color:#EDEDEF !important; }
