@@ -958,14 +958,15 @@ async function newNote() {
   selectedId = id; noteMode = "edit"; await persist(); renderNav(); renderNotes();
   $("v-vault").classList.add("show-detail"); setTimeout(() => $("note-title") && $("note-title").focus(), 60);
 }
-const saveNote = debounce(async () => {
+async function saveNoteCore() {
   const x = notesList().find(y => y.id === selectedId); if (!x) return;
   if ($("note-title")) x.title = $("note-title").value;
   if ($("note-body")) x.body = $("note-body").value;
   x.updated = Date.now(); await persist();
   const b = $("list").querySelector(`.note-row[data-id="${CSS.escape(selectedId)}"] b`); if (b) b.textContent = x.title || T("Без названия", "Untitled");
   const st = $("note-saved"); if (st) st.textContent = T("Сохранено", "Saved");
-}, 400);
+}
+const saveNote = debounce(saveNoteCore, 400);
 function renderNoteEditor() {
   const ed = $("note-editor"); ed.classList.remove("hidden");
   $("detail-view").classList.add("hidden"); $("form-card").classList.add("hidden");
@@ -976,7 +977,7 @@ function renderNoteEditor() {
     <div class="note-bar">
       <button class="ib back" data-note-back aria-label="${T("Назад", "Back")}"><svg class="ic"><use href="#i-back"/></svg></button>
       <div class="note-modes"><button class="seg${edit ? " on" : ""}" data-note-mode="edit">${T("✏ Правка", "✏ Edit")}</button><button class="seg${edit ? "" : " on"}" data-note-mode="preview">${T("👁 Просмотр", "👁 Preview")}</button></div>
-      <button class="ib danger-text" data-note-del>${T("Удалить", "Delete")}</button>
+      <button class="seg-done" data-note-done>${T("Готово", "Done")}</button><button class="ib danger-text" data-note-del>${T("Удалить", "Delete")}</button>
     </div>
     <input id="note-title" class="note-title" maxlength="120" placeholder="${T("Без названия", "Untitled")}">
     ${edit ? `<textarea id="note-body" class="note-body" placeholder="${T("Пишите здесь… Поддерживается Markdown: # заголовок, **жирный**, - список, - [ ] задача", "Write here… Markdown supported: # heading, **bold**, - list, - [ ] task")}" spellcheck="true"></textarea>`
@@ -988,7 +989,7 @@ function renderNoteEditor() {
 }
 $("note-editor").addEventListener("click", async e => {
   if (e.target.closest("[data-new-note]")) return newNote();
-  if (e.target.closest("[data-note-back]")) { $("v-vault").classList.remove("show-detail"); return; }
+  if (e.target.closest("[data-note-back],[data-note-done]")) { await saveNoteCore(); $("v-vault").classList.remove("show-detail"); return; }
   const mb = e.target.closest("[data-note-mode]"); if (mb) { noteMode = mb.dataset.noteMode; renderNoteEditor(); return; }
   const box = e.target.closest(".md-box"); // клик по чекбоксу в режиме просмотра — переключает в тексте
   if (box) {

@@ -1215,3 +1215,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .nav-sec.open .chev{ transform:rotate(180deg); }
 .nav-sec .nav-items{ display:none; }
 .nav-sec.open .nav-items{ display:block; }
+
+/* Кнопка «Готово» в редакторе заметки */
+.note-bar .seg-done{ height:38px; padding:0 18px; border-radius:999px; background:var(--lime); color:#111; font-weight:600; border:0; box-shadow:none; margin-left:auto; }
+.note-bar .seg-done:hover{ filter:brightness(1.05); transform:translateY(-1px); }
+.note-bar .ib.danger-text{ margin-left:8px; }
