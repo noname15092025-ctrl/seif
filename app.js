@@ -12,7 +12,7 @@ if (self !== top) { try { top.location = self.location.href; } catch { document.
    ===================================================================== */
 
 const STORE = "seif.v2";
-const KDF = { alg: "argon2id", m: 47104, t: 2, p: 1 }; // 46 МиБ — усиленный профиль против оффлайн-перебора (~1.5–2.5 с на вход); старые профили мигрируют при входе
+const KDF = { alg: "argon2id", m: 19456, t: 2, p: 1 }; // OWASP-минимум: ~1 с на вход; пул-JS argon2 при большей памяти слишком медленный
 let LOCK_IDLE_MS = 5 * 60 * 1000; const LOCK_HIDDEN_MS = 60 * 1000;
 try { const _al = localStorage.getItem("vault.autolock"); if (_al != null) LOCK_IDLE_MS = +_al; } catch {}
 const stayOn = () => { try { return (localStorage.getItem("vault.stay") ?? "1") === "1"; } catch { return true; } };
