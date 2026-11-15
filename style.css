@@ -1165,3 +1165,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .menu-btn:hover{ background:rgba(255,255,255,.12) !important; transform:none !important; }
 .menu-btn .ic{ width:20px; height:20px; }
 @media (max-width:980px){ .app .list-pane{ padding:16px !important; } }
+
+/* страница прокручивается целиком (sidebar вне потока) */
+.app{ height:auto !important; min-height:100vh; overflow:visible !important; }
+.app .list-pane{ height:auto !important; overflow:visible !important; }
+.app #list.rows{ overflow:visible !important; }
