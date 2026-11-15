@@ -364,21 +364,33 @@ $("b-unlock").onclick = async e => {
     $("unlock-err").textContent = T("Слишком много попыток. Подождите ", "Too many attempts. Wait ") + Math.ceil((s.lockUntil - now) / 1000) + T(" с", " s"); return;
   }
   busy(e.target, true, T("Проверяю…", "Checking…"));
+  let authed = false;
   try {
     const pw = $("unlock-pw").value;
     const wk = await wrapKeyFrom(pw, s);
     const raw = await open(wk, s.wrapped);
     vaultKey = await importVaultKey(raw);
     entries = JSON.parse(dec.decode(await open(vaultKey, s.vault))).map(migrateEntry);
+    authed = true;
     s.fails = 0; s.lockUntil = 0; s.lastLogin = Date.now();
     saveSession(raw, s.id); try { localStorage.setItem("vault.last", s.id); } catch {}
-    // переход на текущие параметры Argon2id (со старого KDF или с устаревших параметров)
-    if (!s.kdf || s.kdf.alg !== "argon2id" || s.kdf.m !== KDF.m || s.kdf.t !== KDF.t) { Object.assign(s, await wrapVaultKeyRaw(raw, pw)); delete s.iters; }
+    // Переход на текущие параметры Argon2id — НЕ критично для входа: любая ошибка здесь
+    // не должна приводить к «Неверный пароль». Новую обёртку применяем, только если она
+    // реально открывается тем же паролем (защита от порчи профиля).
+    if (!s.kdf || s.kdf.alg !== "argon2id" || s.kdf.m !== KDF.m || s.kdf.t !== KDF.t) {
+      try {
+        const nw = await wrapVaultKeyRaw(raw, pw);
+        const back = await open(await wrapKeyFrom(pw, nw), nw.wrapped);
+        if (back.length === raw.length && back.every((b, i) => b === raw[i])) { Object.assign(s, nw); delete s.iters; }
+        back.fill(0);
+      } catch {}
+    }
     raw.fill(0);
     store.set(s);
     $("unlock-pw").value = ""; $("unlock-err").textContent = ""; $("ldial-turn").style.transform = "";
     openVaultView();
-  } catch {
+  } catch (err) {
+    if (authed) { try { store.set(s); } catch {} $("unlock-err").textContent = ""; try { openVaultView(); } catch {} busy(e.target, false, ""); return; }
     s.fails = (s.fails || 0) + 1;
     if (s.fails >= 3) s.lockUntil = Date.now() + Math.min(2 ** (s.fails - 3) * 30000, 3600000); // 30 с, 1 мин, 2 мин… до часа
     store.set(s);
@@ -1336,7 +1348,7 @@ if ($("set-autolock")) {
 }
 if ($("set-stay")) {
   $("set-stay").checked = stayOn();
-  $("set-stay").onchange = e => { try { localStorage.setItem("vault.stay", e.target.checked ? "1" : "0"); } catch {} if (!e.target.checked) clearSession(); else if (vaultKey) { C.exportKey("raw", vaultKey).then(r => saveSession(new Uint8Array(r), currentId)).catch(() => {}); } };
+  $("set-stay").onchange = e => { try { localStorage.setItem("vault.stay", e.target.checked ? "1" : "0"); } catch {} if (!e.target.checked) clearSession();  };
 }
 
 /* Горячие клавиши */
