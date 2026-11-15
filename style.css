@@ -979,3 +979,32 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 
 /* Код в инструкции */
 .center-page .panel code, .center-page .panel pre, .center-page .panel kbd{ background:#ECE5D7 !important; color:#15150F !important; border-color:var(--beige-line) !important; }
+
+/* ======= Светло-серые поверхности вместо белого/бежевого (мягче для глаз) ======= */
+:root{ --beige:#EAEAEC; --beige2:#DFDFE2; --beige-row:#EFEFF1; --beige-line:#D6D6DA; }
+/* хранилище */
+.app .row{ background:#EFEFF1 !important; border:1px solid #E1E1E5 !important; }
+.app .row:hover{ background:#F4F4F6 !important; }
+.app .row .ava, .app .detail .d-head .ava{ background:#E3E3E6 !important; color:#111 !important; }
+.app #list.rows{ background:#DFDFE2 !important; }
+.app .detail .d-field, .app .detail .input-group{ background:#EAEAEC !important; border:1px solid #D6D6DA !important; }
+.app #list .note-row{ background:#EFEFF1 !important; border:1px solid #E1E1E5 !important; }
+.app #list .note-row:hover{ background:#F4F4F6 !important; }
+.app #list .note-row.active{ background:#EFEFF1 !important; }
+.app #list .task-add .field, .app #list .task-rename{ background:#F2F2F4 !important; }
+/* центральные экраны */
+.center-page .panel{ background:#EAEAEC !important; }
+.center-page .field, .center-page input:not([type=checkbox]):not([type=radio]), .center-page textarea, .center-page select, .center-page .input-group{ background:#F2F2F4 !important; border-color:#D6D6DA !important; }
+.words{ background:#F2F2F4 !important; } .words div{ background:#E2E2E5 !important; }
+.split .panel{ background:#EAEAEC !important; }
+.split .profiles .prof{ background:#F2F2F4 !important; } .split .field{ background:#F2F2F4 !important; }
+.split .profiles .prof.active{ background:var(--d-olive) !important; }
+.dark-btn{ background:#EAEAEC !important; }
+/* лендинг */
+.t-white{ background:#EAEAEC !important; }
+#compare .compare{ background:#EAEAEC !important; }
+.hd-bg{ fill:#EAEAEC !important; } .ap-face{ fill:#EAEAEC !important; }
+/* модалка/плашка/код */
+.modal-box{ background:#EAEAEC !important; border-color:#D6D6DA !important; }
+.copied{ background:#EAEAEC !important; border-color:#D6D6DA !important; }
+.center-page .panel code, .center-page .panel pre, .center-page .panel kbd{ background:#E2E2E5 !important; }
