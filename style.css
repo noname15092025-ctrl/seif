@@ -931,3 +931,51 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 .app .row{ background:#FBF7EF !important; border:1px solid #ECE3D1 !important; box-shadow:0 2px 10px rgba(60,50,30,.07) !important; }
 .app .row .t b{ color:#15150F; font-weight:600; }
 .app .row .t small{ color:#6E6E74; }
+
+/* ======= D34: заметки, задачи, модалки, тосты — убираем старый тёмный/красный ======= */
+/* Заметки — карточки на беже */
+.app #list .note-row{ background:#FBF7EF !important; border:1px solid #ECE3D1 !important; border-radius:14px !important; margin:6px 0 !important; padding:12px 14px !important; box-shadow:0 2px 8px rgba(60,50,30,.06); }
+.app #list .note-row:hover{ background:#FFFDF8 !important; }
+.app #list .note-row.active{ background:#FBF7EF !important; outline:2px solid var(--lime); border-color:transparent !important; }
+.app #list .note-row b{ color:#15150F !important; }
+.app #list .note-row small{ color:#6E6E74 !important; }
+/* Редактор заметки — на тёмном, читаемый текст */
+.app .note-ed .note-title{ color:#fff !important; }
+.app .note-ed .note-title::placeholder{ color:#6E6E74 !important; }
+.app .note-ed .note-body{ color:#DADAD2 !important; }
+.app .note-ed .note-body::placeholder{ color:#6E6E74 !important; }
+.app .note-ed button.ghost{ background:rgba(255,255,255,.06) !important; color:#EDEDED !important; border:1px solid rgba(255,255,255,.18) !important; border-radius:999px !important; }
+.app .note-ed .danger{ background:transparent !important; color:#CDA152 !important; border:1px solid rgba(205,161,82,.5) !important; border-radius:999px !important; }
+.app .note-ed .danger:hover{ background:#CDA152 !important; color:#111 !important; }
+.app .note-ed .md{ color:#DADAD2; }
+
+/* Задачи — на беже */
+.app #list .task-add .field{ background:#FBF8F1 !important; border:1px solid var(--beige-line) !important; color:#111 !important; }
+.app #list .task-add .field::placeholder{ color:#8A8A82 !important; }
+.app #list .task-row{ border-bottom:1px solid #E2DAC8 !important; }
+.app #list .task-row:hover{ background:rgba(0,0,0,.03) !important; }
+.app #list .task-text{ color:#15150F !important; }
+.app #list .task-row.done .task-text{ color:#9A968B !important; }
+.app #list .task-check{ border-color:#C4BCA8 !important; color:#111 !important; }
+.app #list .task-row.done .task-check{ background:var(--lime) !important; border-color:var(--lime) !important; color:#111 !important; }
+.app #list .task-due{ color:#6E6E74 !important; border-color:#D8D0BE !important; }
+.app #list .task-due.overdue{ color:#C98A2E !important; border-color:#E0A23C !important; }
+.app #list .task-pri.high{ color:#C98A2E !important; }
+.app #list .task-del:hover{ color:#C98A2E !important; }
+.app #list .task-rename{ border:1px solid var(--lime) !important; background:#FBF8F1 !important; color:#111 !important; }
+
+/* Модалка подтверждения — беж, без красного */
+.modal-box{ background:var(--beige) !important; border:1px solid var(--beige-line) !important; border-radius:24px !important; color:#111 !important; }
+.modal-box p, .modal-box h3{ color:#111 !important; }
+.modal-box button:not(.danger){ background:#111 !important; color:#fff !important; border:0 !important; border-radius:999px !important; }
+.modal-box .danger{ background:transparent !important; color:#CDA152 !important; border:1px solid rgba(205,161,82,.55) !important; border-radius:999px !important; }
+.modal-box .danger:hover{ background:#CDA152 !important; color:#111 !important; }
+
+/* Тост и плашка «скопировано» — олива/беж вместо красного */
+.toast{ background:var(--d-olive) !important; color:#fff !important; }
+.copied{ background:var(--beige) !important; border:1px solid var(--beige-line) !important; color:#111 !important; }
+.copied .t-bg{ stroke:#D8D0BE !important; }
+.timer{ stroke:#7FA33A !important; }
+
+/* Код в инструкции */
+.center-page .panel code, .center-page .panel pre, .center-page .panel kbd{ background:#ECE5D7 !important; color:#15150F !important; border-color:var(--beige-line) !important; }
