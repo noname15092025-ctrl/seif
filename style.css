@@ -627,3 +627,164 @@ h1, h2, h3, .brand, .p-title, .hero-h, .l-h2, .d-title, .wordmark, .wordmark-sm,
 /* Кремовый фон страницы под лендингом и экранами входа (убирает чёрные поля по бокам) */
 html:has(.landing:not(.hidden)), body:has(.landing:not(.hidden)),
 html:has(.center-page:not(.hidden)), body:has(.center-page:not(.hidden)) { background:#F2F1EC; }
+
+/* ======================================================================
+   ДИЗАЙН 34 (D34) — тёмная страница, оливковые/бумажные панели, лайм
+   Накладывается поверх прежних тем. Шрифт Urbanist (сетевой запрещён —
+   системный фолбэк), моно JetBrains → ui-monospace.
+   ====================================================================== */
+:root{
+  --d-bg:#0B0B0C; --d-olive:#1E2410; --d-paper:#F1F1F3; --d-card:#FFFFFF;
+  --d-ink:#111111; --d-soft:#6E6E74; --d-faint:#8A8A90; --d-line:#E2E2E6; --d-line2:#EEEEF1;
+  --lime:#C8E27A; --d-dim:#A7A7AD; --d-chip:#1C1C1E;
+  --d-font:"Urbanist","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+html, body{ background:var(--d-bg) !important; color:#EDEDED; font-family:var(--d-font); }
+body, h1,h2,h3,h4,.brand,.hero-h,.l-h2,.p-title,.d-title,.wordmark,.wordmark-sm,.big12,.note-title,.side-brand{ font-family:var(--d-font) !important; letter-spacing:-.01em; }
+.mono,.field.mono,.totp-code{ font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace !important; }
+
+/* перекрываем прежнюю кремовую палитру лендинга/экранов */
+.landing, .center-page{ --bg:var(--d-bg); --side:var(--d-bg); --panel:var(--d-paper); --panel2:var(--d-card);
+  --text:var(--d-ink); --soft:var(--d-soft); --muted:var(--d-faint); --line:var(--d-line); --line2:var(--d-line2);
+  --accent:var(--lime); --ring:rgba(200,226,122,.35); background:var(--d-bg); color:#FFF; }
+html:has(.landing:not(.hidden)), body:has(.landing:not(.hidden)),
+html:has(.center-page:not(.hidden)), body:has(.center-page:not(.hidden)),
+html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg) !important; }
+
+/* ---------- Кнопки D34 ---------- */
+.pill,.accent-btn,.dark-btn,.outline,.wide{ border-radius:999px; }
+.accent-btn{ background:var(--lime); color:#111; border:0; box-shadow:none; font-weight:600; }
+.accent-btn:hover{ filter:brightness(1.04); transform:translateY(-2px); }
+.dark-btn{ background:#F4F4F5; color:#111; border:0; box-shadow:none; font-weight:600; }
+.dark-btn:hover{ background:#fff; transform:translateY(-2px); filter:none; }
+.outline{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.28);
+  -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); box-shadow:inset 0 1px 0 rgba(255,255,255,.25); }
+.outline:hover{ background:rgba(255,255,255,.14); color:#fff; transform:translateY(-2px); }
+.pill.big,button.big{ height:60px; padding:0 30px; font-size:16px; }
+
+/* ====================== ЛЕНДИНГ ====================== */
+.landing{ max-width:1280px; }
+.l-head{ padding:24px 32px; }
+.brand{ color:#fff; font-weight:600; }
+.brand .ic.accent{ stroke:var(--lime); background:transparent; padding:0; }
+.l-nav{ background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:999px; padding:6px; }
+.l-nav a{ color:#CFCFCF; padding:10px 18px; border-radius:999px; font-weight:500; }
+.l-nav a:hover{ color:#fff; background:rgba(255,255,255,.08); }
+.l-actions .ghost{ background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.14); color:#fff; }
+.l-actions .ghost:hover{ background:rgba(255,255,255,.12); }
+#b-signin.pill{ background:var(--lime); color:#111; border:0; font-weight:600; }
+#b-signin.pill:hover{ filter:brightness(1.04); transform:translateY(-2px); }
+
+.badge{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); color:#EDEDED; }
+.badge .dot{ background:var(--lime); }
+.hero-h{ color:#fff; font-weight:500; letter-spacing:-.03em; }
+.hero-h .hl{ background:var(--lime); color:#111; transform:none; border-radius:20px; padding:0 16px 4px; }
+.hero-sub{ color:#A7A7AD; }
+
+.hero-art{ background:var(--d-olive); border-radius:44px; position:relative; overflow:hidden; }
+.hero-art::before{ content:""; position:absolute; left:18%; top:20%; width:64%; height:60%;
+  border-radius:45% 55% 50% 50%; background:var(--lime); filter:blur(46px); opacity:.5; pointer-events:none; }
+.hero-art .rot{ position:relative; }
+.hero-art .circ{ fill:rgba(255,255,255,.28); }
+.hd-bg{ fill:#F1F1F3; } .hd-ring{ stroke:#2A3318; } .hd-core{ fill:var(--lime); }
+.hd-knob{ fill:#111; } .hd-hub{ fill:#111; }
+
+.marquee-wrap{ background:#141414; color:#fff; }
+.marquee i{ color:var(--lime); }
+
+#how .l-h2, #compare .l-h2, #security .l-h2{ color:#fff; }
+.tile{ border-radius:34px; }
+.t-accent{ background:var(--d-olive); color:#fff; position:relative; overflow:hidden; }
+.t-accent::before{ content:""; position:absolute; right:-10%; bottom:-20%; width:70%; height:80%;
+  border-radius:50%; background:var(--lime); filter:blur(48px); opacity:.45; }
+.t-accent .big12{ color:var(--lime); position:relative; }
+.t-accent h3, .t-accent p{ position:relative; }
+.t-white{ background:var(--d-paper); color:#111; }
+.t-white .t-tag{ color:#8A8A90; } .t-white h3{ color:#111; }
+.t-dark{ background:#161616; color:#fff; }
+.t-dark .t-tag{ color:#A7A7AD; }
+.dots3 i{ border-color:#fff; } .dots3 i:nth-child(1){ background:var(--lime); }
+.dots3 i:nth-child(2){ background:#161616; } .dots3 i:nth-child(3){ background:#3A3A3E; }
+.t-mut{ background:var(--d-chip); } .t-mut .lockbig{ stroke:var(--lime); }
+
+#compare .eyebrow{ color:var(--lime); }
+#compare .crow{ border-color:rgba(255,255,255,.08); }
+#compare .cf{ color:#EDEDED; } #compare .them{ color:#8A8A90; } #compare .us{ color:var(--lime); }
+#compare .us .ic.accent{ stroke:var(--lime); }
+.compare-note{ color:#8A8A90; }
+
+.sec-block{ background:var(--d-olive); color:#fff; position:relative; overflow:hidden; }
+.sec-block::before{ content:""; position:absolute; left:50%; top:60%; width:50%; height:70%; transform:translateX(-50%);
+  border-radius:50%; background:var(--lime); filter:blur(60px); opacity:.28; pointer-events:none; }
+.sec-block>*{ position:relative; }
+.sec-block .accent-eye{ color:var(--lime); }
+.sec-block .l-h2{ color:#fff; } .sec-block .muted2{ color:#8E948A; }
+.wordmark{ color:#fff; } .foot-meta{ color:#6E6E74; }
+
+/* ====================== ЦЕНТРАЛЬНЫЕ ЭКРАНЫ ====================== */
+.center-page{ background:var(--d-bg); color:#fff; }
+.center-page .panel{ background:var(--d-paper); color:#111; border:0; border-radius:34px;
+  box-shadow:0 30px 80px -30px rgba(0,0,0,.6); padding:34px 30px; }
+.center-page .panel h1,.center-page .panel h2,.center-page .panel h3,.center-page .p-title{ color:#111; }
+.center-page .p-sub,.center-page .panel p.muted,.center-page .muted{ color:#6E6E74; }
+.center-page label{ color:#111; font-weight:600; text-transform:none; letter-spacing:0; font-size:14px; }
+.center-page .field,.center-page input:not([type=checkbox]):not([type=radio]),.center-page textarea,.center-page select{
+  background:#fff; color:#111; border:1px solid var(--d-line); border-radius:16px; }
+.center-page .field:focus,.center-page input:focus,.center-page textarea:focus{ border-color:var(--lime); box-shadow:0 0 0 4px rgba(200,226,122,.4); }
+.center-page input[type=checkbox],.center-page input[type=radio],.center-page input[type=range]{ accent-color:#111; }
+.center-page .input-group{ background:#fff; border:1px solid var(--d-line); border-radius:16px; }
+.center-page .input-group:focus-within{ border-color:var(--lime); box-shadow:0 0 0 4px rgba(200,226,122,.4); }
+.center-page .err{ color:#E5484D; }
+/* кнопки на светлой панели: основная — тёмная #111, акцентная — лайм */
+.center-page .panel button:not(.ghost):not(.danger):not(.accent-btn):not(.dark-btn):not(.outline):not(.icon-btn){
+  background:#111; color:#fff; border:0; border-radius:999px; font-weight:600; }
+.center-page .panel button.ghost{ background:#fff; color:#111; border:1px solid var(--d-line); }
+.center-page .panel .danger{ background:transparent; color:#E5484D; border:1px solid #E5484D; }
+.center-page .corner .pill.ghost{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.16); color:#fff; }
+
+/* фраза из 12 слов */
+.words{ background:#fff; border-radius:24px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.06); }
+.words div{ background:var(--d-paper); border:0; border-radius:16px; color:#111; }
+.meter-bar[data-s]{ background:var(--lime) !important; }
+
+/* ====================== ВХОД (сплит) ====================== */
+.center-page.split .art-panel{ background:var(--d-olive); position:relative; overflow:hidden; }
+.center-page.split .art-panel::before{ content:""; position:absolute; left:20%; bottom:8%; width:60%; height:40%;
+  border-radius:50%; background:var(--lime); filter:blur(50px); opacity:.5; pointer-events:none; }
+.art-panel>*{ position:relative; }
+.wordmark-sm{ color:#fff; }
+.ap-bg{ stroke:rgba(255,255,255,.14); } .art-panel .ring{ stroke:var(--lime); }
+.ap-face{ fill:#F1F1F3; } .ap-ticks{ stroke:#2A3318; } .ap-core{ fill:var(--lime); }
+.ap-knob{ fill:#111; } .ap-hub{ fill:#111; } .art-cap{ color:#fff; }
+.split .panel{ background:var(--d-paper); }
+.split .profiles .prof{ background:#fff; border:0; border-radius:20px; }
+.split .profiles .prof.active{ background:var(--d-olive); color:#fff; }
+.split .field{ background:#fff; }
+
+/* ====================== ХРАНИЛИЩЕ ====================== */
+.app{ background:var(--d-bg); }
+.app .side{ background:var(--d-olive); color:#fff; border-right:0; }
+.app .side-brand{ color:#fff; } .app .side-brand .ic.accent{ stroke:var(--lime); }
+.app .side .nav-item,.app .side a,.app .side button.navlink{ color:#D7DBCB; }
+.app .side .nav-item:hover{ background:rgba(255,255,255,.06); color:#fff; }
+.app .side .nav-item.active{ background:rgba(200,226,122,.16); color:var(--lime); }
+.app .list-pane{ background:var(--d-bg); }
+.app .list-top .field{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); color:#fff; border-radius:16px; }
+.app .list-top .field::placeholder{ color:#8A8A90; }
+.app #list.rows{ background:var(--d-paper); border-radius:26px; padding:6px 14px; margin:12px; }
+.app .row{ background:#fff; border:0; border-radius:18px; margin:8px 0; color:#111; box-shadow:0 4px 14px rgba(0,0,0,.05); padding:12px 14px; }
+.app .row:hover{ transform:translateY(-1px); box-shadow:0 8px 20px rgba(0,0,0,.08); }
+.app .row.active{ outline:2px solid var(--lime); background:#fff; }
+.app .row .r-title,.app .row b{ color:#111; } .app .row .r-sub,.app .row small{ color:#6E6E74; }
+.app .row .fav{ color:var(--lime); fill:var(--lime); }
+.app .detail{ background:var(--d-paper); color:#111; border-radius:26px; margin:12px; }
+.app .detail .d-field,.app .detail .field{ background:#fff; color:#111; border:1px solid var(--d-line); border-radius:14px; }
+.app .detail label,.app .detail .d-title{ color:#111; }
+.app .detail .d-sub,.app .detail .muted{ color:#6E6E74; }
+.totp-code{ color:#111; }
+/* акцентная кнопка добавить — лаймовый круг (FAB) */
+.app .btn-add,.app #b-add,.app .fab{ background:var(--lime); color:#111; border:0; border-radius:999px;
+  box-shadow:0 10px 30px rgba(200,226,122,.35); }
+
+@media (max-width:980px){ .center-page.split .art-panel{ display:none; } }
+@media (prefers-reduced-motion:reduce){ .hero-art .rot,.hero-art .dial,.art-panel .ldial,.art-panel .ring{ animation:none !important; } }
