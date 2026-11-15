@@ -882,3 +882,32 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 .app .detail .d-btns .danger:hover, .app .detail .danger:hover, .center-page .panel .danger:hover{
   background:#CDA152 !important; color:#111 !important; }
 .nav-item.trash span, .count.bad{ }
+
+/* ======= D34: тёплый бежевый вместо белого + контраст показанного пароля ======= */
+:root{ --beige:#F4EFE6; --beige2:#ECE5D7; --beige-row:#F7F3EB; --beige-line:#E4DCCB; }
+
+/* Хранилище */
+.app #list.rows{ background:var(--beige2) !important; }
+.app .row{ background:var(--beige-row) !important; box-shadow:0 2px 8px rgba(60,50,30,.06) !important; }
+.app .row .ava{ background:#EFE8D9 !important; color:#111 !important; }
+.app .detail .d-field{ background:var(--beige) !important; border:1px solid var(--beige-line) !important; }
+.app .detail .input-group{ background:var(--beige) !important; border:1px solid var(--beige-line) !important; }
+.app .detail .d-head .ava{ background:#EFE8D9 !important; color:#111 !important; }
+/* показанный пароль — тёмный и чёткий */
+.app .detail{ --text:#111; }
+.app .detail .revealed, .app .detail .revealed .dc, .app .detail .d-field .dc{ color:#111 !important; }
+
+/* Центральные экраны */
+.center-page .panel{ background:var(--beige) !important; }
+.center-page .field, .center-page input:not([type=checkbox]):not([type=radio]), .center-page textarea, .center-page select,
+.center-page .input-group{ background:#FBF8F1 !important; border-color:var(--beige-line) !important; }
+.words{ background:#FBF8F1 !important; } .words div{ background:var(--beige2) !important; }
+.split .panel{ background:var(--beige) !important; }
+.split .profiles .prof{ background:#FBF8F1 !important; } .split .field{ background:#FBF8F1 !important; }
+.dark-btn{ background:#F2ECE0 !important; }
+
+/* Лендинг: бумажные поверхности */
+.t-white{ background:var(--beige) !important; }
+#compare .compare{ background:var(--beige) !important; }
+#compare .crow{ border-top-color:rgba(60,50,30,.08) !important; }
+.hd-bg{ fill:var(--beige) !important; } .ap-face{ fill:var(--beige) !important; }
