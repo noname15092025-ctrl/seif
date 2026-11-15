@@ -1075,3 +1075,6 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 .modal-box button:not(.danger){ background:#EDEDEF !important; color:#111 !important; }
 .copied{ background:#2A2A2E !important; border-color:#3A3A40 !important; color:#ECECEE !important; }
 .center-page .panel code, .center-page .panel pre, .center-page .panel kbd{ background:#24242A !important; color:#ECECEE !important; }
+
+/* Светлой темы нет — убираем переключатель темы */
+[data-theme-toggle]{ display:none !important; }
