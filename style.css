@@ -796,3 +796,51 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 
 @media (max-width:980px){ .center-page.split .art-panel{ display:none; } }
 @media (prefers-reduced-motion:reduce){ .hero-art .rot,.hero-art .dial,.art-panel .ldial,.art-panel .ring{ animation:none !important; } }
+
+/* ======= D34: пропорции и цвета хранилища (как в макете D34List) ======= */
+.app{ --accent:var(--lime); --accent-soft:rgba(200,226,122,.18); --ring:rgba(200,226,122,.35); }
+/* надёжность — семантические цвета, не сплошной лайм */
+.meter-bar[data-s="1"]{ background:#E5484D !important; }
+.meter-bar[data-s="2"]{ background:#E8A54B !important; }
+.meter-bar[data-s="3"]{ background:#A7C957 !important; }
+.meter-bar[data-s="4"]{ background:#7FA33A !important; }
+.d-strength .bar span[data-s="1"]{ background:#E5484D !important; }
+.d-strength .bar span[data-s="2"]{ background:#E8A54B !important; }
+.d-strength .bar span[data-s="3"]{ background:#A7C957 !important; }
+.d-strength .bar span[data-s="4"]{ background:#7FA33A !important; }
+
+/* Сайдбар: без переноса названия, компактнее */
+.app .side{ padding:20px 12px 14px; gap:2px; }
+.app .side-brand{ font-size:16px; line-height:1.15; padding:0 10px 18px; }
+.app .side .nav-item{ padding:8px 12px; border-radius:12px; }
+.app .side::-webkit-scrollbar{ width:8px; }
+.app .side::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.12); border-radius:4px; }
+
+/* Список: по центру, фиксированная читаемая ширина, компактные строки */
+.app .list-pane{ padding:24px 28px; align-items:center; }
+.app .list-top, .app .list-sub{ width:100%; max-width:760px; }
+.app #list.rows{ width:100%; max-width:760px; margin:0; padding:8px 10px; }
+.app .row{ padding:10px 12px; border-radius:16px; margin:6px 0; gap:12px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+.app .row .ava{ width:40px; height:40px; border-radius:12px; background:#fff; color:#111; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+.app .list-top button{ background:var(--lime); color:#111; border:0; font-weight:600; }
+
+/* Деталь: тёмная область, белые поля-чипы, видимые кнопки */
+.app .detail{ background:transparent; color:#EDEDED; width:440px; padding:32px 30px; }
+.app .detail .d-title{ color:#fff; }
+.app .detail .d-meta, .app .detail .muted{ color:#9A9AA0; }
+.app .detail label{ color:#9A9AA0; }
+.app .detail .d-head .ava{ background:#fff; color:#111; }
+.app .detail .d-field{ background:#fff; color:#111; border:0; border-radius:14px; }
+.app .detail .d-field > span, .app .detail .d-field a{ color:#111; }
+.app .detail .d-field .ib{ color:#6E6E74; background:transparent; border:0; }
+.app .detail .d-field .ib:hover{ color:#111; background:rgba(0,0,0,.05); }
+.app .detail .input-group{ background:#fff; border:1px solid var(--d-line); }
+.app .detail button.ghost{ background:rgba(255,255,255,.06); color:#EDEDED; border:1px solid rgba(255,255,255,.18); border-radius:999px; }
+.app .detail button.ghost:hover{ background:rgba(255,255,255,.12); color:#fff; }
+.app .detail .danger{ background:transparent; color:#E5484D; border:1px solid rgba(229,72,77,.55); border-radius:999px; }
+.app .detail .danger:hover{ background:#E5484D; color:#fff; }
+.app .detail .d-btns button:not(.ghost):not(.danger), .app .detail #b-add{ background:var(--lime); color:#111; border:0; border-radius:999px; font-weight:600; }
+.app .detail .tab{ background:rgba(255,255,255,.06); color:#CFCFCF; border:1px solid rgba(255,255,255,.12); }
+.app .detail .tab.active{ background:var(--lime); color:#111; border-color:var(--lime); }
+.app .detail .ib.back{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.14); }
+.app .detail .cf-add.ghost{ background:rgba(255,255,255,.06); color:#EDEDED; }
