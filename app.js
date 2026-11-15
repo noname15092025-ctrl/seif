@@ -12,7 +12,7 @@ if (self !== top) { try { top.location = self.location.href; } catch { document.
    ===================================================================== */
 
 const STORE = "seif.v2";
-const KDF = { alg: "argon2id", m: 19456, t: 2, p: 1 }; // рекомендация OWASP: сильно и при этом быстро (~1 с); дальше KDF усиливать невыгодно
+const KDF = { alg: "argon2id", m: 47104, t: 2, p: 1 }; // 46 МиБ — усиленный профиль против оффлайн-перебора (~1.5–2.5 с на вход); старые профили мигрируют при входе
 let LOCK_IDLE_MS = 5 * 60 * 1000; const LOCK_HIDDEN_MS = 60 * 1000;
 try { const _al = localStorage.getItem("vault.autolock"); if (_al != null) LOCK_IDLE_MS = +_al; } catch {}
 const stayOn = () => { try { return (localStorage.getItem("vault.stay") ?? "1") === "1"; } catch { return true; } };
@@ -227,8 +227,8 @@ function bindMeter(inputId) {
 }
 const meterPw1 = bindMeter("pw1"), meterCp = bindMeter("cp-new1"), meterEntry = bindMeter("e-pass");
 function checkNewPassword(p1, p2) {
-  if (p1.length < 10) return T("Минимум 10 символов", "At least 10 characters");
-  if (strength(p1).score < 2) return T("Пароль слишком простой. Добавьте слов или символов", "Password is too weak. Add more words or characters");
+  if (p1.length < 12) return T("Минимум 12 символов", "At least 12 characters");
+  if (strength(p1).score < 3) return T("Пароль слабоват. Добавьте длины, слов или символов", "Password is too weak. Add length, words or symbols");
   if (p1 !== p2) return T("Пароли не совпадают", "Passwords do not match");
   return null;
 }
