@@ -1027,3 +1027,51 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 .t-white, #compare .compare, .modal-box, .copied{ background:#D9D9DD !important; border-color:#C6C6CC !important; }
 .hd-bg{ fill:#D9D9DD !important; } .ap-face{ fill:#D9D9DD !important; }
 .center-page .panel code, .center-page .panel pre, .center-page .panel kbd{ background:#CECED3 !important; }
+
+/* ================= ТЁМНО-СЕРЫЕ поверхности + светлый текст ================= */
+:root{ --beige:#2A2A2E; --beige2:#202023; --beige-row:#2D2D31; --beige-line:#3A3A40; }
+/* --- хранилище: список --- */
+.app #list.rows{ background:#202023 !important; }
+.app .row, .app #list .note-row{ background:#2D2D31 !important; border:1px solid #3A3A40 !important; box-shadow:0 2px 10px rgba(0,0,0,.25) !important; }
+.app .row:hover, .app #list .note-row:hover{ background:#34343A !important; }
+.app .row.active, .app #list .note-row.active{ background:#2D2D31 !important; outline:2px solid var(--lime) !important; border-color:transparent !important; }
+.app .row .t b, .app #list .note-row b{ color:#EDEDEF !important; }
+.app .row .t small, .app #list .note-row small{ color:#9A9AA0 !important; }
+.app .row .ava, .app .detail .d-head .ava{ background:#3A3A40 !important; color:#EDEDEF !important; }
+/* деталь */
+.app .detail{ --text:#ECECEE; }
+.app .detail .d-field, .app .detail .input-group{ background:#2A2A2E !important; border:1px solid #3A3A40 !important; }
+.app .detail .d-field > span, .app .detail .d-field a, .app .detail .revealed, .app .detail .revealed .dc, .app .detail .d-field .dc{ color:#ECECEE !important; }
+.app .detail .d-field .ib{ color:#9A9AA0 !important; }
+.app .detail .d-field .ib:hover{ color:#fff !important; background:rgba(255,255,255,.08) !important; }
+/* задачи */
+.app #list .task-add .field, .app #list .task-rename{ background:#2A2A2E !important; color:#EDEDEF !important; border:1px solid #3A3A40 !important; }
+.app #list .task-text{ color:#EDEDEF !important; }
+.app #list .task-row{ border-bottom:1px solid #35353B !important; }
+.app #list .task-check{ border-color:#55555E !important; }
+/* --- центральные экраны --- */
+.center-page .panel{ background:#2A2A2E !important; box-shadow:0 30px 80px -30px rgba(0,0,0,.7) !important; }
+.center-page .panel h1, .center-page .panel h2, .center-page .panel h3, .center-page .p-title{ color:#F2F2F4 !important; }
+.center-page label{ color:#C7C7CD !important; }
+.center-page .p-sub, .center-page .panel p.muted, .center-page .muted{ color:#9A9AA0 !important; }
+.center-page .field, .center-page input:not([type=checkbox]):not([type=radio]), .center-page textarea, .center-page select, .center-page .input-group{
+  background:#303036 !important; color:#ECECEE !important; border-color:#3A3A40 !important; }
+.center-page .field::placeholder, .center-page input::placeholder, .center-page textarea::placeholder{ color:#80808A !important; }
+.words{ background:#303036 !important; } .words div{ background:#24242A !important; color:#ECECEE !important; }
+.split .panel{ background:#2A2A2E !important; }
+.split .profiles .prof{ background:#303036 !important; color:#ECECEE !important; }
+.split .profiles .prof .who{ color:#ECECEE !important; } .split .profiles .prof small{ color:#9A9AA0 !important; }
+.split .field{ background:#303036 !important; }
+.dark-btn{ background:#303036 !important; color:#F2F2F4 !important; }
+/* --- лендинг --- */
+.t-white{ background:#2A2A2E !important; } .t-white .t-tag{ color:#9A9AA0 !important; } .t-white h3{ color:#F2F2F4 !important; }
+#compare .compare{ background:#2A2A2E !important; }
+#compare .crow{ border-top-color:rgba(255,255,255,.08) !important; }
+#compare .cf{ color:#EDEDEF !important; } #compare .them{ color:#9A9AA0 !important; } #compare .us{ color:#C8E27A !important; background:rgba(200,226,122,.12) !important; }
+#compare .chead>span{ color:#8C8C92 !important; } #compare .chead .us{ color:#C8E27A !important; background:rgba(200,226,122,.16) !important; }
+/* --- модалка/плашка/код --- */
+.modal-box{ background:#2A2A2E !important; border-color:#3A3A40 !important; }
+.modal-box p, .modal-box h3{ color:#ECECEE !important; }
+.modal-box button:not(.danger){ background:#EDEDEF !important; color:#111 !important; }
+.copied{ background:#2A2A2E !important; border-color:#3A3A40 !important; color:#ECECEE !important; }
+.center-page .panel code, .center-page .panel pre, .center-page .panel kbd{ background:#24242A !important; color:#ECECEE !important; }
