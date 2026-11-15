@@ -678,10 +678,10 @@ function renderNav() {
 }
 $("nav").onclick = e => {
   $("v-vault").classList.remove("nav-open");
-  const w = e.target.closest("[data-view]"); if (w) { setView(w.dataset.view); return; }
+  const w = e.target.closest("[data-view]"); if (w) { setView(w.dataset.view); scrollTo(0, 0); return; }
   const a = e.target.closest("[data-filter]"); if (!a) return;
   if (view !== "vault") setViewChrome("vault");
-  view = "vault"; filter = a.dataset.filter; renderNav(); render();
+  view = "vault"; filter = a.dataset.filter; renderNav(); render(); scrollTo(0, 0);
 };
 function maskCard(n) { const d = (n || "").replace(/\D/g, ""); return d ? "•••• " + d.slice(-4) : ""; }
 const subline = x => {
