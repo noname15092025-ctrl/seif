@@ -911,3 +911,23 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 #compare .compare{ background:var(--beige) !important; }
 #compare .crow{ border-top-color:rgba(60,50,30,.08) !important; }
 .hd-bg{ fill:var(--beige) !important; } .ap-face{ fill:var(--beige) !important; }
+
+/* ======= Контраст и иерархия: профиль, бейдж внимания, разделение строк ======= */
+/* Профиль на входе — имя читаемое, активный тёмный */
+.split .profiles .prof{ color:#111 !important; }
+.split .profiles .prof .who{ color:#111; font-weight:600; }
+.split .profiles .prof small{ color:#6E6E74; font-weight:400; }
+.split .profiles .prof.active{ background:var(--d-olive) !important; color:#fff !important; }
+.split .profiles .prof.active .who{ color:#fff; }
+.split .profiles .prof.active small{ color:#C9CFB8; }
+
+/* «Требуют внимания» — янтарный ТЕКСТ без заливки (не кривой бейдж) */
+.badge-warn{ background:transparent !important; color:#C98A2E !important; font-weight:700 !important; padding:0 !important; }
+.app .side .nav-item.active .badge-warn{ color:#B07A1E !important; }
+.count.bad{ background:#E0A23C !important; color:#111 !important; padding:2px 9px !important; border-radius:999px !important; }
+
+/* Списки — строки чётко отделены от контейнера */
+.app #list.rows{ background:#E9E1D0 !important; }
+.app .row{ background:#FBF7EF !important; border:1px solid #ECE3D1 !important; box-shadow:0 2px 10px rgba(60,50,30,.07) !important; }
+.app .row .t b{ color:#15150F; font-weight:600; }
+.app .row .t small{ color:#6E6E74; }
