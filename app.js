@@ -13,7 +13,9 @@ if (self !== top) { try { top.location = self.location.href; } catch { document.
 
 const STORE = "seif.v2";
 const KDF = { alg: "argon2id", m: 19456, t: 2, p: 1 }; // рекомендация OWASP: сильно и при этом быстро (~1 с); дальше KDF усиливать невыгодно
-const LOCK_IDLE_MS = 5 * 60 * 1000, LOCK_HIDDEN_MS = 60 * 1000;
+let LOCK_IDLE_MS = 5 * 60 * 1000; const LOCK_HIDDEN_MS = 60 * 1000;
+try { const _al = localStorage.getItem("vault.autolock"); if (_al != null) LOCK_IDLE_MS = +_al; } catch {}
+const stayOn = () => { try { return (localStorage.getItem("vault.stay") ?? "1") === "1"; } catch { return true; } };
 const enc = new TextEncoder(), dec = new TextDecoder();
 const C = crypto.subtle;
 let WORDS = null;
@@ -432,6 +434,7 @@ function gpRun() {
   $("gp-len-v").textContent = gpMode === "words" ? Math.max(3, Math.round(o.len / 5)) + T(" слов", " words") : o.len;
   $("gp-sets").classList.toggle("hidden", gpMode !== "chars");
   gpValue = genPassword(o); decryptInto($("gp-out"), gpValue);
+  if (gpValue && gpHist[0] !== gpValue) { gpHist.unshift(gpValue); gpHist = gpHist.slice(0, 6); gpRenderHist(); }
   const st = strength(gpValue); $("gp-bar").dataset.s = st.score; $("gp-label").textContent = st.label + " · ~" + st.bits + T(" бит", " bits");
 }
 $("b-generator").onclick = () => { show("generator"); gpRun(); };
@@ -703,10 +706,13 @@ function render() {
   if (!list.some(x => x.id === selectedId)) selectedId = null;
   if (!selectedId && list.length && innerWidth > 980) selectedId = list[0].id;
   $("list-count").textContent = list.length + " " + T(plural(list.length, "запись", "записи", "записей"), list.length === 1 ? "entry" : "entries");
+  const att = attentionSet();
   $("list").innerHTML = list.length ? list.map((x, i) => `
     <div class="row${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
       <span class="ava">${esc(initial(x.title))}</span>
       <span class="t"><b>${esc(x.title)}</b><small${expiringSoon(x) ? ' class="exp-soon"' : ""}>${esc(subline(x))}</small></span>
+      ${att.has(x.id) ? `<span class="row-warn" title="${T("Требует внимания", "Needs attention")}"></span>` : ""}
+      ${x.login ? `<button type="button" class="row-copy" data-copy-login aria-label="${T("Скопировать логин", "Copy login")}" title="${T("Скопировать логин", "Copy login")}"><svg class="ic"><use href="#i-copy"/></svg></button>` : ""}
       ${x.fav ? `<svg class="ic fav"><use href="#i-star"/></svg>` : ""}
     </div>`).join("") : `<div class="empty">${filter === "trash" ? T("Корзина пуста", "Trash is empty") : filter === "attention" ? T("Всё в порядке — проблемных паролей нет", "All good — no problem passwords") : live().length ? T("Ничего не найдено", "Nothing found") : T("Сейф пока пуст. Нажмите «+ Добавить».", "The safe is empty. Click “+ Add”.")}</div>`;
   $("list").querySelectorAll(".row").forEach((r, i) => r.style.animationDelay = Math.min(i, 8) * 0.04 + "s");
@@ -731,6 +737,7 @@ $("list").onclick = async e => {
     return;
   }
   const r = e.target.closest(".row"); if (!r) return;
+  if (e.target.closest("[data-copy-login]")) { const xi = entries.find(y => y.id === r.dataset.id); if (xi && xi.login) { copySecret(xi.login); markUsed(xi); } return; }
   selectedId = r.dataset.id; clearForm(); showDetail();
   $("list").querySelectorAll(".row").forEach(x => x.classList.toggle("active", x.dataset.id === selectedId));
   $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0;
@@ -1288,11 +1295,11 @@ $("b-wipe").onclick = async () => {
   if (await confirmBox(T("Удалить профиль «", "Delete profile “") + (store.get().name || "") + T("» с этого устройства? Восстановить можно будет только по секретной фразе и резервной копии.", "” from this device? It can only be restored with the secret phrase and a backup."), T("Удалить", "Delete"), true)) { store.remove(currentId); currentId = null; lock(); }
 };
 let idle, hiddenTimer;
-function resetIdle() { clearTimeout(idle); if (vaultKey) idle = setTimeout(lock, LOCK_IDLE_MS); }
+function resetIdle() { clearTimeout(idle); if (vaultKey && LOCK_IDLE_MS > 0) idle = setTimeout(lock, LOCK_IDLE_MS); }
 ["click", "keydown", "mousemove", "touchstart", "scroll"].forEach(ev => addEventListener(ev, resetIdle, { passive: true }));
 document.addEventListener("visibilitychange", () => {
   clearTimeout(hiddenTimer);
-  if (document.hidden && vaultKey) hiddenTimer = setTimeout(lock, LOCK_HIDDEN_MS);
+  if (document.hidden && vaultKey && LOCK_IDLE_MS > 0) hiddenTimer = setTimeout(lock, LOCK_HIDDEN_MS);
 });
 
 /* ---------------- PWA ---------------- */
@@ -1304,7 +1311,7 @@ if ("serviceWorker" in navigator && location.protocol === "https:") navigator.se
 /* ---------------- Запуск ---------------- */
 applyTheme();
 const SESS_KEY = "vault.session";
-function saveSession(raw, id) { try { sessionStorage.setItem(SESS_KEY, JSON.stringify({ id, k: b64(raw) })); } catch {} }
+function saveSession(raw, id) { if (!stayOn()) return; try { sessionStorage.setItem(SESS_KEY, JSON.stringify({ id, k: b64(raw) })); } catch {} }
 function clearSession() { try { sessionStorage.removeItem(SESS_KEY); } catch {} }
 async function tryResume() {
   let d = null; try { d = JSON.parse(sessionStorage.getItem(SESS_KEY) || "null"); } catch {}
@@ -1320,5 +1327,40 @@ async function tryResume() {
     return true;
   } catch { clearSession(); vaultKey = null; entries = []; return false; }
 }
+/* Настройки приложения: автоблокировка и сохранение сессии */
+if ($("set-autolock")) {
+  $("set-autolock").value = String(LOCK_IDLE_MS);
+  $("set-autolock").onchange = e => { try { localStorage.setItem("vault.autolock", e.target.value); } catch {} LOCK_IDLE_MS = +e.target.value; resetIdle(); };
+}
+if ($("set-stay")) {
+  $("set-stay").checked = stayOn();
+  $("set-stay").onchange = e => { try { localStorage.setItem("vault.stay", e.target.checked ? "1" : "0"); } catch {} if (!e.target.checked) clearSession(); else if (vaultKey) { C.exportKey("raw", vaultKey).then(r => saveSession(new Uint8Array(r), currentId)).catch(() => {}); } };
+}
+
+/* Горячие клавиши */
+addEventListener("keydown", e => {
+  const ae = document.activeElement, inField = ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable);
+  const inVault = !$("v-vault").classList.contains("hidden");
+  if (e.key === "Escape") { if ($("v-vault").classList.contains("show-detail")) { $("v-vault").classList.remove("show-detail"); } return; }
+  if (inField) return;
+  if (e.key === "/" && inVault && view === "vault") { e.preventDefault(); $("search").focus(); }
+  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && inVault && view === "vault") { e.preventDefault(); $("b-new-entry").click(); }
+});
+
+/* Генератор: пресеты и история */
+let gpHist = [];
+function gpRenderHist() {
+  const el = $("gp-history"); if (!el) return;
+  el.classList.toggle("hidden", !gpHist.length);
+  el.innerHTML = gpHist.map(v => `<button type="button" class="gp-hchip mono" data-hv="${esc(v)}" title="${T("Скопировать", "Copy")}">${esc(v)}</button>`).join("");
+}
+if ($("gp-history")) $("gp-history").onclick = e => { const b = e.target.closest("[data-hv]"); if (b) copySecret(b.dataset.hv); };
+if ($("gp-presets")) $("gp-presets").onclick = e => {
+  const b = e.target.closest("[data-preset]"); if (!b) return;
+  const p = b.dataset.preset, set = (m, len) => { gpMode = m; $("gp-len").value = len; $("gp-mode").querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.mode === m)); gpRun(); };
+  $("gp-presets").querySelectorAll(".chip").forEach(c => c.classList.toggle("active", c === b));
+  if (p === "max") set("chars", 24); else if (p === "words") set("words", 24); else if (p === "pin") set("pin", 6); else if (p === "pron") set("pron", 14);
+};
+
 initWords().then(async () => { applyLang(); clearForm(); updGenUi(); if (!(await tryResume())) home(); })
   .catch(err => { $("loading-msg").textContent = "Ошибка: " + err.message + ". Обновите страницу."; });

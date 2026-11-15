@@ -348,7 +348,16 @@
     <h3 data-en="Profile name">Название профиля</h3>
     <div class="input-row"><input id="rename" class="field" maxlength="40"><button class="ghost" id="b-rename" data-en="Rename">Переименовать</button></div>
     <h3 data-en="App">Приложение</h3>
-    <p class="muted small" data-en="The profile locks after 5 minutes of inactivity or 1 minute after you leave the tab.">Профиль блокируется через 5 минут бездействия или через минуту после ухода с вкладки.</p>
+    <label for="set-autolock" data-en="Auto-lock after inactivity">Автоблокировка при бездействии</label>
+    <select id="set-autolock" class="field">
+      <option value="60000" data-en="1 minute">1 минута</option>
+      <option value="300000" data-en="5 minutes">5 минут</option>
+      <option value="900000" data-en="15 minutes">15 минут</option>
+      <option value="1800000" data-en="30 minutes">30 минут</option>
+      <option value="0" data-en="Never">Никогда</option>
+    </select>
+    <label class="chk" style="margin-top:12px"><input type="checkbox" id="set-stay"> <span data-en="Stay unlocked after page refresh">Оставаться в сейфе после обновления страницы</span></label>
+    <p class="muted small" data-en="Closing the tab always locks the vault. The master password is still required then.">Закрытие вкладки всегда блокирует сейф — тогда мастер-пароль нужен заново.</p>
     <div class="btn-row"><button class="ghost" data-install hidden data-en="Install as app">Установить как приложение</button></div>
     <h3 class="danger-h" data-en="Danger zone">Опасная зона</h3>
     <button class="danger" id="b-wipe" data-en="Delete profile from this device">Удалить профиль с устройства</button>
@@ -360,10 +369,17 @@
   <div class="panel wide-panel rise">
     <a class="p-back" data-back-vault><svg class="ic"><use href="#i-back"/></svg><span data-en="Back to vault">К хранилищу</span></a>
     <h1 class="p-title left" data-en="Password generator">Генератор паролей</h1>
+    <div class="gp-presets" id="gp-presets">
+      <button class="chip" data-preset="max" data-en="Maximum">Максимум</button>
+      <button class="chip" data-preset="words" data-en="Words">Слова</button>
+      <button class="chip" data-preset="pin">PIN</button>
+      <button class="chip" data-preset="pron" data-en="Pronounceable">Произносимый</button>
+    </div>
     <div class="gen-out"><span id="gp-out" class="revealed"></span>
       <button class="ib" id="gp-again" aria-label="Ещё" title="Ещё" data-en="New">Новый</button>
       <button class="ib" id="gp-copy" aria-label="Скопировать" title="Скопировать"><svg class="ic"><use href="#i-copy"/></svg></button></div>
     <div class="d-strength"><span class="bar"><span id="gp-bar"></span></span><span id="gp-label"></span></div>
+    <div id="gp-history" class="gp-history hidden"></div>
     <div class="tabs" id="gp-mode">
       <button class="tab active" data-mode="chars" data-en="Characters">Символы</button>
       <button class="tab" data-mode="words" data-en="Words">Слова</button>
