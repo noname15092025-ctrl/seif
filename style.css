@@ -1149,3 +1149,19 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 /* на узком экране — почти на весь экран, как было */
 @media (max-width:980px){ .app .detail{ padding:0; background:var(--d-bg); }
   .app .detail > #detail-view, .app .detail > #form-card, .app .detail > #note-editor{ max-width:none; border:0; border-radius:0; min-height:100vh; box-shadow:none; } }
+
+/* ============ Выдвижная навигация, список по центру ============ */
+.app{ position:relative; display:block !important; }
+.app .side{ position:fixed; top:0; left:0; height:100vh; width:264px; transform:translateX(-100%);
+  transition:transform .28s cubic-bezier(.2,.7,.2,1); z-index:70; border-right:1px solid #2A2A2E; }
+.app.nav-open .side{ transform:none; box-shadow:0 0 70px rgba(0,0,0,.6); }
+.nav-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.55); opacity:0; pointer-events:none;
+  transition:opacity .22s; z-index:65; }
+.app.nav-open .nav-backdrop{ opacity:1; pointer-events:auto; }
+.app .list-pane{ margin:0 auto !important; max-width:860px !important; width:100%; padding:28px 20px 60px !important; align-items:stretch !important; }
+.app .list-top, .app .list-sub, .app #list.rows{ max-width:none !important; }
+.menu-btn{ width:48px; height:48px; min-width:48px; padding:0; border-radius:14px !important;
+  background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.1) !important; color:#EDEDEF !important; box-shadow:none !important; flex:0 0 auto; }
+.menu-btn:hover{ background:rgba(255,255,255,.12) !important; transform:none !important; }
+.menu-btn .ic{ width:20px; height:20px; }
+@media (max-width:980px){ .app .list-pane{ padding:16px !important; } }

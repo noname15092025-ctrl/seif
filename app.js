@@ -634,6 +634,9 @@ $("b-edit-cancel").onclick = () => { clearForm(); showDetail(); };
 function showForm() { $("detail-view").classList.add("hidden"); $("form-card").classList.remove("hidden"); $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; setTimeout(() => $("e-title").focus(), 50); }
 function showDetail() { $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); renderDetail(); }
 $("b-new-entry").onclick = () => { if (view === "notes") return newNote(); if (view === "tasks") return $("task-new")?.focus(); clearForm(); showForm(); };
+if ($("b-menu")) $("b-menu").onclick = () => $("v-vault").classList.toggle("nav-open");
+$("v-vault").addEventListener("click", e => { if (e.target.classList.contains("nav-backdrop")) $("v-vault").classList.remove("nav-open"); });
+
 $("detail").addEventListener("click", e => { if (e.target === $("detail")) { clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail"); } });
 document.addEventListener("click", e => { if (e.target.closest("[data-detail-back]")) { clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail"); renderDetail(); } });
 function startEdit(x) {
@@ -674,6 +677,7 @@ function renderNav() {
     link(["trash", T("Корзина", "Trash"), trash]);
 }
 $("nav").onclick = e => {
+  $("v-vault").classList.remove("nav-open");
   const w = e.target.closest("[data-view]"); if (w) { setView(w.dataset.view); return; }
   const a = e.target.closest("[data-filter]"); if (!a) return;
   if (view !== "vault") setViewChrome("vault");
