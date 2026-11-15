@@ -2,7 +2,7 @@
 <html lang="ru" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.pwnedpasswords.com; base-uri 'none'; form-action 'none'; frame-src 'none'; child-src 'none'; object-src 'none'; media-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.pwnedpasswords.com https://*.workers.dev; base-uri 'none'; form-action 'none'; frame-src 'none'; child-src 'none'; object-src 'none'; media-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0A0A0A">
@@ -362,6 +362,12 @@
     <label class="chk" style="margin-top:12px"><input type="checkbox" id="set-stay"> <span data-en="Stay unlocked after page refresh">Оставаться в сейфе после обновления страницы</span></label>
     <p class="muted small" data-en="Closing the tab always locks the vault. The master password is still required then.">Закрытие вкладки всегда блокирует сейф — тогда мастер-пароль нужен заново.</p>
     <div class="btn-row"><button class="ghost" data-install hidden data-en="Install as app">Установить как приложение</button></div>
+    <h3 data-en="Sync across devices">Синхронизация между устройствами</h3>
+    <p class="muted small" data-en="Store the encrypted vault in your own free cloud (Cloudflare Worker). The server sees only ciphertext — never your passwords or keys. Then sign in from any device with the secret phrase.">Храните зашифрованный сейф в своём бесплатном облаке (Cloudflare Worker). Сервер видит только шифротекст — ни паролей, ни ключей. После этого входите с любого устройства по секретной фразе.</p>
+    <label for="sync-url" data-en="Sync server URL">Адрес сервера синхронизации</label>
+    <input id="sync-url" class="field mono" placeholder="https://vault-sync.ваш-аккаунт.workers.dev" autocomplete="off" spellcheck="false">
+    <div class="btn-row"><button class="ghost" id="b-sync-save" data-en="Save">Сохранить</button><button class="ghost" id="b-sync-now" data-en="Sync now">Синхронизировать сейчас</button></div>
+    <div class="muted small" id="sync-status"></div>
     <h3 class="danger-h" data-en="Danger zone">Опасная зона</h3>
     <button class="danger" id="b-wipe" data-en="Delete profile from this device">Удалить профиль с устройства</button>
   </div>

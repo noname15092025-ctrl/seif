@@ -190,6 +190,7 @@ async function persist() {
   const s = store.get();
   s.vault = await seal(vaultKey, enc.encode(JSON.stringify(entries)));
   store.set(s);
+  if (typeof schedulePush === "function") schedulePush();
 }
 async function setupDevice(key, pw, vaultBox, name) {
   const id = await vaultId(key);
@@ -198,6 +199,7 @@ async function setupDevice(key, pw, vaultBox, name) {
   store.set({ v: 3, id, name: name || (prev && prev.name) || T("Профиль", "Profile"), ...w, fails: 0, lockUntil: 0,
               vault: vaultBox || await seal(key, enc.encode("[]")) });
   currentId = id;
+  try { const raw = new Uint8Array(await C.exportKey("raw", key)); await ensureSyncIds(store.get(), raw); raw.fill(0); if (syncUrl()) syncPush(store.get()).catch(() => {}); } catch {}
 }
 
 /* ---------------- Надёжность пароля ---------------- */
@@ -348,6 +350,13 @@ $("b-restore-go").onclick = async e => {
       if (backup.id !== id) throw new Error(T("Эта резервная копия от другой фразы", "This backup belongs to a different phrase"));
       box = backup.vault;
     } else { const s = store.all().find(p => p.id === id); if (s) box = s.vault; }
+    if (!box && syncUrl()) {
+      try {
+        const d = await deriveSync(new Uint8Array(await C.exportKey("raw", key)));
+        const r = await fetch(syncUrl() + "/v?id=" + d.id, { headers: { Authorization: "Bearer " + d.auth }, cache: "no-store" });
+        if (r.ok) { const data = await r.json(); if (data && data.vault) { await open(key, data.vault); box = data.vault; } }
+      } catch {}
+    }
     if (box) await open(key, box);
     key._vaultBox = box; pendingKey = key;
     $("restore-words").value = ""; $("restore-file").value = "";
@@ -374,6 +383,8 @@ $("b-unlock").onclick = async e => {
     authed = true;
     s.fails = 0; s.lockUntil = 0; s.lastLogin = Date.now();
     saveSession(raw, s.id); try { localStorage.setItem("vault.last", s.id); } catch {}
+    try { await ensureSyncIds(s, raw); } catch {}
+    if (syncUrl()) setTimeout(() => { const cur = store.get(); if (cur && vaultKey) syncPull(cur).catch(() => {}); }, 200);
     // Переход на текущие параметры Argon2id — НЕ критично для входа: любая ошибка здесь
     // не должна приводить к «Неверный пароль». Новую обёртку применяем, только если она
     // реально открывается тем же паролем (защита от порчи профиля).
@@ -549,6 +560,41 @@ const pwEntries = () => live().filter(x => x.type !== "page" && x.type !== "task
 const notesList = () => live().filter(x => x.type === "page");
 const tasksList = () => live().filter(x => x.type === "task");
 const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+
+/* ---------------- Облачная синхронизация (zero-knowledge) ---------------- */
+const SYNC_URL_KEY = "vault.sync.url";
+const syncUrl = () => { try { return (localStorage.getItem(SYNC_URL_KEY) || "").replace(/\/+$/, ""); } catch { return ""; } };
+async function deriveSync(raw) {
+  const hk = await C.importKey("raw", raw, "HKDF", false, ["deriveBits"]);
+  const bits = n => C.deriveBits({ name: "HKDF", hash: "SHA-256", salt: enc.encode("seif-sync-v1"), info: enc.encode(n) }, hk, 256);
+  const b64u = b => b64(new Uint8Array(b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return { id: b64u(await bits("id")).slice(0, 22), auth: b64u(await bits("auth")) };
+}
+async function ensureSyncIds(s, raw) {
+  if (s.syncId && s.syncAuth) return true;
+  if (!raw) return false;
+  const d = await deriveSync(raw); s.syncId = d.id; s.syncAuth = d.auth; store.set(s); return true;
+}
+async function syncPull(s) {
+  const url = syncUrl(); if (!url || !s.syncId || !vaultKey) return { ok: false };
+  const r = await fetch(url + "/v?id=" + s.syncId, { headers: { Authorization: "Bearer " + s.syncAuth }, cache: "no-store", referrerPolicy: "no-referrer" });
+  if (r.status === 404) return { ok: true, empty: true };
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const data = await r.json();
+  if (!data || !data.vault) return { ok: true, empty: true };
+  if (typeof data.v === "number" && typeof s.syncV === "number" && data.v <= s.syncV) return { ok: true, same: true };
+  const fresh = JSON.parse(dec.decode(await open(vaultKey, data.vault))).map(migrateEntry);
+  entries = fresh; s.syncV = data.v; s.vault = data.vault; if (data.name) s.name = data.name; store.set(s);
+  try { renderNav(); render(); } catch {}
+  return { ok: true, pulled: true };
+}
+async function syncPush(s) {
+  const url = syncUrl(); if (!url || !s.syncId) return;
+  const v = Date.now(); s.syncV = v; store.set(s);
+  const r = await fetch(url + "/v?id=" + s.syncId, { method: "PUT", headers: { Authorization: "Bearer " + s.syncAuth, "Content-Type": "application/json" }, body: JSON.stringify({ v, vault: s.vault, name: s.name }), referrerPolicy: "no-referrer" });
+  if (!r.ok && r.status !== 409) throw new Error("HTTP " + r.status);
+}
+const schedulePush = debounce(() => { const s = store.get(); if (s && vaultKey && syncUrl()) syncPush(s).catch(() => {}); }, 1500);
 function attentionSet() {
   const withPass = live().filter(x => x.pass && x.type !== "card");
   const counts = {}; withPass.forEach(x => counts[x.pass] = (counts[x.pass] || 0) + 1);
@@ -1357,6 +1403,22 @@ async function tryResume() {
   } catch { clearSession(); vaultKey = null; entries = []; return false; }
 }
 /* Настройки приложения: автоблокировка и сохранение сессии */
+if ($("sync-url")) $("sync-url").value = syncUrl();
+if ($("b-sync-save")) $("b-sync-save").onclick = () => {
+  const u = $("sync-url").value.trim().replace(/\/+$/, "");
+  if (u && !/^https:\/\/[^\s]+\.[^\s]+$/.test(u)) { $("sync-status").textContent = T("Нужен корректный https-адрес", "Need a valid https URL"); return; }
+  try { localStorage.setItem(SYNC_URL_KEY, u); } catch {}
+  $("sync-status").textContent = u ? T("Сохранено. Нажмите «Синхронизировать сейчас».", "Saved. Click \u201cSync now\u201d.") : T("Синхронизация выключена.", "Sync is off.");
+};
+if ($("b-sync-now")) $("b-sync-now").onclick = async () => {
+  const s = store.get(); if (!s || !vaultKey) return;
+  if (!syncUrl()) { $("sync-status").textContent = T("Сначала укажите адрес сервера.", "Set the server URL first."); return; }
+  if (!s.syncId) { $("sync-status").textContent = T("Перезайдите в сейф, чтобы включить синхронизацию.", "Re-open the vault to enable sync."); return; }
+  $("sync-status").textContent = T("Синхронизирую…", "Syncing…");
+  try { const pr = await syncPull(store.get()); await syncPush(store.get()); renderNav(); render();
+    $("sync-status").textContent = T("Готово.", "Done.") + (pr && pr.pulled ? T(" Подтянул свежую версию из облака.", " Pulled the latest from the cloud.") : T(" Сейф выгружен в облако.", " Vault pushed to the cloud."));
+  } catch (e) { $("sync-status").textContent = T("Ошибка синхронизации: ", "Sync error: ") + e.message; }
+};
 if ($("set-autolock")) {
   $("set-autolock").value = String(LOCK_IDLE_MS);
   $("set-autolock").onchange = e => { try { localStorage.setItem("vault.autolock", e.target.value); } catch {} LOCK_IDLE_MS = +e.target.value; resetIdle(); };
