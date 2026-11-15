@@ -1201,3 +1201,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   border-bottom:1px solid rgba(255,255,255,.08); }
 .app .side #nav{ order:2; }
 .app .side-tools{ order:3; margin-top:auto; }
+
+/* Скрытый раздел всегда скрыт (перебивает display:block на .app) */
+#v-vault.hidden, .app.hidden{ display:none !important; }
