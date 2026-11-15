@@ -708,9 +708,17 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 .t-mut{ background:var(--d-chip); } .t-mut .lockbig{ stroke:var(--lime); }
 
 #compare .eyebrow{ color:var(--lime); }
-#compare .crow{ border-color:rgba(255,255,255,.08); }
-#compare .cf{ color:#EDEDED; } #compare .them{ color:#8A8A90; } #compare .us{ color:var(--lime); }
-#compare .us .ic.accent{ stroke:var(--lime); }
+#compare .compare{ background:#fff; border:0; border-radius:28px; overflow:hidden; box-shadow:0 30px 80px -40px rgba(0,0,0,.6); }
+#compare .crow{ border-top-color:rgba(0,0,0,.07); }
+#compare .crow>span{ padding:16px 22px; }
+#compare .cf{ color:#111; font-weight:500; }
+#compare .them{ color:#8A8A90; border-left-color:rgba(0,0,0,.06); }
+#compare .us{ color:#111; font-weight:600; background:rgba(200,226,122,.16); border-left-color:rgba(0,0,0,.06); }
+#compare .chead>span{ color:#9A9AA0; }
+#compare .chead .us{ color:#3C4A1E; background:rgba(200,226,122,.24); }
+#compare .chead .us .ic.accent{ stroke:#3C4A1E; }
+#compare .crow .them::before{ content:"✕ "; color:#B6B6BC; }
+#compare .crow .us::before{ content:"✓ "; color:#6E8A2E; }
 .compare-note{ color:#8A8A90; }
 
 .sec-block{ background:var(--d-olive); color:#fff; position:relative; overflow:hidden; }
