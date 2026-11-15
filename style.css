@@ -1008,3 +1008,22 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 .modal-box{ background:#EAEAEC !important; border-color:#D6D6DA !important; }
 .copied{ background:#EAEAEC !important; border-color:#D6D6DA !important; }
 .center-page .panel code, .center-page .panel pre, .center-page .panel kbd{ background:#E2E2E5 !important; }
+
+/* ======= Серый потемнее ======= */
+:root{ --beige:#D9D9DD; --beige2:#CECED3; --beige-row:#DFDFE3; --beige-line:#C6C6CC; }
+.app .row, .app #list .note-row{ background:#DFDFE3 !important; border:1px solid #CFCFD4 !important; }
+.app .row:hover, .app #list .note-row:hover{ background:#E6E6EA !important; }
+.app #list .note-row.active{ background:#DFDFE3 !important; }
+.app #list.rows{ background:#CECED3 !important; }
+.app .row .ava, .app .detail .d-head .ava{ background:#CBCBD1 !important; }
+.app .detail .d-field, .app .detail .input-group{ background:#D9D9DD !important; border:1px solid #C6C6CC !important; }
+.app #list .task-add .field, .app #list .task-rename{ background:#DCDCE0 !important; }
+.center-page .panel{ background:#D9D9DD !important; }
+.center-page .field, .center-page input:not([type=checkbox]):not([type=radio]), .center-page textarea, .center-page select, .center-page .input-group{ background:#E2E2E6 !important; border-color:#C6C6CC !important; }
+.words{ background:#E2E2E6 !important; } .words div{ background:#CECED3 !important; }
+.split .panel{ background:#D9D9DD !important; }
+.split .profiles .prof, .split .field{ background:#E2E2E6 !important; }
+.dark-btn{ background:#D9D9DD !important; }
+.t-white, #compare .compare, .modal-box, .copied{ background:#D9D9DD !important; border-color:#C6C6CC !important; }
+.hd-bg{ fill:#D9D9DD !important; } .ap-face{ fill:#D9D9DD !important; }
+.center-page .panel code, .center-page .panel pre, .center-page .panel kbd{ background:#CECED3 !important; }
