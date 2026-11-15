@@ -637,7 +637,7 @@ html:has(.center-page:not(.hidden)), body:has(.center-page:not(.hidden)) { backg
   --d-bg:#0B0B0C; --d-olive:#1E2410; --d-paper:#F1F1F3; --d-card:#FFFFFF;
   --d-ink:#111111; --d-soft:#6E6E74; --d-faint:#8A8A90; --d-line:#E2E2E6; --d-line2:#EEEEF1;
   --lime:#C8E27A; --d-dim:#A7A7AD; --d-chip:#1C1C1E;
-  --d-font:"Urbanist","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --d-font:"Urbanist","Gabarito","Manrope","Plus Jakarta Sans","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
 }
 html, body{ background:var(--d-bg) !important; color:#EDEDED; font-family:var(--d-font); }
 body, h1,h2,h3,h4,.brand,.hero-h,.l-h2,.p-title,.d-title,.wordmark,.wordmark-sm,.big12,.note-title,.side-brand{ font-family:var(--d-font) !important; letter-spacing:-.01em; }
@@ -867,3 +867,18 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 .app .detail .d-btns button[data-act="fav"]:hover{ background:rgba(255,255,255,.13); color:#fff; }
 .app .detail .d-btns .danger{ background:transparent; color:#E5484D; border:1px solid rgba(229,72,77,.5); }
 .app .detail .d-btns .danger:hover{ background:#E5484D; color:#fff; }
+
+/* D34: убираем красный, иконки заметок/задач */
+.nav-item.ws .wsico{ width:18px; height:18px; margin-right:10px; flex:0 0 auto; }
+.nav-item.ws{ display:flex; align-items:center; }
+.meter-bar[data-s="1"]{ background:#E0A23C !important; }
+.meter-bar[data-s="2"]{ background:#E8C06A !important; }
+.d-strength .bar span[data-s="1"]{ background:#E0A23C !important; }
+.d-strength .bar span[data-s="2"]{ background:#E8C06A !important; }
+.err, .center-page .err{ color:#C98A3C !important; }
+.count.bad, .badge-warn{ background:#E0A23C !important; color:#111 !important; }
+.app .detail .d-btns .danger, .app .detail .danger, .center-page .panel .danger{
+  color:#CDA152 !important; border:1px solid rgba(205,161,82,.5) !important; background:transparent !important; }
+.app .detail .d-btns .danger:hover, .app .detail .danger:hover, .center-page .panel .danger:hover{
+  background:#CDA152 !important; color:#111 !important; }
+.nav-item.trash span, .count.bad{ }

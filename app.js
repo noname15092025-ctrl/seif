@@ -649,8 +649,8 @@ function renderNav() {
   if (!valid.has(filter)) filter = "all";
   const link = ([v, l, c, w]) => `<a class="nav-item${v === filter && view === "vault" ? " active" : ""}${v === "trash" ? " trash" : ""}" data-filter="${esc(v)}">${esc(l)}<span${w === "warn" && c ? ' class="badge-warn"' : ""}>${c}</span></a>`;
   const activeTasks = tasksList().filter(t => !t.done).length;
-  const ws = `<a class="nav-item ws${view === "notes" ? " active" : ""}" data-view="notes"><span class="wsico">\u{1F4DD}</span> ${T("Заметки", "Notes")}<span>${notesList().length || ""}</span></a>`
-    + `<a class="nav-item ws${view === "tasks" ? " active" : ""}" data-view="tasks"><span class="wsico">\u2705</span> ${T("Задачи", "Tasks")}<span>${activeTasks || ""}</span></a>`;
+  const ws = `<a class="nav-item ws${view === "notes" ? " active" : ""}" data-view="notes"><svg class="ic wsico"><use href="#i-note"/></svg> ${T("Заметки", "Notes")}<span>${notesList().length || ""}</span></a>`
+    + `<a class="nav-item ws${view === "tasks" ? " active" : ""}" data-view="tasks"><svg class="ic wsico"><use href="#i-check"/></svg> ${T("Задачи", "Tasks")}<span>${activeTasks || ""}</span></a>`;
   $("nav").innerHTML = ws + `<div class="nav-head">${T("ПАРОЛИ", "PASSWORDS")}</div>` + top.map(link).join("") +
     `<div class="nav-head">${T("ТИПЫ", "TYPES")}</div>` + types.map(link).join("") +
     `<div class="nav-head">${T("ПРОВЕРКА", "CHECKS")}</div>` + checks.map(link).join("") +
