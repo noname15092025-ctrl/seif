@@ -844,3 +844,16 @@ html:has(.app:not(.hidden)), body:has(.app:not(.hidden)){ background:var(--d-bg)
 .app .detail .tab.active{ background:var(--lime); color:#111; border-color:var(--lime); }
 .app .detail .ib.back{ background:rgba(255,255,255,.06); color:#fff; border:1px solid rgba(255,255,255,.14); }
 .app .detail .cf-add.ghost{ background:rgba(255,255,255,.06); color:#EDEDED; }
+
+/* D34: читаемость сайдбара */
+.app .side .nav-item{ color:#D4D9C6; }
+.app .side .nav-item:hover{ background:rgba(255,255,255,.06); color:#fff; }
+.app .side .nav-item.active{ background:rgba(200,226,122,.16); color:var(--lime); }
+.app .side .nav-item.active span{ color:var(--lime); }
+.app .side .nav-item span{ color:#8D937E; }
+.app .side .side-sec,.app .side .nav-sec,.app .side h4{ color:#7E8470; }
+.app .side-tools .nav-item{ color:#CCD2BE; }
+.app .side-foot{ border-top-color:rgba(255,255,255,.1); }
+.app .side-foot .who{ color:#EDEDED; } .app .side-foot .who a{ color:var(--lime); }
+.app .list-sub .muted{ color:#8A8A90; }
+.app .list-sub .field.slim{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff; border-radius:12px; }

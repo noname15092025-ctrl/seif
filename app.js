@@ -322,7 +322,7 @@ $("b-setpw").onclick = async e => {
   try {
     await setupDevice(pendingKey, p1, pendingKey._vaultBox || null, pname);
     const raw = new Uint8Array(await C.exportKey("raw", pendingKey));
-    vaultKey = await importVaultKey(raw); raw.fill(0); pendingKey = null;
+    vaultKey = await importVaultKey(raw); saveSession(raw, currentId); raw.fill(0); pendingKey = null;
     entries = JSON.parse(dec.decode(await open(vaultKey, store.get().vault))).map(migrateEntry);
     $("pw1").value = $("pw2").value = $("p-name").value = ""; meterPw1();
     openVaultView();
@@ -368,7 +368,8 @@ $("b-unlock").onclick = async e => {
     const raw = await open(wk, s.wrapped);
     vaultKey = await importVaultKey(raw);
     entries = JSON.parse(dec.decode(await open(vaultKey, s.vault))).map(migrateEntry);
-    s.fails = 0; s.lockUntil = 0; s.lastLogin = Date.now(); try { localStorage.setItem("vault.last", s.id); } catch {}
+    s.fails = 0; s.lockUntil = 0; s.lastLogin = Date.now();
+    saveSession(raw, s.id); try { localStorage.setItem("vault.last", s.id); } catch {}
     // переход на текущие параметры Argon2id (со старого KDF или с устаревших параметров)
     if (!s.kdf || s.kdf.alg !== "argon2id" || s.kdf.m !== KDF.m || s.kdf.t !== KDF.t) { Object.assign(s, await wrapVaultKeyRaw(raw, pw)); delete s.iters; }
     raw.fill(0);
@@ -1277,6 +1278,7 @@ $("b-import-go").onclick = async () => {
 
 /* ---------------- Выход, удаление, автоблокировка ---------------- */
 function lock() {
+  clearSession();
   vaultKey = null; entries = []; selectedId = null; view = "vault"; breached = new Map(); totpKeys.clear();
   $("list").innerHTML = ""; $("detail-view").innerHTML = ""; $("search").value = ""; $("audit-body").innerHTML = ""; $("import-body").innerHTML = ""; importRows = [];
   clearForm(); home();
@@ -1301,5 +1303,22 @@ if ("serviceWorker" in navigator && location.protocol === "https:") navigator.se
 
 /* ---------------- Запуск ---------------- */
 applyTheme();
-initWords().then(() => { applyLang(); clearForm(); updGenUi(); home(); })
+const SESS_KEY = "vault.session";
+function saveSession(raw, id) { try { sessionStorage.setItem(SESS_KEY, JSON.stringify({ id, k: b64(raw) })); } catch {} }
+function clearSession() { try { sessionStorage.removeItem(SESS_KEY); } catch {} }
+async function tryResume() {
+  let d = null; try { d = JSON.parse(sessionStorage.getItem(SESS_KEY) || "null"); } catch {}
+  if (!d || !d.k || !d.id) return false;
+  const s = store.all().find(p => p.id === d.id);
+  if (!s) { clearSession(); return false; }
+  try {
+    const raw = unb64(d.k);
+    vaultKey = await importVaultKey(raw);
+    entries = JSON.parse(dec.decode(await open(vaultKey, s.vault))).map(migrateEntry);
+    raw.fill(0); currentId = s.id;
+    openVaultView();
+    return true;
+  } catch { clearSession(); vaultKey = null; entries = []; return false; }
+}
+initWords().then(async () => { applyLang(); clearForm(); updGenUi(); if (!(await tryResume())) home(); })
   .catch(err => { $("loading-msg").textContent = "Ошибка: " + err.message + ". Обновите страницу."; });
