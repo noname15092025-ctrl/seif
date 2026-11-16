@@ -336,6 +336,7 @@ $("b-setpw").onclick = async e => {
 
 /* ---------------- Восстановление ---------------- */
 $("b-restore").onclick = $("b-forgot").onclick = () => { $("restore-err").textContent = ""; show("restore"); };
+document.addEventListener("click", e => { if (e.target.id === "b-restore-hint") { e.preventDefault(); $("b-restore").click(); } });
 $("b-restore-go").onclick = async e => {
   const phrase = normalizePhrase($("restore-words").value);
   const bad = await validateMnemonic(phrase);
