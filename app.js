@@ -563,7 +563,10 @@ const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = se
 
 /* ---------------- Облачная синхронизация (zero-knowledge) ---------------- */
 const SYNC_URL_KEY = "vault.sync.url";
-const syncUrl = () => { try { return (localStorage.getItem(SYNC_URL_KEY) || "").replace(/\/+$/, ""); } catch { return ""; } };
+// Общий сервер синхронизации по умолчанию — работает у ВСЕХ пользователей из коробки.
+// Впишите сюда адрес развёрнутого Cloudflare Worker, напр. "https://vault-sync.ВАШ-АККАУНТ.workers.dev"
+const DEFAULT_SYNC_URL = "";
+const syncUrl = () => { try { const o = (localStorage.getItem(SYNC_URL_KEY) || "").trim(); return (o || DEFAULT_SYNC_URL).replace(/\/+$/, ""); } catch { return DEFAULT_SYNC_URL; } };
 async function deriveSync(raw) {
   const hk = await C.importKey("raw", raw, "HKDF", false, ["deriveBits"]);
   const bits = n => C.deriveBits({ name: "HKDF", hash: "SHA-256", salt: enc.encode("seif-sync-v1"), info: enc.encode(n) }, hk, 256);
