@@ -364,9 +364,9 @@
     <p class="muted small" data-en="Closing the tab always locks the vault. The master password is still required then.">Закрытие вкладки всегда блокирует сейф — тогда мастер-пароль нужен заново.</p>
     <div class="btn-row"><button class="ghost" data-install hidden data-en="Install as app">Установить как приложение</button></div>
     <h3 data-en="Sync across devices">Синхронизация между устройствами</h3>
-    <p class="muted small" data-en="Device sync is on: your vault is encrypted and saved to the cloud automatically, and you can sign in from any device with your secret phrase. The server sees only ciphertext — never your passwords or keys. The field below is optional — for hosting your own sync server.">Синхронизация включена: сейф автоматически шифруется и сохраняется в облаке, и войти можно с любого устройства по секретной фразе. Сервер видит только шифротекст — ни паролей, ни ключей. Поле ниже — необязательное, для своего сервера синхронизации.</p>
-    <label for="sync-url" data-en="Sync server URL">Адрес сервера синхронизации</label>
-    <input id="sync-url" class="field mono" placeholder="https://vault-sync.ваш-аккаунт.workers.dev" autocomplete="off" spellcheck="false">
+    <p class="muted small" data-en="Device sync is on: your vault is encrypted and saved to the cloud automatically, and you can sign in from any device with your secret phrase. The server sees only ciphertext — never your passwords or keys. The field below is optional: your own or backup servers (writes go to the first available, reads take the newest version).">Синхронизация включена: сейф автоматически шифруется и сохраняется в облаке, и войти можно с любого устройства по секретной фразе. Сервер видит только шифротекст — ни паролей, ни ключей. Поле ниже — необязательное: свои или резервные серверы (запись уходит на первый доступный, чтение берёт самую свежую версию).</p>
+    <label for="sync-url" data-en="Sync servers (one per line, first is primary)">Серверы синхронизации (по одному в строке, первый — основной)</label>
+    <textarea id="sync-url" class="field mono" rows="3" placeholder="https://vault.ваш-аккаунт.workers.dev\nhttps://vault-backup.другой-аккаунт.workers.dev" autocomplete="off" spellcheck="false"></textarea>
     <div class="btn-row"><button class="ghost" id="b-sync-save" data-en="Save">Сохранить</button><button class="ghost" id="b-sync-now" data-en="Sync now">Синхронизировать сейчас</button></div>
     <div class="muted small" id="sync-status"></div>
     <h3 class="danger-h" data-en="Danger zone">Опасная зона</h3>

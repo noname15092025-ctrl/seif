@@ -351,11 +351,11 @@ $("b-restore-go").onclick = async e => {
       if (backup.id !== id) throw new Error(T("Эта резервная копия от другой фразы", "This backup belongs to a different phrase"));
       box = backup.vault;
     } else { const s = store.all().find(p => p.id === id); if (s) box = s.vault; }
-    if (!box && syncUrl()) {
+    if (!box && syncUrls().length) {
       try {
         const d = await deriveSync(new Uint8Array(await C.exportKey("raw", key)));
-        const r = await fetch(syncUrl() + "/v?id=" + d.id, { headers: { Authorization: "Bearer " + d.auth }, cache: "no-store" });
-        if (r.ok) { const data = await r.json(); if (data && data.vault) { await open(key, data.vault); box = data.vault; } }
+        const best = await syncFetchLatest(d.id, d.auth);
+        if (best && best.vault) { await open(key, best.vault); box = best.vault; }
       } catch {}
     }
     if (box) await open(key, box);
@@ -562,12 +562,19 @@ const notesList = () => live().filter(x => x.type === "page");
 const tasksList = () => live().filter(x => x.type === "task");
 const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 
-/* ---------------- Облачная синхронизация (zero-knowledge) ---------------- */
+/* ---------------- Облачная синхронизация (zero-knowledge, несколько бэкендов) ---------------- */
 const SYNC_URL_KEY = "vault.sync.url";
-// Общий сервер синхронизации по умолчанию — работает у ВСЕХ пользователей из коробки.
-// Впишите сюда адрес развёрнутого Cloudflare Worker, напр. "https://vault-sync.ВАШ-АККАУНТ.workers.dev"
-const DEFAULT_SYNC_URL = "https://vault.noname15092025.workers.dev";
-const syncUrl = () => { try { const o = (localStorage.getItem(SYNC_URL_KEY) || "").trim(); return (o || DEFAULT_SYNC_URL).replace(/\/+$/, ""); } catch { return DEFAULT_SYNC_URL; } };
+// Общие серверы синхронизации по умолчанию — работают у ВСЕХ пользователей из коробки.
+// Запись идёт на первый доступный; если он недоступен или упёрся в лимит — на следующий.
+// Чтение опрашивает все и берёт самую свежую версию. Добавляйте сюда резервные воркеры.
+const DEFAULT_SYNC_URLS = ["https://vault.noname15092025.workers.dev"];
+const syncUrls = () => {
+  try { const o = (localStorage.getItem(SYNC_URL_KEY) || "").trim();
+    const list = o ? o.split(/[\s,]+/).filter(Boolean) : DEFAULT_SYNC_URLS;
+    return [...new Set(list.map(u => u.replace(/\/+$/, "")))];
+  } catch { return DEFAULT_SYNC_URLS; }
+};
+const syncUrl = () => syncUrls()[0] || "";
 async function deriveSync(raw) {
   const hk = await C.importKey("raw", raw, "HKDF", false, ["deriveBits"]);
   const bits = n => C.deriveBits({ name: "HKDF", hash: "SHA-256", salt: enc.encode("seif-sync-v1"), info: enc.encode(n) }, hk, 256);
@@ -579,26 +586,43 @@ async function ensureSyncIds(s, raw) {
   if (!raw) return false;
   const d = await deriveSync(raw); s.syncId = d.id; s.syncAuth = d.auth; store.set(s); return true;
 }
+// Прочитать запись из одного бэкенда (вернуть {v,vault,name} или null)
+async function fetchOne(url, id, auth) {
+  try {
+    const r = await fetch(url + "/v?id=" + id, { headers: { Authorization: "Bearer " + auth }, cache: "no-store", referrerPolicy: "no-referrer" });
+    if (!r.ok) return null; const d = await r.json(); return (d && d.vault) ? d : null;
+  } catch { return null; }
+}
+// Выбрать самую свежую версию среди всех бэкендов
+async function syncFetchLatest(id, auth, urls) {
+  const all = await Promise.all((urls || syncUrls()).map(u => fetchOne(u, id, auth)));
+  return all.filter(Boolean).sort((a, b) => (b.v || 0) - (a.v || 0))[0] || null;
+}
 async function syncPull(s) {
-  const url = syncUrl(); if (!url || !s.syncId || !vaultKey) return { ok: false };
-  const r = await fetch(url + "/v?id=" + s.syncId, { headers: { Authorization: "Bearer " + s.syncAuth }, cache: "no-store", referrerPolicy: "no-referrer" });
-  if (r.status === 404) return { ok: true, empty: true };
-  if (!r.ok) throw new Error("HTTP " + r.status);
-  const data = await r.json();
-  if (!data || !data.vault) return { ok: true, empty: true };
-  if (typeof data.v === "number" && typeof s.syncV === "number" && data.v <= s.syncV) return { ok: true, same: true };
-  const fresh = JSON.parse(dec.decode(await open(vaultKey, data.vault))).map(migrateEntry);
-  entries = fresh; s.syncV = data.v; s.vault = data.vault; if (data.name) s.name = data.name; store.set(s);
+  const urls = syncUrls(); if (!urls.length || !s.syncId || !vaultKey) return { ok: false };
+  const best = await syncFetchLatest(s.syncId, s.syncAuth, urls);
+  if (!best) return { ok: true, empty: true };
+  if (typeof best.v === "number" && typeof s.syncV === "number" && best.v <= s.syncV) return { ok: true, same: true };
+  const fresh = JSON.parse(dec.decode(await open(vaultKey, best.vault))).map(migrateEntry);
+  entries = fresh; s.syncV = best.v; s.vault = best.vault; if (best.name) s.name = best.name; store.set(s);
   try { renderNav(); render(); } catch {}
   return { ok: true, pulled: true };
 }
 async function syncPush(s) {
-  const url = syncUrl(); if (!url || !s.syncId) return;
+  const urls = syncUrls(); if (!urls.length || !s.syncId) return;
   const v = Date.now(); s.syncV = v; store.set(s);
-  const r = await fetch(url + "/v?id=" + s.syncId, { method: "PUT", headers: { Authorization: "Bearer " + s.syncAuth, "Content-Type": "application/json" }, body: JSON.stringify({ v, vault: s.vault, name: s.name }), referrerPolicy: "no-referrer" });
-  if (!r.ok && r.status !== 409) throw new Error("HTTP " + r.status);
+  const body = JSON.stringify({ v, vault: s.vault, name: s.name });
+  let lastErr = null, ok = false;
+  for (const url of urls) {
+    try {
+      const r = await fetch(url + "/v?id=" + s.syncId, { method: "PUT", headers: { Authorization: "Bearer " + s.syncAuth, "Content-Type": "application/json" }, body, referrerPolicy: "no-referrer" });
+      if (r.ok || r.status === 409) { ok = true; break; }
+      lastErr = new Error("HTTP " + r.status);
+    } catch (e) { lastErr = e; }
+  }
+  if (!ok && lastErr) throw lastErr;
 }
-const schedulePush = debounce(() => { const s = store.get(); if (s && vaultKey && syncUrl()) syncPush(s).catch(() => {}); }, 1500);
+const schedulePush = debounce(() => { const s = store.get(); if (s && vaultKey && syncUrls().length) syncPush(s).catch(() => {}); }, 1500);
 function attentionSet() {
   const withPass = live().filter(x => x.pass && x.type !== "card");
   const counts = {}; withPass.forEach(x => counts[x.pass] = (counts[x.pass] || 0) + 1);
@@ -1407,12 +1431,13 @@ async function tryResume() {
   } catch { clearSession(); vaultKey = null; entries = []; return false; }
 }
 /* Настройки приложения: автоблокировка и сохранение сессии */
-if ($("sync-url")) $("sync-url").value = syncUrl();
+if ($("sync-url")) { const o = (() => { try { return localStorage.getItem(SYNC_URL_KEY) || ""; } catch { return ""; } })(); $("sync-url").value = o; }
 if ($("b-sync-save")) $("b-sync-save").onclick = () => {
-  const u = $("sync-url").value.trim().replace(/\/+$/, "");
-  if (u && !/^https:\/\/[^\s]+\.[^\s]+$/.test(u)) { $("sync-status").textContent = T("Нужен корректный https-адрес", "Need a valid https URL"); return; }
-  try { localStorage.setItem(SYNC_URL_KEY, u); } catch {}
-  $("sync-status").textContent = u ? T("Сохранено. Нажмите «Синхронизировать сейчас».", "Saved. Click \u201cSync now\u201d.") : T("Синхронизация выключена.", "Sync is off.");
+  const list = $("sync-url").value.split(/[\s,]+/).map(x => x.trim().replace(/\/+$/, "")).filter(Boolean);
+  const bad = list.find(u => !/^https:\/\/[^\s]+\.[^\s]+$/.test(u));
+  if (bad) { $("sync-status").textContent = T("Некорректный адрес: ", "Invalid URL: ") + bad; return; }
+  try { localStorage.setItem(SYNC_URL_KEY, list.join("\n")); } catch {}
+  $("sync-status").textContent = list.length ? T("Сохранено (" + list.length + "). Нажмите «Синхронизировать сейчас».", "Saved (" + list.length + "). Click \u201cSync now\u201d.") : T("Используются серверы по умолчанию.", "Using default servers.");
 };
 if ($("b-sync-now")) $("b-sync-now").onclick = async () => {
   const s = store.get(); if (!s || !vaultKey) return;

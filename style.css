@@ -1225,3 +1225,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .hero-hint{ margin:16px 0 0; font-size:15px; color:#A7A7AD; }
 .hero-hint a{ color:var(--lime); font-weight:600; cursor:pointer; text-decoration:none; border-bottom:1px solid rgba(200,226,122,.4); }
 .hero-hint a:hover{ border-bottom-color:var(--lime); }
+
+/* Поле серверов синхронизации — textarea */
+#sync-url{ min-height:84px; resize:vertical; line-height:1.5; }
