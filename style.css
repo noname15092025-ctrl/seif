@@ -1246,3 +1246,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .brand .ic.accent, .side-brand .ic.accent, #compare .us .ic.accent, .d-empty .ic.accent{
   background:transparent !important; padding:0 !important; border-radius:0 !important;
   fill:var(--lime) !important; stroke:none !important; box-sizing:content-box; }
+
+/* Профили на входе — менее скруглённые углы */
+.split .profiles .prof{ border-radius:14px !important; }
