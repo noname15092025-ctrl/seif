@@ -1228,3 +1228,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 /* Поле серверов синхронизации — textarea */
 #sync-url{ min-height:84px; resize:vertical; line-height:1.5; }
+
+/* Профили на входе не вылезают за рамки карточки */
+.split .profiles{ grid-template-columns:repeat(2, minmax(0,1fr)) !important; }
+.split .profiles .prof{ flex-direction:column !important; align-items:flex-start !important; min-width:0; overflow:hidden; gap:6px; padding:16px !important; }
+.split .profiles .prof .avatar{ margin-bottom:2px; }
+.split .profiles .prof .who{ min-width:0; width:100%; }
+.split .profiles .prof .who span, .split .profiles .prof small{ display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
