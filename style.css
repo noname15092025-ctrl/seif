@@ -1235,3 +1235,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .split .profiles .prof .avatar{ margin-bottom:2px; }
 .split .profiles .prof .who{ min-width:0; width:100%; }
 .split .profiles .prof .who span, .split .profiles .prof small{ display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Единый значок-щит в тёмном квадрате везде, где логотип */
+.brand .ic.accent, .side-brand .ic.accent, #compare .us .ic.accent{
+  background:#1C1C1E !important; border-radius:8px !important; padding:5px !important;
+  width:18px !important; height:18px !important; box-sizing:content-box !important;
+  stroke:var(--lime) !important; fill:none !important; flex:0 0 auto; }
