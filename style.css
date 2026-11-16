@@ -1241,3 +1241,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   background:#1C1C1E !important; border-radius:8px !important; padding:5px !important;
   width:18px !important; height:18px !important; box-sizing:content-box !important;
   stroke:var(--lime) !important; fill:none !important; flex:0 0 auto; }
+
+/* Логотип — залитый лаймовый щит без рамки, везде одинаково */
+.brand .ic.accent, .side-brand .ic.accent, #compare .us .ic.accent, .d-empty .ic.accent{
+  background:transparent !important; padding:0 !important; border-radius:0 !important;
+  fill:var(--lime) !important; stroke:none !important; box-sizing:content-box; }
