@@ -10,10 +10,10 @@
 <link rel="icon" href="shield.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=39">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=57">
+<link rel="stylesheet" href="style.css?v=58">
 <script src="wordlist.js" defer></script>
 <script src="argon2.js" defer></script>
-<script src="app.js?v=57" defer></script>
+<script src="app.js?v=58" defer></script>
 </head>
 <body>
 <svg width="0" height="0" class="sprite" aria-hidden="true">
@@ -458,8 +458,8 @@
       <h3><i>A</i>Создание профиля</h3>
       <ul>
         <li>На главной нажмите <b>«Создать новый профиль»</b>.</li>
-        <li>Перепишите 12 слов на бумагу по порядку и нажмите «Я записал(а)». Затем введите 3 слова, которые попросит Vault.</li>
-        <li>Задайте название профиля и мастер-пароль. Полоска под полем показывает надёжность: пароль ниже уровня «Средний» Vault не примет.</li>
+        <li>Перепишите 12 слов на бумагу по порядку и нажмите «Я записал(а)». Затем введите 3 слова, которые попросит SHUT.</li>
+        <li>Задайте название профиля и мастер-пароль. Полоска под полем показывает надёжность: пароль ниже уровня «Средний» SHUT не примет.</li>
       </ul>
       <h3><i>B</i>Типы записей</h3>
       <ul>
@@ -471,7 +471,7 @@
       <ul>
         <li>Во вкладках формы есть ещё пять типов: <b>Документ</b> (паспорт, СНИЛС, права — номер, кем выдан, даты), <b>Крипто</b> (сеть, адрес, сид-фраза, пароль кошелька), <b>Ключ</b> (лицензии и API-ключи), <b>Счёт</b> (реквизиты) и <b>Контакт</b>.</li>
         <li>Секретные поля — номер документа, сид-фраза, ключ, номер счёта — скрыты, пока вы не нажмёте на глаз.</li>
-        <li>Сид-фразы и ключи от криптокошельков — самое ценное. Убедитесь, что у Vault длинный мастер-пароль и есть резервная копия.</li>
+        <li>Сид-фразы и ключи от криптокошельков — самое ценное. Убедитесь, что у SHUT длинный мастер-пароль и есть резервная копия.</li>
       </ul>
       <h3><i>B3</i>Умные разделы меню</h3>
       <ul>
@@ -492,7 +492,7 @@
       </ul>
       <h3><i>D</i>Коды двухфакторной защиты (2FA)</h3>
       <ul>
-        <li>В поле «Ключ 2FA» вставьте секретный ключ, который сайт показывает при включении 2FA (или ссылку <code>otpauth://</code>). Vault будет показывать 6-значный код, как Google Authenticator.</li>
+        <li>В поле «Ключ 2FA» вставьте секретный ключ, который сайт показывает при включении 2FA (или ссылку <code>otpauth://</code>). SHUT будет показывать 6-значный код, как Google Authenticator.</li>
         <li>Важно: если хранить коды 2FA рядом с паролями, тот, кто откроет профиль, получит и то и другое. Для самых важных аккаунтов (почта, банк) держите 2FA в отдельном приложении на телефоне.</li>
       </ul>
       <h3><i>E</i>Работа с записями</h3>
@@ -509,7 +509,7 @@
       <h3><i>G</i>Вход, выход, профили, настройки</h3>
       <ul>
         <li>На экране входа выберите профиль и введите мастер-пароль. После 3 неверных попыток вход временно блокируется, и с каждой ошибкой пауза растёт.</li>
-        <li>Значок замка внизу слева или «Сменить профиль» закрывают сейф. Vault закрывается сам через 5 минут бездействия или через минуту после ухода с вкладки.</li>
+        <li>Значок замка внизу слева или «Сменить профиль» закрывают сейф. SHUT закрывается сам через 5 минут бездействия или через минуту после ухода с вкладки.</li>
         <li><b>«Настройки и копии»</b> — резервная копия, Excel, импорт, смена мастер-пароля и названия, удаление профиля.</li>
       </ul>
       <h3><i>H</i>Резервная копия и перенос</h3>
@@ -525,12 +525,12 @@
       </ul>
       <h3><i>J</i>Приложение, тема и язык</h3>
       <ul>
-        <li>Кнопка <b>«Установить как приложение»</b> в настройках (или «Добавить на главный экран» в меню браузера на телефоне) ставит Vault как приложение. Оно работает и без интернета.</li>
+        <li>Кнопка <b>«Установить как приложение»</b> в настройках (или «Добавить на главный экран» в меню браузера на телефоне) ставит SHUT как приложение. Оно работает и без интернета.</li>
         <li>☀ / ☾ — светлая и тёмная тема, EN / RU — язык интерфейса (внизу слева в сейфе и вверху на остальных экранах).</li>
       </ul>
 
       <p class="part">Часть 2. Как не дать себя взломать</p>
-      <p class="lead">Vault шифрует всё на вашем устройстве. Взломать его можно только через вас: через вашу фразу, пароль или устройство.</p>
+      <p class="lead">SHUT шифрует всё на вашем устройстве. Взломать его можно только через вас: через вашу фразу, пароль или устройство.</p>
       <h3><i>01</i>Секретная фраза</h3>
       <ul>
         <li><b>Запишите от руки на бумаге</b> и храните дома. Можно сделать две копии в разных местах.</li>
@@ -544,11 +544,11 @@
       </ul>
       <h3><i>03</i>Мошенники</h3>
       <ul>
-        <li>У Vault нет поддержки и аккаунтов. <b>Никто от имени Vault никогда не попросит</b> фразу, пароль или файл копии. Кто просит — мошенник.</li>
+        <li>У SHUT нет поддержки и аккаунтов. <b>Никто от имени SHUT никогда не попросит</b> фразу, пароль или файл копии. Кто просит — мошенник.</li>
       </ul>
       <h3><i>04</i>Адрес сайта</h3>
       <ul>
-        <li>Открывайте Vault только по адресу <code>noname15092025-ctrl.github.io/seif</code> — из закладки или установленного приложения, а не по ссылкам из писем и сообщений.</li>
+        <li>Открывайте SHUT только по адресу <code>noname15092025-ctrl.github.io/seif</code> — из закладки или установленного приложения, а не по ссылкам из писем и сообщений.</li>
         <li>Поддельная копия сайта может украсть то, что вы введёте.</li>
       </ul>
       <h3><i>05</i>Устройство</h3>
@@ -575,8 +575,8 @@
       <h3><i>A</i>Creating a profile</h3>
       <ul>
         <li>On the home screen click <b>“Create new profile”</b>.</li>
-        <li>Write the 12 words on paper in order and click “I wrote it down”. Then enter the 3 words Vault asks for.</li>
-        <li>Set a profile name and a master password. The bar under the field shows its strength: Vault won't accept anything below “Fair”.</li>
+        <li>Write the 12 words on paper in order and click “I wrote it down”. Then enter the 3 words SHUT asks for.</li>
+        <li>Set a profile name and a master password. The bar under the field shows its strength: SHUT won't accept anything below “Fair”.</li>
       </ul>
       <h3><i>B</i>Entry types</h3>
       <ul>
@@ -588,7 +588,7 @@
       <ul>
         <li>The form has five more tabs: <b>Document</b> (passport, ID, license — number, issuer, dates), <b>Crypto</b> (network, address, seed phrase, wallet password), <b>Key</b> (licenses and API keys), <b>Account</b> (bank details) and <b>Contact</b>.</li>
         <li>Secret fields — document number, seed phrase, key, account number — stay hidden until you click the eye.</li>
-        <li>Crypto seed phrases and keys are the most valuable data. Make sure Vault has a long master password and a backup.</li>
+        <li>Crypto seed phrases and keys are the most valuable data. Make sure SHUT has a long master password and a backup.</li>
       </ul>
       <h3><i>B3</i>Smart menu sections</h3>
       <ul>
@@ -609,7 +609,7 @@
       </ul>
       <h3><i>D</i>Two-factor codes (2FA)</h3>
       <ul>
-        <li>Paste the secret key a site shows when you enable 2FA (or an <code>otpauth://</code> link) into the “2FA key” field. Vault will show the 6-digit code, like Google Authenticator.</li>
+        <li>Paste the secret key a site shows when you enable 2FA (or an <code>otpauth://</code> link) into the “2FA key” field. SHUT will show the 6-digit code, like Google Authenticator.</li>
         <li>Note: if 2FA codes live next to passwords, anyone who opens the profile gets both. For the most important accounts (email, bank) keep 2FA in a separate app on your phone.</li>
       </ul>
       <h3><i>E</i>Working with entries</h3>
@@ -626,7 +626,7 @@
       <h3><i>G</i>Sign in, log out, profiles, settings</h3>
       <ul>
         <li>On the sign-in screen pick a profile and enter its master password. After 3 wrong attempts sign-in is paused, and the pause grows with each mistake.</li>
-        <li>The lock icon at the bottom left or “Switch profile” closes the safe. Vault also closes itself after 5 minutes of inactivity or a minute after you leave the tab.</li>
+        <li>The lock icon at the bottom left or “Switch profile” closes the safe. SHUT also closes itself after 5 minutes of inactivity or a minute after you leave the tab.</li>
         <li><b>“Settings and backups”</b> — backup, Excel, import, master password and name changes, profile deletion.</li>
       </ul>
       <h3><i>H</i>Backup and moving devices</h3>
@@ -642,12 +642,12 @@
       </ul>
       <h3><i>J</i>App, theme and language</h3>
       <ul>
-        <li>The <b>“Install as app”</b> button in settings (or “Add to Home screen” in your phone browser's menu) installs Vault as an app. It also works offline.</li>
+        <li>The <b>“Install as app”</b> button in settings (or “Add to Home screen” in your phone browser's menu) installs SHUT as an app. It also works offline.</li>
         <li>☀ / ☾ — light and dark theme, EN / RU — interface language (bottom left in the safe, top right elsewhere).</li>
       </ul>
 
       <p class="part">Part 2. How not to get hacked</p>
-      <p class="lead">Vault encrypts everything on your device. The only way in is through you: your phrase, your password or your device.</p>
+      <p class="lead">SHUT encrypts everything on your device. The only way in is through you: your phrase, your password or your device.</p>
       <h3><i>01</i>Secret phrase</h3>
       <ul>
         <li><b>Write it by hand on paper</b> and keep it at home. You can make two copies in different places.</li>
@@ -661,11 +661,11 @@
       </ul>
       <h3><i>03</i>Scammers</h3>
       <ul>
-        <li>Vault has no support team and no accounts. <b>Nobody on behalf of Vault will ever ask</b> for your phrase, password or backup file. Anyone who asks is a scammer.</li>
+        <li>SHUT has no support team and no accounts. <b>Nobody on behalf of SHUT will ever ask</b> for your phrase, password or backup file. Anyone who asks is a scammer.</li>
       </ul>
       <h3><i>04</i>Site address</h3>
       <ul>
-        <li>Open Vault only at <code>noname15092025-ctrl.github.io/seif</code> — from a bookmark or the installed app, not from links in emails or messages.</li>
+        <li>Open SHUT only at <code>noname15092025-ctrl.github.io/seif</code> — from a bookmark or the installed app, not from links in emails or messages.</li>
         <li>A fake copy of the site can steal what you type.</li>
       </ul>
       <h3><i>05</i>Your device</h3>
