@@ -317,8 +317,9 @@ $("b-verify").onclick = async () => {
   pendingKey = await phraseToVaultKey(pendingPhrase);
   pendingKey._vaultBox = null;
   pendingPhrase = null; $("words").innerHTML = "";
-  $("setpw-err").textContent = ""; show("setpw");
+  setSetpwBtn("Создать сейф", "Create vault"); $("setpw-err").textContent = ""; show("setpw");
 };
+function setSetpwBtn(ru, en) { const b = $("b-setpw"); b.dataset.ru = ru; b.dataset.en = en; b.textContent = (typeof lang !== "undefined" && lang === "en") ? en : ru; }
 $("b-setpw").onclick = async e => {
   const p1 = $("pw1").value, p2 = $("pw2").value, pname = $("p-name").value.trim();
   const bad = checkNewPassword(p1, p2); if (bad) { $("setpw-err").textContent = bad; return; }
@@ -361,7 +362,7 @@ $("b-restore-go").onclick = async e => {
     if (box) await open(key, box);
     key._vaultBox = box; pendingKey = key;
     $("restore-words").value = ""; $("restore-file").value = "";
-    $("setpw-err").textContent = ""; show("setpw");
+    setSetpwBtn("Открыть сейф", "Open the vault"); $("setpw-err").textContent = ""; show("setpw");
   } catch (err) { $("restore-err").textContent = err.name === "OperationError" ? T("Не удалось расшифровать", "Could not decrypt") : err.message; }
   busy(e.target, false);
 };
