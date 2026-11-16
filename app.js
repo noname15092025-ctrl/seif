@@ -567,7 +567,7 @@ const SYNC_URL_KEY = "vault.sync.url";
 // Общие серверы синхронизации по умолчанию — работают у ВСЕХ пользователей из коробки.
 // Запись идёт на первый доступный; если он недоступен или упёрся в лимит — на следующий.
 // Чтение опрашивает все и берёт самую свежую версию. Добавляйте сюда резервные воркеры.
-const DEFAULT_SYNC_URLS = ["https://vault.noname15092025.workers.dev"];
+const DEFAULT_SYNC_URLS = ["https://vault-sync-d1.noname15092025.workers.dev", "https://vault.noname15092025.workers.dev"];
 const syncUrls = () => {
   try { const o = (localStorage.getItem(SYNC_URL_KEY) || "").trim();
     const list = o ? o.split(/[\s,]+/).filter(Boolean) : DEFAULT_SYNC_URLS;
