@@ -83,15 +83,16 @@
         <span class="them" data-en="Typical managers">Обычные менеджеры</span>
         <span class="us"><svg class="ic accent"><use href="#i-logo"/></svg> Vault</span>
       </div>
-      <div class="crow"><span class="cf" data-en="Where data lives">Где хранятся данные</span><span class="them" data-en="On the company's servers">На серверах компании</span><span class="us" data-en="Only on your device">Только на вашем устройстве</span></div>
-      <div class="crow"><span class="cf" data-en="What can be stolen from the service">Что можно украсть у сервиса</span><span class="them" data-en="Encrypted vaults (as with LastPass)">Зашифрованные хранилища (как у LastPass)</span><span class="us" data-en="Nothing — there is no server">Нечего — сервера нет</span></div>
+      <div class="crow"><span class="cf" data-en="Where data lives">Где хранятся данные</span><span class="them" data-en="On the company's servers">На серверах компании</span><span class="us" data-en="On your device and encrypted cloud">На устройстве и в зашифрованном облаке</span></div>
+      <div class="crow"><span class="cf" data-en="What can be stolen from the service">Что можно украсть у сервиса</span><span class="them" data-en="Encrypted vaults (as with LastPass)">Зашифрованные хранилища (как у LastPass)</span><span class="us" data-en="Only ciphertext — nothing can decrypt it">Только шифротекст — расшифровать нечем</span></div>
       <div class="crow"><span class="cf" data-en="Account and email">Аккаунт и email</span><span class="them" data-en="Required">Нужны</span><span class="us" data-en="Not needed">Не нужны</span></div>
       <div class="crow"><span class="cf" data-en="Price">Цена</span><span class="them" data-en="Subscription, prices rising">Подписка, цены растут</span><span class="us" data-en="Free forever">Бесплатно навсегда</span></div>
-      <div class="crow"><span class="cf" data-en="Recovery">Восстановление</span><span class="them" data-en="Via account and email">Через аккаунт и почту</span><span class="us" data-en="By a 12-word phrase, depends on no one">По фразе из 12 слов, ни от кого не зависит</span></div>
-      <div class="crow"><span class="cf" data-en="Tracking">Слежка</span><span class="them" data-en="Telemetry and trackers">Телеметрия и трекеры</span><span class="us" data-en="Zero external requests">Ноль внешних запросов</span></div>
-      <div class="crow"><span class="cf" data-en="Code">Код</span><span class="them" data-en="Often closed-source">Часто закрытый</span><span class="us" data-en="Open, one page, works offline">Открытый, одна страница, работает офлайн</span></div>
+      <div class="crow"><span class="cf" data-en="Recovery">Восстановление</span><span class="them" data-en="Via account and email">Через аккаунт и почту</span><span class="us" data-en="By a 12-word phrase, from any device">По фразе из 12 слов, с любого устройства</span></div>
+      <div class="crow"><span class="cf" data-en="Tracking">Слежка</span><span class="them" data-en="Telemetry and trackers">Телеметрия и трекеры</span><span class="us" data-en="No trackers or telemetry">Без трекеров и телеметрии</span></div>
+      <div class="crow"><span class="cf" data-en="Device sync">Синхронизация устройств</span><span class="them" data-en="Yes, but the service can access it">Да, но сервис имеет доступ</span><span class="us" data-en="Yes, zero-knowledge — the server sees only ciphertext">Да, zero-knowledge — сервер видит только шифротекст</span></div>
+      <div class="crow"><span class="cf" data-en="Code">Код</span><span class="them" data-en="Often closed-source">Часто закрытый</span><span class="us" data-en="Open source, works offline, optional sync">Открытый код, работает офлайн, синхронизация по желанию</span></div>
     </div>
-    <p class="compare-note" data-en="Honestly: commercial managers are still ahead on cross-device sync, browser autofill and passkeys. Vault's niche is maximum privacy and independence.">Честно: по автосинхронизации между устройствами, автозаполнению в браузере и passkeys коммерческие менеджеры пока впереди. Ниша Vault — максимум приватности и независимости.</p>
+    <p class="compare-note" data-en="Vault now syncs across devices by your secret phrase while staying zero-knowledge. Commercial managers are still ahead on browser autofill and passkeys — Vault's niche is privacy and independence.">Теперь Vault синхронизируется между устройствами по секретной фразе, оставаясь zero-knowledge. По автозаполнению в браузере и passkeys коммерческие менеджеры пока впереди — ниша Vault в приватности и независимости.</p>
   </section>
 
   <section id="security" class="l-sec">
@@ -363,7 +364,7 @@
     <p class="muted small" data-en="Closing the tab always locks the vault. The master password is still required then.">Закрытие вкладки всегда блокирует сейф — тогда мастер-пароль нужен заново.</p>
     <div class="btn-row"><button class="ghost" data-install hidden data-en="Install as app">Установить как приложение</button></div>
     <h3 data-en="Sync across devices">Синхронизация между устройствами</h3>
-    <p class="muted small" data-en="Store the encrypted vault in your own free cloud (Cloudflare Worker). The server sees only ciphertext — never your passwords or keys. Then sign in from any device with the secret phrase.">Храните зашифрованный сейф в своём бесплатном облаке (Cloudflare Worker). Сервер видит только шифротекст — ни паролей, ни ключей. После этого входите с любого устройства по секретной фразе.</p>
+    <p class="muted small" data-en="Device sync is on: your vault is encrypted and saved to the cloud automatically, and you can sign in from any device with your secret phrase. The server sees only ciphertext — never your passwords or keys. The field below is optional — for hosting your own sync server.">Синхронизация включена: сейф автоматически шифруется и сохраняется в облаке, и войти можно с любого устройства по секретной фразе. Сервер видит только шифротекст — ни паролей, ни ключей. Поле ниже — необязательное, для своего сервера синхронизации.</p>
     <label for="sync-url" data-en="Sync server URL">Адрес сервера синхронизации</label>
     <input id="sync-url" class="field mono" placeholder="https://vault-sync.ваш-аккаунт.workers.dev" autocomplete="off" spellcheck="false">
     <div class="btn-row"><button class="ghost" id="b-sync-save" data-en="Save">Сохранить</button><button class="ghost" id="b-sync-now" data-en="Sync now">Синхронизировать сейчас</button></div>
@@ -557,7 +558,7 @@
       </ul>
       <h3><i>06</i>Копии и файлы</h3>
       <ul>
-        <li>Скачивайте резервную копию после важных изменений и храните на флешке или в облаке. Без неё при очистке браузера записи пропадут.</li>
+        <li>Синхронизация хранит зашифрованную копию в облаке, поэтому сейф восстановится по фразе на любом устройстве. Резервную копию всё равно полезно скачивать — офлайн-страховка на случай, если облако недоступно.</li>
         <li>Файлы Excel и CSV для импорта не зашифрованы — удаляйте их сразу, включая корзину.</li>
       </ul>
       <h3><i>07</i>Если что-то пошло не так</h3>
