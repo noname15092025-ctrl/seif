@@ -1,0 +1,12 @@
+{
+  "appId": "app.shut.wallet",
+  "appName": "SHUT",
+  "webDir": "www",
+  "server": {
+    "iosScheme": "capacitor"
+  },
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#121212"
+  }
+}
