@@ -6,14 +6,14 @@
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0A0A0A">
-<title>Vault — хранилище</title>
+<title>SHUT — хранилище</title>
 <link rel="icon" href="shield.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=39">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=56">
+<link rel="stylesheet" href="style.css?v=57">
 <script src="wordlist.js" defer></script>
 <script src="argon2.js" defer></script>
-<script src="app.js?v=56" defer></script>
+<script src="app.js?v=57" defer></script>
 </head>
 <body>
 <svg width="0" height="0" class="sprite" aria-hidden="true">
@@ -32,7 +32,7 @@
 <!-- ============ Лендинг ============ -->
 <section id="v-start" class="landing hidden">
   <header class="l-head">
-    <a class="brand" data-home><svg class="ic accent"><use href="#i-logo"/></svg><span data-en="Vault — storage">Vault — хранилище</span></a>
+    <a class="brand" data-home><svg class="ic accent"><use href="#i-logo"/></svg><span data-en="SHUT — storage">SHUT — хранилище</span></a>
     <nav class="l-nav">
       <a href="#how" data-en="How it works">Как это работает</a>
       <a href="#compare" data-en="Comparison">Сравнение</a>
@@ -76,12 +76,12 @@
 
   <section id="compare" class="l-sec">
     <p class="eyebrow" data-en="HOW WE'RE DIFFERENT">ЧЕМ МЫ ОТЛИЧАЕМСЯ</p>
-    <h2 class="l-h2" data-en="Vault vs. typical password managers">Vault против обычных менеджеров</h2>
+    <h2 class="l-h2" data-en="SHUT vs. typical password managers">SHUT против обычных менеджеров</h2>
     <div class="compare">
       <div class="crow chead">
         <span></span>
         <span class="them" data-en="Typical managers">Обычные менеджеры</span>
-        <span class="us"><svg class="ic accent"><use href="#i-logo"/></svg> Vault</span>
+        <span class="us"><svg class="ic accent"><use href="#i-logo"/></svg> SHUT</span>
       </div>
       <div class="crow"><span class="cf" data-en="Where data lives">Где хранятся данные</span><span class="them" data-en="On the company's servers">На серверах компании</span><span class="us" data-en="On your device and encrypted cloud">На устройстве и в зашифрованном облаке</span></div>
       <div class="crow"><span class="cf" data-en="What can be stolen from the service">Что можно украсть у сервиса</span><span class="them" data-en="Encrypted vaults (as with LastPass)">Зашифрованные хранилища (как у LastPass)</span><span class="us" data-en="Only ciphertext — nothing can decrypt it">Только шифротекст — расшифровать нечем</span></div>
@@ -92,7 +92,7 @@
       <div class="crow"><span class="cf" data-en="Device sync">Синхронизация устройств</span><span class="them" data-en="Yes, but the service can access it">Да, но сервис имеет доступ</span><span class="us" data-en="Yes, zero-knowledge — the server sees only ciphertext">Да, zero-knowledge — сервер видит только шифротекст</span></div>
       <div class="crow"><span class="cf" data-en="Code">Код</span><span class="them" data-en="Often closed-source">Часто закрытый</span><span class="us" data-en="Open source, works offline, optional sync">Открытый код, работает офлайн, синхронизация по желанию</span></div>
     </div>
-    <p class="compare-note" data-en="Vault now syncs across devices by your secret phrase while staying zero-knowledge. Commercial managers are still ahead on browser autofill and passkeys — Vault's niche is privacy and independence.">Теперь Vault синхронизируется между устройствами по секретной фразе, оставаясь zero-knowledge. По автозаполнению в браузере и passkeys коммерческие менеджеры пока впереди — ниша Vault в приватности и независимости.</p>
+    <p class="compare-note" data-en="SHUT now syncs across devices by your secret phrase while staying zero-knowledge. Commercial managers are still ahead on browser autofill and passkeys — SHUT's niche is privacy and independence.">Теперь SHUT синхронизируется между устройствами по секретной фразе, оставаясь zero-knowledge. По автозаполнению в браузере и passkeys коммерческие менеджеры пока впереди — ниша SHUT в приватности и независимости.</p>
   </section>
 
   <section id="security" class="l-sec">
@@ -104,8 +104,8 @@
   </section>
 
   <footer class="l-foot">
-    <span class="wordmark">vault</span>
-    <span class="foot-meta" data-en="Open source · AES-256 · © Vault">Открытый код · AES-256 · © Vault</span>
+    <span class="wordmark">shut</span>
+    <span class="foot-meta" data-en="Open source · AES-256 · © SHUT">Открытый код · AES-256 · © SHUT</span>
   </footer>
 </section>
 
@@ -113,7 +113,7 @@
 <section id="v-unlock" class="center-page cream split hidden">
   <div class="corner"><button class="pill ghost small" data-lang-toggle>EN</button><button class="pill ghost small" data-theme-toggle>☀</button></div>
   <div class="art-panel" aria-hidden="true">
-    <span class="wordmark-sm" data-home>vault</span>
+    <span class="wordmark-sm" data-home>shut</span>
     <div class="art-dial">
       <svg viewBox="0 0 220 220">
         <circle cx="110" cy="110" r="96" class="ap-bg"/>
@@ -210,7 +210,7 @@
 <section id="v-vault" class="app hidden">
   <div class="nav-backdrop" aria-hidden="true"></div>
   <aside class="side">
-    <a class="brand side-brand" data-home-lock><svg class="ic accent"><use href="#i-logo"/></svg><span data-en="Vault — storage">Vault — хранилище</span></a>
+    <a class="brand side-brand" data-home-lock><svg class="ic accent"><use href="#i-logo"/></svg><span data-en="SHUT — storage">SHUT — хранилище</span></a>
     <nav class="nav" id="nav"></nav>
     <div class="side-tools">
       <a class="nav-item" id="b-generator" data-en="Password generator">Генератор паролей</a>

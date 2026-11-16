@@ -46,7 +46,7 @@ function applyLang() {
   document.querySelectorAll("[data-lang-toggle]").forEach(b => b.textContent = lang === "en" ? "RU" : "EN");
   $("guide-ru").classList.toggle("hidden", lang === "en");
   $("guide-en").classList.toggle("hidden", lang !== "en");
-  document.title = T("Vault — хранилище", "Vault — storage");
+  document.title = T("SHUT — хранилище", "SHUT — storage");
   applyTypeLabels();
   if (vaultKey) { renderNav(); render(); }
   if (!$("v-unlock").classList.contains("hidden")) renderProfiles();
@@ -301,7 +301,7 @@ $("b-phrase-ok").onclick = () => {
 $("b-print-kit").onclick = () => {
   if (!pendingPhrase) return;
   const words = pendingPhrase.split(" ");
-  $("print-kit").innerHTML = `<h1>Vault — ${T("памятка восстановления", "recovery sheet")}</h1>
+  $("print-kit").innerHTML = `<h1>SHUT — ${T("памятка восстановления", "recovery sheet")}</h1>
     <p>${T("Эти 12 слов — единственный способ восстановить ваш сейф. Храните этот лист в надёжном месте. Никому не показывайте и не фотографируйте.", "These 12 words are the only way to restore your vault. Keep this sheet somewhere safe. Never show or photograph it.")}</p>
     <ol class="pk-words">${words.map(w => `<li>${esc(w)}</li>`).join("")}</ol>
     <p class="pk-note">${T("Создано", "Created")}: ${new Date().toLocaleDateString()} · noname15092025-ctrl.github.io/seif</p>
@@ -1223,7 +1223,7 @@ function buildXlsx(rows, widths) {
   return zip([
     ["[Content_Types].xml", X + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
     ["_rels/.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
-    ["xl/workbook.xml", X + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Vault" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ["xl/workbook.xml", X + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="SHUT" sheetId="1" r:id="rId1"/></sheets></workbook>'],
     ["xl/_rels/workbook.xml.rels", X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
     ["xl/styles.xml", X + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="2"><xf/><xf fontId="1" applyFont="1"/></cellXfs></styleSheet>'],
     ["xl/worksheets/sheet1.xml", X + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>' +
@@ -1374,7 +1374,7 @@ $("import-file").onchange = async () => {
     const dup = importRows.filter(x => keys.has(x.title + "\u0000" + x.login + "\u0000" + x.pass)).length;
     $("import-body").innerHTML = `<p>${T("Файл: ", "File: ")}<b>${esc(f.name)}</b></p><p>${T("Найдено записей: ", "Entries found: ")}<b>${importRows.length}</b>${dup ? T(", из них уже есть: ", ", already present: ") + dup + T(" (будут пропущены)", " (will be skipped)") : ""}</p>` +
       `<div class="preview">${importRows.slice(0, 5).map(x => `<div class="mini"><div><b>${esc(x.title)}</b><small>${esc(x.login)}</small></div></div>`).join("")}${importRows.length > 5 ? `<p class="muted small">${T("и ещё ", "and ")}${importRows.length - 5}${T("…", " more…")}</p>` : ""}</div>` +
-      `<div class="note-box">${T("Поддерживаются CSV из Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password и Excel-выгрузка из Vault. После импорта удалите исходный файл — он не зашифрован.", "Supports CSV from Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password and Vault's Excel export. Delete the source file after import — it is not encrypted.")}</div>`;
+      `<div class="note-box">${T("Поддерживаются CSV из Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password и Excel-выгрузка из SHUT. После импорта удалите исходный файл — он не зашифрован.", "Supports CSV from Chrome, Edge, Firefox, Bitwarden, KeePass, 1Password and SHUT's Excel export. Delete the source file after import — it is not encrypted.")}</div>`;
     show("import");
   } catch (err) { alertBox(T("Не удалось прочитать файл: ", "Could not read the file: ") + err.message); }
 };
@@ -1446,7 +1446,7 @@ if ($("b-sync-now")) $("b-sync-now").onclick = async () => {
   if (!s.syncId) { $("sync-status").textContent = T("Перезайдите в сейф, чтобы включить синхронизацию.", "Re-open the vault to enable sync."); return; }
   $("sync-status").textContent = T("Синхронизирую…", "Syncing…");
   try { const pr = await syncPull(store.get()); await syncPush(store.get()); renderNav(); render();
-    $("sync-status").textContent = T("Готово.", "Done.") + (pr && pr.pulled ? T(" Подтянул свежую версию из облака.", " Pulled the latest from the cloud.") : T(" Сейф выгружен в облако.", " Vault pushed to the cloud."));
+    $("sync-status").textContent = T("Готово.", "Done.") + (pr && pr.pulled ? T(" Подтянул свежую версию из облака.", " Pulled the latest from the cloud.") : T(" Сейф выгружен в облако.", " SHUT pushed to the cloud."));
   } catch (e) { $("sync-status").textContent = T("Ошибка синхронизации: ", "Sync error: ") + e.message; }
 };
 if ($("set-autolock")) {

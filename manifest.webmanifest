@@ -1,6 +1,6 @@
 {
-  "name": "Vault — хранилище",
-  "short_name": "Vault",
+  "name": "SHUT — хранилище",
+  "short_name": "SHUT",
   "description": "Zero-knowledge менеджер паролей. Всё шифруется на устройстве.",
   "start_url": "./",
   "scope": "./",
