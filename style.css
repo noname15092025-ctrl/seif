@@ -1333,14 +1333,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 /* ======================================================================
    SHUT · Оболочка в стиле «Дизайн 34» — сайдбар (общий для всех экранов)
    ====================================================================== */
-/* Плавающая оливковая карточка со свечением */
-@media (min-width:761px){
-  .app .side{ margin:12px 0 12px 12px !important; border-radius:32px !important; border:1px solid rgba(255,255,255,.06) !important;
-    padding:22px 14px !important; position:relative; overflow:hidden; }
-  .app .side::before{ content:""; position:absolute; left:-80px; bottom:120px; width:300px; height:260px;
-    border-radius:45% 55% 50% 50%; background:var(--lime); filter:blur(60px); opacity:.32; pointer-events:none; z-index:0; }
-  .app .side > *{ position:relative; z-index:1; }
-}
+/* Оливковый drawer со свечением (НЕ трогаем position:fixed и margin — иначе ломается раскладка) */
+.app .side{ border-radius:0 28px 28px 0; overflow-x:hidden; }
+.app .side::before{ content:""; position:absolute; left:-80px; bottom:120px; width:300px; height:260px;
+  border-radius:45% 55% 50% 50%; background:var(--lime); filter:blur(60px); opacity:.30; pointer-events:none; z-index:0; }
+.app .side > *{ position:relative; z-index:1; }
 /* Бренд */
 .app .side-brand{ font-size:22px !important; letter-spacing:1px !important; padding:0 8px 14px !important; color:#fff !important; line-height:1 !important; }
 .app .side-brand .ic.accent{ fill:var(--lime) !important; stroke:none !important; }
