@@ -744,7 +744,8 @@ function renderNav() {
   if (!valid.has(filter)) filter = "all";
   const link = ([v, l, c, w]) => `<a class="nav-item${v === filter && view === "vault" ? " active" : ""}${v === "trash" ? " trash" : ""}" data-filter="${esc(v)}">${esc(l)}<span${w === "warn" && c ? ' class="badge-warn"' : ""}>${c}</span></a>`;
   const activeTasks = tasksList().filter(t => !t.done).length;
-  const ws = `<a class="nav-item ws${view === "notes" ? " active" : ""}" data-view="notes"><svg class="ic wsico"><use href="#i-note"/></svg> ${T("Заметки", "Notes")}<span>${notesList().length || ""}</span></a>`
+  const ws = `<a class="nav-item ws${view === "home" ? " active" : ""}" data-view="home"><svg class="ic wsico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg> ${T("Обзор", "Overview")}<span></span></a>`
+    + `<a class="nav-item ws${view === "notes" ? " active" : ""}" data-view="notes"><svg class="ic wsico"><use href="#i-note"/></svg> ${T("Заметки", "Notes")}<span>${notesList().length || ""}</span></a>`
     + `<a class="nav-item ws${view === "tasks" ? " active" : ""}" data-view="tasks"><svg class="ic wsico"><use href="#i-check"/></svg> ${T("Задачи", "Tasks")}<span>${activeTasks || ""}</span></a>`;
   const topK = new Set(top.map(i => i[0])), typeK = new Set(types.map(i => i[0])), checkK = new Set(checks.map(i => i[0]));
   const activeSec = view === "vault" ? (topK.has(filter) ? "pw" : typeK.has(filter) ? "types" : checkK.has(filter) ? "checks" : filter.startsWith("c:") ? "cats" : null) : null;
@@ -800,6 +801,7 @@ function visibleList() {
   return list.sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0) || cmp(a, b));
 }
 function render() {
+  if (view === "home") return renderHome();
   if (view === "notes") return renderNotes();
   if (view === "tasks") return renderTasks();
   $("note-editor").classList.add("hidden");
@@ -821,8 +823,15 @@ function render() {
   if ($("form-card").classList.contains("hidden")) renderDetail();
 }
 function plural(n, one, few, many) { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; }
-$("search").oninput = render; $("sort").onchange = render;
+$("search").oninput = () => { if (view === "home" && $("search").value) { view = "vault"; filter = "all"; setViewChrome("vault"); renderNav(); } render(); };
+$("sort").onchange = render;
 $("list").onclick = async e => {
+  if (view === "home") {
+    const dv = e.target.closest("[data-view]"); if (dv) { setView(dv.dataset.view); return; }
+    const df = e.target.closest("[data-filter]"); if (df) { view = "vault"; filter = df.dataset.filter; setViewChrome("vault"); renderNav(); render(); scrollTo(0, 0); return; }
+    const op = e.target.closest("[data-open]"); if (op) { view = "vault"; filter = "all"; selectedId = op.dataset.open; setViewChrome("vault"); renderNav(); render(); clearForm(); showDetail(); $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; return; }
+    return;
+  }
   if (view === "tasks") {
     const row = e.target.closest(".task-row"); if (!row) return;
     const x = tasksList().find(t => t.id === row.dataset.id); if (!x) return;
@@ -956,7 +965,7 @@ function openVaultView() {
   const s = store.get();
   $("vault-name").textContent = s.name || T("Профиль", "Profile");
   $("vault-avatar").textContent = initial(s.name);
-  view = "vault"; setViewChrome("vault");
+  view = "home"; setViewChrome("home");
   clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("note-editor").classList.add("hidden"); $("v-vault").classList.remove("show-detail");
   if (purgeTrash()) persist();
   renderNav(); render(); show("vault"); resetIdle();
@@ -968,7 +977,7 @@ function setViewChrome(v) {
   $("sort").classList.toggle("hidden", v !== "vault");
   $("search").placeholder = v === "notes" ? T("Поиск заметок", "Search notes") : v === "tasks" ? T("Поиск задач", "Search tasks") : T("Поиск по хранилищу", "Search the vault");
   const head = $("ws-head"); if (head) head.classList.toggle("hidden", !(v === "notes" || v === "tasks"));
-  const vv = $("v-vault"); if (vv) { vv.classList.remove("ws-notes", "ws-tasks"); if (v === "notes") vv.classList.add("ws-notes"); else if (v === "tasks") vv.classList.add("ws-tasks"); }
+  const vv = $("v-vault"); if (vv) { vv.classList.remove("ws-notes", "ws-tasks", "ws-home"); if (v === "notes") vv.classList.add("ws-notes"); else if (v === "tasks") vv.classList.add("ws-tasks"); else if (v === "home") vv.classList.add("ws-home"); }
 }
 function setView(v) {
   view = v; selectedId = null; $("search").value = ""; setViewChrome(v);
@@ -985,6 +994,42 @@ $("ws-head") && $("ws-head").addEventListener("click", e => {
   const c = e.target.closest("[data-task-filter]"); if (!c) return;
   taskFilter = c.dataset.taskFilter; renderTasks();
 });
+/* ---------------- Домашний экран «Обзор» (стиль 34) ---------------- */
+function greet() { const h = new Date().getHours(); return h < 6 ? T("Доброй ночи", "Good night") : h < 12 ? T("Доброе утро", "Good morning") : h < 18 ? T("Добрый день", "Good afternoon") : T("Добрый вечер", "Good evening"); }
+function relTime(ts) { if (!ts) return ""; const d = new Date(ts), now = new Date(); if (d.toDateString() === now.toDateString()) return T("сегодня", "today"); if (d.toDateString() === new Date(now - 864e5).toDateString()) return T("вчера", "yesterday"); return d.toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "short" }); }
+function scoreData() {
+  const wp = live().filter(x => x.pass && x.type !== "card");
+  const c = {}; wp.forEach(x => c[x.pass] = (c[x.pass] || 0) + 1);
+  const weak = wp.filter(x => strength(x.pass).score < 3), reused = wp.filter(x => c[x.pass] > 1);
+  const oldp = wp.filter(x => Date.now() - (x.pwChanged || x.created) > 365 * 864e5), leaked = wp.filter(x => (breached.get(x.id) || 0) > 0);
+  const bad = new Set([...weak, ...reused, ...oldp, ...leaked]).size;
+  return { score: wp.length ? Math.round(100 * (1 - bad / wp.length)) : 100, total: live().length, weak: weak.length, leaked: leaked.length };
+}
+function renderHome() {
+  $("note-editor").classList.add("hidden"); $("detail-view").classList.add("hidden"); $("form-card").classList.add("hidden"); $("v-vault").classList.remove("show-detail");
+  const s = store.get(), d = scoreData(), L = live();
+  const dateStr = new Date().toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { weekday: "long", day: "numeric", month: "long" });
+  const name = (s.name || "").trim();
+  const cnt = t => L.filter(x => x.type === t).length;
+  const cats = [{ n: T("Логины", "Logins"), k: cnt("login"), f: "t:login" }, { n: T("Карты", "Cards"), k: cnt("card"), f: "t:card" }, { n: "Wi-Fi", k: cnt("wifi"), f: "t:wifi" }, { n: T("Заметки", "Notes"), k: notesList().length, v: "notes" }];
+  const shapes = ["40% 60% 50% 50%", "60% 40% 30% 70%", "50% 50% 60% 40%", "35% 65% 45% 55%"];
+  const catHtml = cats.map((c, i) => `<a class="dash-cat" ${c.v ? `data-view="${c.v}"` : `data-filter="${c.f}"`}><span class="dash-cat-blob" style="border-radius:${shapes[i]}"></span><span class="dash-cat-top"><span class="dash-cat-n">${esc(c.n)}</span><span class="dash-cat-k">${c.k} ${T("шт.", "items")}</span></span><span class="dash-cat-go">›</span></a>`).join("");
+  const recent = L.filter(x => x.used || x.updated !== x.created).sort((a, b) => Math.max(b.used || 0, b.updated) - Math.max(a.used || 0, a.updated)).slice(0, 5);
+  const recentHtml = recent.length ? recent.map(x => `<a class="dash-rec" data-open="${esc(x.id)}"><span class="dash-rec-ava">${esc(initial(x.title))}</span><span class="dash-rec-n">${esc(x.title)}</span><span class="dash-rec-u">${esc(subline(x))}</span><span class="dash-rec-t">${esc(relTime(Math.max(x.used || 0, x.updated)))}</span></a>`).join("") : `<div class="dash-empty">${T("Пока пусто", "Nothing yet")}</div>`;
+  const stat = (k, v, col) => `<div class="dash-stat"><span class="dash-stat-k">${k}</span><span class="dash-stat-v" style="color:${col}">${v}</span></div>`;
+  $("list").innerHTML = `
+    <section class="dash-hero">
+      <div class="dash-hero-l"><span class="dash-date">${esc(dateStr)}</span><h1 class="dash-greet">${esc(greet())}${name ? ", " + esc(name) : ""}</h1></div>
+      <div class="dash-cards">
+        <div class="dash-score"><div class="dash-score-l"><span class="dash-stat-k">${T("Защита сегодня", "Protection today")}</span><span class="dash-score-v">${d.score} <span>%</span></span></div><span class="dash-dial"><span class="dash-dial-dot"></span></span></div>
+        ${stat(T("Записей", "Entries"), d.total, "#111")}${stat(T("Слабые", "Weak"), d.weak, d.weak ? "#C27A1A" : "#111")}${stat(T("Утечки", "Leaks"), d.leaked, d.leaked ? "#C8333A" : "#111")}
+      </div>
+    </section>
+    <h2 class="dash-h2">${T("Категории", "Categories")}</h2>
+    <div class="dash-cats">${catHtml}</div>
+    <h2 class="dash-h2">${T("Недавние", "Recent")}</h2>
+    <div class="dash-recent">${recentHtml}</div>`;
+}
 
 /* ---- Markdown (безопасный: экранируем, затем расставляем свои теги) ---- */
 function mdInline(s) {
