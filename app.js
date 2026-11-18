@@ -967,11 +967,7 @@ function setViewChrome(v) {
   $("b-new-entry").textContent = v === "notes" ? T("+ Заметка", "+ Note") : v === "tasks" ? T("+ Задача", "+ Task") : T("+ Добавить", "+ Add");
   $("sort").classList.toggle("hidden", v !== "vault");
   $("search").placeholder = v === "notes" ? T("Поиск заметок", "Search notes") : v === "tasks" ? T("Поиск задач", "Search tasks") : T("Поиск по хранилищу", "Search the vault");
-  const head = $("ws-head"); if (head) {
-    const ws = v === "notes" || v === "tasks"; head.classList.toggle("hidden", !ws);
-    if (ws) { $("ws-title").textContent = v === "notes" ? T("Заметки", "Notes") : T("Задачи", "Tasks");
-      $("ws-sub").textContent = v === "notes" ? T("Зашифрованные записи", "Encrypted notes") : T("Личный список дел", "Your private to-do"); }
-  }
+  const head = $("ws-head"); if (head) head.classList.toggle("hidden", !(v === "notes" || v === "tasks"));
   const vv = $("v-vault"); if (vv) { vv.classList.remove("ws-notes", "ws-tasks"); if (v === "notes") vv.classList.add("ws-notes"); else if (v === "tasks") vv.classList.add("ws-tasks"); }
 }
 function setView(v) {
@@ -979,6 +975,16 @@ function setView(v) {
   if (v !== "vault") { $("detail-view").classList.add("hidden"); $("form-card").classList.add("hidden"); }
   renderNav(); render();
 }
+/* Hero-панель раздела в стиле «Дизайн 34»: светлая карточка, крупный заголовок, чипы */
+let taskFilter = "all";
+function wsHero(title, sub, chips) {
+  const h = $("ws-head"); if (!h) return;
+  h.innerHTML = `<section class="ws-hero"><div class="ws-hero-l"><span class="ws-hero-sub">${sub}</span><h1 class="ws-hero-t">${title}</h1></div>${chips ? `<div class="ws-chips">${chips}</div>` : ""}</section>`;
+}
+$("ws-head") && $("ws-head").addEventListener("click", e => {
+  const c = e.target.closest("[data-task-filter]"); if (!c) return;
+  taskFilter = c.dataset.taskFilter; renderTasks();
+});
 
 /* ---- Markdown (безопасный: экранируем, затем расставляем свои теги) ---- */
 function mdInline(s) {
@@ -1025,7 +1031,9 @@ function renderNotes() {
   const list = all.filter(x => (x.title + " " + (x.body || "")).toLowerCase().includes(q)).sort((a, b) => b.updated - a.updated);
   if (!list.some(x => x.id === selectedId)) selectedId = null;
   // запись выбирается кликом — модалка не открывается автоматически
-  $("list-count").textContent = all.length + " " + T(plural(all.length, "заметка", "заметки", "заметок"), all.length === 1 ? "note" : "notes");
+  const cnt = all.length + " " + T(plural(all.length, "заметка", "заметки", "заметок"), all.length === 1 ? "note" : "notes");
+  $("list-count").textContent = cnt;
+  wsHero(T("Заметки", "Notes"), all.length ? cnt : T("Зашифрованы на устройстве", "Encrypted on device"), "");
   $("list").innerHTML = list.length ? list.map(x => `
     <div class="note-row${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
       <b>${esc(x.title || T("Без названия", "Untitled"))}</b>
@@ -1095,9 +1103,17 @@ function renderTasks() {
     (a.done ? 1 : 0) - (b.done ? 1 : 0) || (b.priority || 0) - (a.priority || 0) ||
     ((a.due || "9999") < (b.due || "9999") ? -1 : (a.due || "9999") > (b.due || "9999") ? 1 : 0) || b.created - a.created);
   const done = all.filter(x => x.done).length, pr = PRI();
-  $("list-count").textContent = (all.length - done) + " " + T("активных", "active") + (done ? ` · ${done} ${T("выполнено", "done")}` : "");
+  const subc = (all.length - done) + " " + T("активных", "active") + (done ? ` · ${done} ${T("выполнено", "done")}` : "");
+  $("list-count").textContent = subc;
+  const chip = (k, ru, en) => `<button class="ws-chip${taskFilter === k ? " on" : ""}" data-task-filter="${k}">${T(ru, en)}</button>`;
+  wsHero(T("Задачи", "Tasks"), subc, chip("all", "Все", "All") + chip("today", "Сегодня", "Today") + chip("done", "Выполненные", "Done"));
+  const todayISO = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+  const shown = taskFilter === "done" ? list.filter(x => x.done)
+    : taskFilter === "today" ? list.filter(x => !x.done && x.due === todayISO) : list;
   $("list").innerHTML = `<div class="task-add"><input id="task-new" class="field" maxlength="200" placeholder="${T("Новая задача…", "New task…")}"></div>` +
-    (list.length ? list.map(x => {
+    (shown.length ? shown.map((x, i) => {
+      const divider = x.done && (i === 0 || !shown[i - 1].done) ? `<div class="task-divider">${T("Выполнено", "Done")}</div>` : "";
+      return divider + (() => {
       const p = pr[x.priority || 0], overdue = !x.done && x.due && new Date(x.due + "T23:59") < Date.now();
       return `<div class="task-row${x.done ? " done" : ""}" data-id="${esc(x.id)}">
         <button class="task-check" data-task-toggle aria-label="${T("Готово", "Done")}">${x.done ? "✓" : ""}</button>
@@ -1107,6 +1123,7 @@ function renderTasks() {
         <input type="date" class="task-date" value="${esc(x.due || "")}">
         <button class="ib task-del" data-task-del aria-label="×">✕</button>
       </div>`;
+      })();
     }).join("") : `<div class="empty">${all.length ? T("Ничего не найдено", "Nothing found") : T("Задач пока нет. Напишите задачу и нажмите Enter.", "No tasks yet. Type one and press Enter.")}</div>`);
   const inp = $("task-new");
   inp.onkeydown = async e => {
