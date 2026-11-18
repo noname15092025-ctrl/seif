@@ -967,6 +967,12 @@ function setViewChrome(v) {
   $("b-new-entry").textContent = v === "notes" ? T("+ Заметка", "+ Note") : v === "tasks" ? T("+ Задача", "+ Task") : T("+ Добавить", "+ Add");
   $("sort").classList.toggle("hidden", v !== "vault");
   $("search").placeholder = v === "notes" ? T("Поиск заметок", "Search notes") : v === "tasks" ? T("Поиск задач", "Search tasks") : T("Поиск по хранилищу", "Search the vault");
+  const head = $("ws-head"); if (head) {
+    const ws = v === "notes" || v === "tasks"; head.classList.toggle("hidden", !ws);
+    if (ws) { $("ws-title").textContent = v === "notes" ? T("Заметки", "Notes") : T("Задачи", "Tasks");
+      $("ws-sub").textContent = v === "notes" ? T("Зашифрованные записи", "Encrypted notes") : T("Личный список дел", "Your private to-do"); }
+  }
+  const vv = $("v-vault"); if (vv) { vv.classList.remove("ws-notes", "ws-tasks"); if (v === "notes") vv.classList.add("ws-notes"); else if (v === "tasks") vv.classList.add("ws-tasks"); }
 }
 function setView(v) {
   view = v; selectedId = null; $("search").value = ""; setViewChrome(v);

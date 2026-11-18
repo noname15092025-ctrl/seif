@@ -1249,3 +1249,67 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 /* Профили на входе — менее скруглённые углы */
 .split .profiles .prof{ border-radius:14px !important; }
+
+/* ======================================================================
+   SHUT · Заметки и Задачи — премиальный тёмный вид (референс 2026)
+   ====================================================================== */
+
+/* Крупный заголовок раздела */
+.ws-head{ padding:6px 4px 2px; margin:4px 12px 0; }
+.ws-head.hidden{ display:none !important; }
+.ws-title{ font-family:var(--d-font) !important; font-weight:800 !important; font-size:clamp(30px,6vw,40px) !important;
+  letter-spacing:-.04em !important; line-height:1 !important; color:#fff !important; margin:0 !important; font-style:italic; }
+.ws-sub{ margin:8px 0 0 !important; color:var(--lime) !important; font-size:13px !important; font-weight:600 !important; letter-spacing:.02em !important; }
+
+/* Контейнер списка в режимах заметок/задач — тёмный, без бежа */
+.app.ws-notes #list.rows, .app.ws-tasks #list.rows{ background:transparent !important; padding:8px 12px 24px !important; margin:8px 0 0 !important; }
+
+/* ---- Заметки: тёмные карточки с мягким подъёмом ---- */
+.app.ws-notes #list .note-row{ background:#141416 !important; border:1px solid rgba(255,255,255,.07) !important;
+  border-radius:20px !important; margin:10px 0 !important; padding:16px 18px !important;
+  box-shadow:0 8px 24px -12px rgba(0,0,0,.7) !important; transition:transform .18s ease, border-color .18s ease, background .18s ease; }
+.app.ws-notes #list .note-row:hover{ background:#17171A !important; border-color:rgba(200,226,122,.35) !important; transform:translateY(-2px); }
+.app.ws-notes #list .note-row.active{ background:#17171A !important; border-color:transparent !important;
+  outline:1.5px solid var(--lime) !important; box-shadow:0 0 0 4px rgba(200,226,122,.12), 0 10px 26px -12px rgba(0,0,0,.7) !important; }
+.app.ws-notes #list .note-row b{ color:#fff !important; font-size:16px !important; font-weight:700 !important; letter-spacing:-.01em; }
+.app.ws-notes #list .note-row small{ color:#8A8A90 !important; font-size:13px !important; margin-top:4px !important; }
+
+/* ---- Задачи: поле ввода-пилюля + карточки-строки ---- */
+.app.ws-tasks #list .task-add{ margin:4px 0 14px !important; }
+.app.ws-tasks #list .task-add .field{ height:54px !important; background:#141416 !important; border:1px solid rgba(255,255,255,.08) !important;
+  border-radius:16px !important; color:#fff !important; font-size:16px !important; }
+.app.ws-tasks #list .task-add .field::placeholder{ color:#6E6E74 !important; }
+.app.ws-tasks #list .task-add .field:focus{ border-color:var(--lime) !important; box-shadow:0 0 0 4px rgba(200,226,122,.18) !important; }
+
+.app.ws-tasks #list .task-row{ background:#141416 !important; border:1px solid rgba(255,255,255,.06) !important; border-bottom:1px solid rgba(255,255,255,.06) !important;
+  border-radius:16px !important; margin:8px 0 !important; padding:12px 14px !important; gap:12px !important;
+  transition:transform .16s ease, border-color .16s ease, background .16s ease; }
+.app.ws-tasks #list .task-row:hover{ background:#17171A !important; border-color:rgba(255,255,255,.12) !important; transform:translateY(-1px); }
+.app.ws-tasks #list .task-row.done{ background:#101012 !important; border-color:rgba(255,255,255,.04) !important; }
+
+.app.ws-tasks #list .task-text{ color:#F0F0EE !important; font-size:15.5px !important; font-weight:500 !important; }
+.app.ws-tasks #list .task-row.done .task-text{ color:#6E6E74 !important; text-decoration:line-through !important; }
+
+.app.ws-tasks #list .task-check{ width:24px !important; height:24px !important; min-width:24px !important; border:1.5px solid #3A3A3E !important;
+  border-radius:8px !important; color:#0B0B0C !important; background:transparent !important; }
+.app.ws-tasks #list .task-check:hover{ border-color:var(--lime) !important; }
+.app.ws-tasks #list .task-row.done .task-check{ background:var(--lime) !important; border-color:var(--lime) !important; color:#0B0B0C !important; font-weight:800 !important; }
+
+.app.ws-tasks #list .task-pri{ color:#57575C !important; }
+.app.ws-tasks #list .task-pri.low{ color:#5b8def !important; } .app.ws-tasks #list .task-pri.med{ color:#E0A23C !important; } .app.ws-tasks #list .task-pri.high{ color:var(--lime) !important; }
+
+.app.ws-tasks #list .task-due{ background:#1C1C1E !important; color:#A7A7AD !important; border:1px solid rgba(255,255,255,.08) !important;
+  border-radius:999px !important; padding:3px 11px !important; font-size:12px !important; font-weight:600 !important; }
+.app.ws-tasks #list .task-due.overdue{ background:rgba(200,226,122,.12) !important; color:var(--lime) !important; border-color:rgba(200,226,122,.4) !important; }
+.app.ws-tasks #list .task-cal, .app.ws-tasks #list .task-del{ color:#6E6E74 !important; }
+.app.ws-tasks #list .task-del:hover{ color:#fff !important; }
+
+/* Счётчик под заголовком — тусклый */
+.app.ws-notes .list-sub #list-count, .app.ws-tasks .list-sub #list-count{ color:#6E6E74 !important; font-size:13px !important; }
+
+/* Кнопка «+ Заметка / + Задача» — лаймовая */
+.app.ws-notes #b-new-entry, .app.ws-tasks #b-new-entry{ background:var(--lime) !important; color:#0B0B0C !important; border:0 !important;
+  border-radius:999px !important; font-weight:700 !important; box-shadow:0 8px 24px -10px rgba(200,226,122,.5) !important; }
+
+/* Пустое состояние */
+.app.ws-notes #list .empty, .app.ws-tasks #list .empty{ color:#6E6E74 !important; }
