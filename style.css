@@ -1495,3 +1495,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .app .row .r-title, .app .row b{ color:#F0F0EE !important; }
 .app .row .r-sub, .app .row small{ color:#8E8E93 !important; }
 .app .row .ava{ background:#2E2E33 !important; color:#EDEDEA !important; box-shadow:none !important; }
+
+/* Быстрые фильтры в шапке списка паролей */
+.vault-chips{ display:flex; gap:8px; flex-wrap:wrap; margin:2px 12px 2px; padding:2px 0; }
+.vault-chips.hidden{ display:none !important; }
+.app.ws-home .vault-chips, .app.ws-notes .vault-chips, .app.ws-tasks .vault-chips{ display:none !important; }

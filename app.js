@@ -426,10 +426,9 @@ function genPassword(o) {
     return p.charAt(0).toUpperCase() + p.slice(1) + randInt(100);
   }
   if (mode === "words") {
-    const n = Math.max(3, Math.round(len / 5)), w = [];
-    for (let i = 0; i < n; i++) w.push(WORDS[randInt(2048)]);
-    const ci = randInt(n); w[ci] = w[ci].replace(/^./, c => c.toUpperCase());
-    return w.join("-") + "-" + randInt(100);
+    const n = Math.max(3, Math.min(10, Math.round(len / 5))), w = [], sep = o.sep || "-";
+    for (let i = 0; i < n; i++) { let word = WORDS[randInt(2048)]; w.push(word.replace(/^./, c => c.toUpperCase())); }
+    return w.join(sep) + sep + randInt(100);
   }
   const sets = [];
   if (o.up) sets.push("ABCDEFGHJKLMNPQRSTUVWXYZ");
@@ -452,12 +451,13 @@ const updGenUi = () => {
 $("g-len").oninput = updGenUi; document.querySelectorAll('input[name="gmode"]').forEach(r => r.onchange = updGenUi);
 
 /* ---------------- Страница генератора ---------------- */
-let gpMode = "chars", gpValue = "";
-function gpOpts() { return { mode: gpMode, len: +$("gp-len").value, up: $("gp-up").checked, low: $("gp-low").checked, dig: $("gp-dig").checked, sym: $("gp-sym").checked }; }
+let gpMode = "chars", gpValue = "", gpSep = "-";
+function gpOpts() { return { mode: gpMode, len: +$("gp-len").value, up: $("gp-up").checked, low: $("gp-low").checked, dig: $("gp-dig").checked, sym: $("gp-sym").checked, sep: gpSep }; }
 function gpRun() {
   const o = gpOpts();
-  $("gp-len-v").textContent = gpMode === "words" ? Math.max(3, Math.round(o.len / 5)) + T(" слов", " words") : o.len;
+  $("gp-len-v").textContent = gpMode === "words" ? Math.max(3, Math.min(10, Math.round(o.len / 5))) + T(" слов", " words") : o.len;
   $("gp-sets").classList.toggle("hidden", gpMode !== "chars");
+  $("gp-wordopts").classList.toggle("hidden", gpMode !== "words");
   gpValue = genPassword(o); decryptInto($("gp-out"), gpValue);
   if (gpValue && gpHist[0] !== gpValue) { gpHist.unshift(gpValue); gpHist = gpHist.slice(0, 6); gpRenderHist(); }
   const st = strength(gpValue); $("gp-bar").dataset.s = st.score; $("gp-label").textContent = st.label + " · ~" + st.bits + T(" бит", " bits");
@@ -467,6 +467,7 @@ $("gp-again").onclick = gpRun;
 $("gp-copy").onclick = () => copySecret(gpValue);
 $("gp-len").oninput = gpRun;
 ["gp-up", "gp-low", "gp-dig", "gp-sym"].forEach(id => $(id).onchange = gpRun);
+$("gp-wordopts").onclick = e => { const b = e.target.closest("[data-sep]"); if (!b) return; gpSep = b.dataset.sep; $("gp-wordopts").querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === b)); gpRun(); };
 $("gp-mode").onclick = e => {
   const b = e.target.closest("[data-mode]"); if (!b) return; gpMode = b.dataset.mode;
   $("gp-mode").querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === b));
@@ -704,17 +705,26 @@ $("b-add").onclick = async () => {
   } else {
     id = b64(rand(9)); entries.push({ ...base, id, created: now, updated: now, pwChanged: now });
   }
-  await persist(); clearForm(); selectedId = id; renderNav(); render(); showDetail(); toast(T("Сохранено", "Saved"));
+  await persist(); formDirty = false; clearForm(); selectedId = id; renderNav(); render(); showDetail(); toast(T("Сохранено", "Saved"));
 };
-$("b-edit-cancel").onclick = () => { clearForm(); showDetail(); };
-function showForm() { $("detail-view").classList.add("hidden"); $("form-card").classList.remove("hidden"); $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; setTimeout(() => $("e-title").focus(), 50); }
+$("b-edit-cancel").onclick = () => closeForm();
+let formDirty = false;
+function showForm() { $("detail-view").classList.add("hidden"); $("form-card").classList.remove("hidden"); $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; formDirty = false; setTimeout(() => $("e-title").focus(), 50); }
+$("form-card").addEventListener("input", () => formDirty = true);
+$("form-card").addEventListener("change", () => formDirty = true);
+async function closeForm() {
+  if (!$("form-card").classList.contains("hidden") && formDirty) {
+    if (!await confirmBox(T("Закрыть без сохранения? Изменения не сохранятся.", "Close without saving? Your changes will be lost."), T("Закрыть", "Close"), true)) return false;
+  }
+  formDirty = false; clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail"); renderDetail(); return true;
+}
 function showDetail() { $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); renderDetail(); }
 $("b-new-entry").onclick = () => { if (view === "notes") return newNote(); if (view === "tasks") return $("task-new")?.focus(); clearForm(); showForm(); };
 if ($("b-menu")) $("b-menu").onclick = () => $("v-vault").classList.toggle("nav-open");
 $("v-vault").addEventListener("click", e => { if (e.target.classList.contains("nav-backdrop")) $("v-vault").classList.remove("nav-open"); });
 
-$("detail").addEventListener("click", e => { if (e.target === $("detail")) { clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail"); } });
-document.addEventListener("click", e => { if (e.target.closest("[data-detail-back]")) { clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail"); renderDetail(); } });
+$("detail").addEventListener("click", e => { if (e.target === $("detail")) { if (!$("form-card").classList.contains("hidden")) closeForm(); else { $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail"); } } });
+document.addEventListener("click", e => { if (e.target.closest("[data-detail-back]")) { closeForm(); } });
 function startEdit(x) {
   editingId = x.id; formType = x.type;
   for (const [k, id] of Object.entries(FIELDS)) $(id).value = x[k] || "";
@@ -807,6 +817,12 @@ function render() {
   if (view === "notes") return renderNotes();
   if (view === "tasks") return renderTasks();
   $("note-editor").classList.add("hidden");
+  const vc = $("vault-chips");
+  if (vc) {
+    vc.classList.remove("hidden");
+    const chips = [["all", T("Все", "All")], ["fav", T("Избранное", "Favorites")], ["attention", T("Внимание", "Attention")], ["recent", T("Недавние", "Recent")]];
+    vc.innerHTML = chips.map(([k, l]) => `<button class="ws-chip${filter === k ? " on" : ""}" data-chip="${esc(k)}">${esc(l)}</button>`).join("");
+  }
   const list = visibleList();
   if (!list.some(x => x.id === selectedId)) selectedId = null;
   // запись выбирается кликом — модалка не открывается автоматически
@@ -826,6 +842,7 @@ function render() {
 }
 function plural(n, one, few, many) { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; }
 $("top-brand") && ($("top-brand").onclick = e => { e.preventDefault(); $("search").value = ""; $("v-vault").classList.remove("nav-open"); setView("home"); scrollTo(0, 0); });
+$("vault-chips") && ($("vault-chips").onclick = e => { const b = e.target.closest("[data-chip]"); if (!b) return; filter = b.dataset.chip; renderNav(); render(); scrollTo(0, 0); });
 $("search").oninput = () => { if (view === "home" && $("search").value) { view = "vault"; filter = "all"; setViewChrome("vault"); renderNav(); } render(); };
 $("sort").onchange = render;
 $("list").onclick = async e => {
@@ -980,6 +997,7 @@ function setViewChrome(v) {
   $("sort").classList.toggle("hidden", v !== "vault");
   $("search").placeholder = v === "notes" ? T("Поиск заметок", "Search notes") : v === "tasks" ? T("Поиск задач", "Search tasks") : T("Поиск по хранилищу", "Search the vault");
   const head = $("ws-head"); if (head) head.classList.toggle("hidden", !(v === "notes" || v === "tasks"));
+  const vc = $("vault-chips"); if (vc) vc.classList.toggle("hidden", v !== "vault");
   const vv = $("v-vault"); if (vv) { vv.classList.remove("ws-notes", "ws-tasks", "ws-home"); if (v === "notes") vv.classList.add("ws-notes"); else if (v === "tasks") vv.classList.add("ws-tasks"); else if (v === "home") vv.classList.add("ws-home"); }
 }
 function setView(v) {
@@ -1533,10 +1551,13 @@ if ($("set-stay")) {
 addEventListener("keydown", e => {
   const ae = document.activeElement, inField = ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable);
   const inVault = !$("v-vault").classList.contains("hidden");
-  if (e.key === "Escape") { if ($("v-vault").classList.contains("show-detail")) { $("v-vault").classList.remove("show-detail"); } return; }
+  if (e.key === "Escape") { if (!$("form-card").classList.contains("hidden")) { closeForm(); } else if ($("v-vault").classList.contains("show-detail")) { $("v-vault").classList.remove("show-detail"); } return; }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && inVault) { e.preventDefault(); setView("home"); $("search").value = ""; $("search").focus(); return; }
   if (inField) return;
-  if (e.key === "/" && inVault && view === "vault") { e.preventDefault(); $("search").focus(); }
-  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && inVault && view === "vault") { e.preventDefault(); $("b-new-entry").click(); }
+  if (e.key === "/" && inVault) { e.preventDefault(); $("search").focus(); }
+  else if (e.key.toLowerCase() === "n" && inVault && view === "vault") { e.preventDefault(); $("b-new-entry").click(); }
+  else if (e.key.toLowerCase() === "g" && inVault) { e.preventDefault(); $("b-generator").click(); }
+  else if (e.key === "?" && inVault) { e.preventDefault(); toast(T("/ поиск · N новая · G генератор · Ctrl K на главную · Esc закрыть", "/ search · N new · G generator · Ctrl K home · Esc close")); }
 });
 
 /* Генератор: пресеты и история */

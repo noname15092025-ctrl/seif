@@ -10,10 +10,10 @@
 <link rel="icon" href="shield.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=39">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=66">
+<link rel="stylesheet" href="style.css?v=67">
 <script src="wordlist.js" defer></script>
 <script src="argon2.js" defer></script>
-<script src="app.js?v=66" defer></script>
+<script src="app.js?v=67" defer></script>
 </head>
 <body>
 <svg width="0" height="0" class="sprite" aria-hidden="true">
@@ -236,6 +236,7 @@
       <button id="b-new-entry" data-en="+ Add">+ Добавить</button>
     </div>
     <div id="ws-head" class="ws-head hidden"><h1 id="ws-title" class="ws-title"></h1><p id="ws-sub" class="ws-sub"></p></div>
+    <div id="vault-chips" class="vault-chips hidden"></div>
     <div class="list-sub">
       <span id="list-count" class="muted"></span>
       <select id="sort" class="field slim">
@@ -406,6 +407,12 @@
       <label class="chk"><input type="checkbox" id="gp-low" checked> a–z</label>
       <label class="chk"><input type="checkbox" id="gp-dig" checked> 0–9</label>
       <label class="chk"><input type="checkbox" id="gp-sym" checked> !@#</label>
+    </div>
+    <div class="tabs hidden" id="gp-wordopts" aria-label="Разделитель">
+      <button class="tab active" data-sep="-" type="button">тире</button>
+      <button class="tab" data-sep="." type="button" data-en="dot">точка</button>
+      <button class="tab" data-sep=" " type="button" data-en="space">пробел</button>
+      <button class="tab" data-sep="_" type="button">_</button>
     </div>
     <p class="muted small" data-en="Generated passwords are not saved anywhere. Copy one and paste it into an entry or a website.">Сгенерированные пароли никуда не сохраняются. Скопируйте пароль и вставьте его в запись или на сайт.</p>
   </div>
