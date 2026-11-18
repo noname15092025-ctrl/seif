@@ -1421,3 +1421,77 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 @media (max-width:860px){ .dash-cats{ grid-template-columns:repeat(2,1fr); } }
 @media (max-width:560px){ .dash-rec{ grid-template-columns:40px 1fr auto; } .dash-rec-u{ display:none; } }
+
+/* ======================================================================
+   SHUT · Редактор заметки — тёмно-серая карточка в общем стиле
+   ====================================================================== */
+.app .detail > #note-editor{ background:#1C1C1E !important; border:1px solid #2A2A2E !important; border-radius:30px !important;
+  color:#F0F0EE !important; padding:20px 24px !important; box-shadow:0 40px 120px -20px rgba(0,0,0,.7) !important; }
+
+/* Верхняя панель */
+.note-ed .note-bar{ align-items:center; gap:10px; margin-bottom:16px; }
+.app .detail #note-editor .ib.back{ width:44px !important; height:44px !important; min-width:44px; border-radius:22px !important;
+  background:#2A2A2E !important; color:#fff !important; border:0 !important; display:inline-flex !important; align-items:center; justify-content:center; }
+.app .detail #note-editor .ib.back .ic{ stroke:#fff; }
+.note-ed .note-modes{ margin:0 auto !important; background:#242428 !important; border:0 !important; border-radius:22px !important; padding:4px !important; gap:4px; }
+.app .detail #note-editor .seg{ height:36px !important; padding:0 16px !important; border-radius:18px !important; background:transparent !important; color:#9A9AA2 !important; font-weight:500; }
+.app .detail #note-editor .seg.on{ background:#3A3A40 !important; color:#fff !important; font-weight:600 !important; }
+.app .detail #note-editor .seg-done{ height:44px !important; padding:0 22px !important; border-radius:22px !important; background:var(--lime) !important; color:#111 !important; border:0 !important; font-weight:600 !important; }
+.app .detail #note-editor .danger-text{ height:44px !important; padding:0 14px !important; border-radius:22px !important; background:none !important; color:#E5706F !important; border:0 !important; font-weight:600 !important; width:auto !important; }
+.app .detail #note-editor .danger-text:hover{ background:rgba(229,112,111,.12) !important; }
+
+/* Заголовок и тело — на тёмной вставке */
+.app .detail #note-editor .note-title{ background:#242428 !important; border:0 !important; color:#fff !important;
+  border-radius:22px 22px 0 0 !important; font-size:32px !important; font-weight:700 !important; padding:22px 26px 8px !important; margin:0 !important; }
+.app .detail #note-editor .note-title::placeholder{ color:#6E6E78 !important; }
+.app .detail #note-editor .note-body, .app .detail #note-editor .note-view.md{ background:#242428 !important; color:#D6D6D2 !important;
+  border-radius:0 0 22px 22px !important; padding:4px 26px 24px !important; font-size:17px !important; line-height:1.65 !important; margin:0 !important; }
+.app .detail #note-editor .note-body::placeholder{ color:#6E6E78 !important; }
+.app .detail #note-editor .note-view.md{ min-height:30vh; }
+.app .detail #note-editor .note-view.md h1,.app .detail #note-editor .note-view.md h2,.app .detail #note-editor .note-view.md h3,.app .detail #note-editor .note-view.md strong{ color:#fff !important; }
+.app .detail #note-editor .note-view.md a{ color:var(--lime) !important; }
+.app .detail #note-editor .note-view.md code,.app .detail #note-editor .note-view.md pre{ background:#15151A !important; color:#E6E6E2 !important; }
+
+/* Футер «Изменено …» */
+.app .detail #note-editor .note-foot{ border-top:0 !important; margin-top:14px !important; padding:0 6px !important; }
+.app .detail #note-editor .note-foot .muted{ color:#8A8A90 !important; }
+
+/* ======================================================================
+   SHUT · Значок + SHUT вверху списка (возврат на «Обзор»)
+   ====================================================================== */
+.top-brand{ display:inline-flex; align-items:center; gap:9px; height:52px; padding:0 14px 0 10px; margin-right:2px;
+  border-radius:26px; background:transparent; color:#fff; text-decoration:none; font-weight:700; font-size:18px; letter-spacing:.5px; flex:0 0 auto; }
+.top-brand:hover{ background:rgba(255,255,255,.06); color:#fff; }
+.top-brand .ic.accent{ width:24px; height:24px; fill:var(--lime) !important; stroke:none !important; }
+@media (max-width:620px){ .top-brand span{ display:none; } .top-brand{ padding:0 10px; } }
+
+/* ======================================================================
+   SHUT · «Всё белое → тёмно-серое» (по просьбе: убрать белые панели)
+   ====================================================================== */
+/* Дашборд «Обзор» */
+.dash-hero{ background:#1E1E21 !important; color:#F0F0EE !important; }
+.dash-date{ color:#9A9AA2 !important; }
+.dash-greet{ color:#fff !important; }
+.dash-score, .dash-stat{ background:#27272B !important; box-shadow:none !important; border:1px solid #303036 !important; }
+.dash-stat-k{ color:#9A9AA2 !important; }
+.dash-score-v{ color:#fff !important; }
+.dash-score-v span{ color:#9A9AA2 !important; }
+.dash-dial{ background:radial-gradient(circle, #EDEDED 0%, #55555A 55%, rgba(255,255,255,0) 72%) !important; }
+.dash-dial-dot{ background:#15151A !important; border-color:#EDEDED !important; }
+.dash-rec-ava{ background:#2E2E33 !important; color:#EDEDEA !important; }
+
+/* Hero заметок/задач */
+.ws-hero{ background:#1E1E21 !important; color:#fff !important; }
+.ws-hero-t{ color:#fff !important; }
+.ws-chip{ background:#27272B !important; color:#A7A7AD !important; }
+.ws-chip:hover{ background:#303036 !important; }
+.ws-chip.on{ background:var(--lime) !important; color:#111 !important; }
+
+/* Список паролей — тёмно-серые карточки вместо белых */
+.app #list.rows{ background:#141416 !important; }
+.app .row{ background:#1C1C1E !important; color:#F0F0EE !important; box-shadow:none !important; border:1px solid #242428 !important; }
+.app .row:hover{ background:#202023 !important; box-shadow:none !important; }
+.app .row.active{ background:#202023 !important; outline:1.5px solid var(--lime) !important; border-color:transparent !important; }
+.app .row .r-title, .app .row b{ color:#F0F0EE !important; }
+.app .row .r-sub, .app .row small{ color:#8E8E93 !important; }
+.app .row .ava{ background:#2E2E33 !important; color:#EDEDEA !important; box-shadow:none !important; }

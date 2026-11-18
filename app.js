@@ -823,6 +823,7 @@ function render() {
   if ($("form-card").classList.contains("hidden")) renderDetail();
 }
 function plural(n, one, few, many) { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; }
+$("top-brand") && ($("top-brand").onclick = e => { e.preventDefault(); $("search").value = ""; $("v-vault").classList.remove("nav-open"); setView("home"); scrollTo(0, 0); });
 $("search").oninput = () => { if (view === "home" && $("search").value) { view = "vault"; filter = "all"; setViewChrome("vault"); renderNav(); } render(); };
 $("sort").onchange = render;
 $("list").onclick = async e => {
@@ -1022,7 +1023,7 @@ function renderHome() {
       <div class="dash-hero-l"><span class="dash-date">${esc(dateStr)}</span><h1 class="dash-greet">${esc(greet())}${name ? ", " + esc(name) : ""}</h1></div>
       <div class="dash-cards">
         <div class="dash-score"><div class="dash-score-l"><span class="dash-stat-k">${T("Защита сегодня", "Protection today")}</span><span class="dash-score-v">${d.score} <span>%</span></span></div><span class="dash-dial"><span class="dash-dial-dot"></span></span></div>
-        ${stat(T("Записей", "Entries"), d.total, "#111")}${stat(T("Слабые", "Weak"), d.weak, d.weak ? "#C27A1A" : "#111")}${stat(T("Утечки", "Leaks"), d.leaked, d.leaked ? "#C8333A" : "#111")}
+        ${stat(T("Записей", "Entries"), d.total, "#F0F0EE")}${stat(T("Слабые", "Weak"), d.weak, d.weak ? "#E8A54B" : "#F0F0EE")}${stat(T("Утечки", "Leaks"), d.leaked, d.leaked ? "#E5706F" : "#F0F0EE")}
       </div>
     </section>
     <h2 class="dash-h2">${T("Категории", "Categories")}</h2>
