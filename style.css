@@ -1329,3 +1329,48 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .app.ws-notes #b-new-entry, .app.ws-tasks #b-new-entry{ background:var(--lime) !important; color:#111 !important; border:0 !important;
   border-radius:26px !important; height:52px !important; font-weight:600 !important; box-shadow:none !important; }
 .app.ws-notes #list .empty, .app.ws-tasks #list .empty{ color:#6E6E74 !important; }
+
+/* ======================================================================
+   SHUT · Оболочка в стиле «Дизайн 34» — сайдбар (общий для всех экранов)
+   ====================================================================== */
+/* Плавающая оливковая карточка со свечением */
+@media (min-width:761px){
+  .app .side{ margin:12px 0 12px 12px !important; border-radius:32px !important; border:1px solid rgba(255,255,255,.06) !important;
+    padding:22px 14px !important; position:relative; overflow:hidden; }
+  .app .side::before{ content:""; position:absolute; left:-80px; bottom:120px; width:300px; height:260px;
+    border-radius:45% 55% 50% 50%; background:var(--lime); filter:blur(60px); opacity:.32; pointer-events:none; z-index:0; }
+  .app .side > *{ position:relative; z-index:1; }
+}
+/* Бренд */
+.app .side-brand{ font-size:22px !important; letter-spacing:1px !important; padding:0 8px 14px !important; color:#fff !important; line-height:1 !important; }
+.app .side-brand .ic.accent{ fill:var(--lime) !important; stroke:none !important; }
+
+/* Профиль-карточка наверх */
+.app .side-brand{ order:0; }
+.app .side-foot{ order:1; margin:0 0 10px !important; padding:12px !important; border-top:0 !important;
+  border:1px solid rgba(255,255,255,.14) !important; background:rgba(255,255,255,.07) !important; border-radius:24px !important;
+  display:flex !important; align-items:center; gap:10px; }
+.app .side #nav, .app .side .nav{ order:2; }
+.app .side-tools{ order:3; }
+.app .side-foot .avatar{ width:44px !important; height:44px !important; border-radius:22px !important; margin:0 !important;
+  background:var(--lime) !important; color:#111 !important; font-weight:600 !important; font-size:18px !important; }
+.app .side-foot .who{ flex:1; font-size:15px; font-weight:600; color:#fff; }
+.app .side-foot .who a{ font-size:13px; color:var(--lime) !important; font-weight:500; }
+.app .side-foot [data-theme-toggle]{ display:none !important; }
+.app .side-foot .ib{ min-width:36px; height:36px; border-radius:18px; border:1px solid rgba(255,255,255,.2); background:none; color:#E9ECE0; }
+.app .side-foot .ib:hover{ background:rgba(255,255,255,.08); }
+
+/* Пункты меню — пилюли 44px */
+.app .side .nav-item{ height:44px !important; min-height:44px; padding:0 14px !important; border-radius:22px !important;
+  display:flex; align-items:center; gap:12px; font-size:15px !important; font-weight:500 !important; color:#E9ECE0 !important; }
+.app .side .nav-item:hover:not(.active){ background:rgba(255,255,255,.06) !important; color:#fff !important; }
+.app .side .nav-item.active{ background:#F4F4F5 !important; color:#111 !important; font-weight:600 !important; }
+.app .side .nav-item span{ color:#C9CFB8 !important; opacity:.6; font-size:13px !important; }
+.app .side .nav-item.active span{ color:#6E6E74 !important; opacity:1; }
+.app .side-tools .nav-item{ font-size:15px !important; }
+
+/* Заголовки секций */
+.app .side .nav-head{ color:#9AA387 !important; letter-spacing:1.5px !important; font-size:12px !important; font-weight:600 !important;
+  text-transform:uppercase; padding:14px 14px 6px !important; }
+.app .side .nav-sec .nav-head{ border-radius:20px; }
+.app .side .nav-head .chev{ stroke:#9AA387; }
