@@ -645,7 +645,8 @@ const TYPE_LABELS = () => ({
   card: { title: T("Название карты (банк)", "Card name (bank)"), login: T("Владелец карты", "Cardholder"), pass: T("PIN-код", "PIN") },
   wifi: { title: T("Название сети (SSID)", "Network name (SSID)"), pass: T("Пароль Wi-Fi", "Wi-Fi password") },
   doc: { title: T("Название", "Name") }, crypto: { title: T("Название кошелька", "Wallet name") },
-  key: { title: T("Название", "Name") }, bank: { title: T("Банк", "Bank") }, contact: { title: T("Имя", "Name") }
+  key: { title: T("Название", "Name") }, bank: { title: T("Банк", "Bank") }, contact: { title: T("Имя", "Name") },
+  custom: { title: T("Название записи", "Entry name") }
 });
 function applyTypeLabels() {
   const L = TYPE_LABELS()[formType];
@@ -657,7 +658,7 @@ function applyTypeLabels() {
   $("form-title").textContent = editingId ? T("Редактирование", "Editing") : T("Новая запись", "New entry");
   $("b-add").textContent = T("Сохранить", "Save");
 }
-document.querySelectorAll("#type-tabs .tab").forEach(b => b.onclick = () => { formType = b.dataset.type; applyTypeLabels(); });
+document.querySelectorAll("#type-tabs .tab").forEach(b => b.onclick = () => { formType = b.dataset.type; applyTypeLabels(); if (formType === "custom" && !$("cf-list").children.length) cfAddRow(); });
 const FIELDS = { title: "e-title", login: "e-login", url: "e-url", pass: "e-pass", totp: "e-totp", category: "e-cat", note: "e-note", number: "e-number", exp: "e-exp", cvv: "e-cvv" };
 function clearForm() {
   Object.values(FIELDS).forEach(id => $(id).value = ""); $("e-fav").checked = false; $("e-extra").innerHTML = ""; $("cf-list").innerHTML = "";
@@ -781,6 +782,7 @@ const subline = x => {
     case "key": return f.product || TYPE_NAME("key");
     case "bank": return f.account ? "•••• " + f.account.replace(/\s/g, "").slice(-4) : TYPE_NAME("bank");
     case "contact": return f.relation || f.phone || f.email || TYPE_NAME("contact");
+    case "custom": return (x.custom && x.custom[0] && x.custom[0].k) || TYPE_NAME("custom");
     default: return x.login || (x.url || "").replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "") || TYPE_NAME(x.type);
   }
 };
@@ -1300,7 +1302,7 @@ function buildXlsx(rows, widths) {
   ]);
 }
 const TYPE_NAME = t => ({ login: T("Пароль", "Password"), note: T("Заметка", "Note"), card: T("Карта", "Card"), wifi: "Wi-Fi", doc: T("Документ", "Document"),
-  crypto: T("Криптокошелёк", "Crypto wallet"), key: T("Ключ", "Key"), bank: T("Счёт", "Bank account"), contact: T("Контакт", "Contact") }[t] || t);
+  crypto: T("Криптокошелёк", "Crypto wallet"), key: T("Ключ", "Key"), bank: T("Счёт", "Bank account"), contact: T("Контакт", "Contact"), custom: T("Своё", "Custom") }[t] || t);
 /* Выгрузка: выбор записей и колонок */
 const EX_COLS = () => [
   ["type", T("Тип", "Type"), 10, x => TYPE_NAME(x.type)], ["title", T("Название", "Name"), 28, x => x.title],
