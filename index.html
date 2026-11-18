@@ -2,7 +2,7 @@
 <html lang="ru" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.pwnedpasswords.com https://*.workers.dev; base-uri 'none'; form-action 'none'; frame-src 'none'; child-src 'none'; object-src 'none'; media-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.pwnedpasswords.com https://*.workers.dev; base-uri 'none'; form-action 'none'; frame-src 'none'; child-src 'none'; object-src 'none'; media-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0A0A0A">
@@ -10,10 +10,10 @@
 <link rel="icon" href="shield.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=39">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=67">
+<link rel="stylesheet" href="style.css?v=68">
 <script src="wordlist.js" defer></script>
 <script src="argon2.js" defer></script>
-<script src="app.js?v=67" defer></script>
+<script src="app.js?v=68" defer></script>
 </head>
 <body>
 <svg width="0" height="0" class="sprite" aria-hidden="true">
@@ -320,6 +320,10 @@
       <label data-en="Custom fields">Свои поля</label>
       <div id="cf-list"></div>
       <button class="ghost cf-add" id="b-cf-add" type="button" data-en="+ Add field">+ Добавить поле</button>
+      <label data-en="Attachments">Вложения</label>
+      <div id="att-list" class="att-list"></div>
+      <label class="ghost cf-add att-add" id="b-att-add"><span data-en="+ Attach file">+ Прикрепить файл</span><input type="file" id="e-att" multiple hidden></label>
+      <p class="muted small" data-en="Files are encrypted together with the entry. Up to 1 MB per file.">Файлы шифруются вместе с записью. До 1 МБ на файл.</p>
       <label class="chk"><input type="checkbox" id="e-fav"> <span data-en="Add to favorites">В избранное</span></label>
       <div class="err" id="form-err"></div>
       <div class="d-btns">

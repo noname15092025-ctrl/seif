@@ -663,6 +663,7 @@ document.querySelectorAll("#type-tabs .tab").forEach(b => b.onclick = () => { fo
 const FIELDS = { title: "e-title", login: "e-login", url: "e-url", pass: "e-pass", totp: "e-totp", category: "e-cat", note: "e-note", number: "e-number", exp: "e-exp", cvv: "e-cvv" };
 function clearForm() {
   Object.values(FIELDS).forEach(id => $(id).value = ""); $("e-fav").checked = false; $("e-extra").innerHTML = ""; $("cf-list").innerHTML = "";
+  formAtt = []; renderAttList();
   editingId = null; $("form-err").textContent = ""; $("gen-opts").classList.add("hidden"); meterEntry(); applyTypeLabels();
 }
 // Свои (произвольные) поля записи — любые пары «название: значение», можно пометить секретными
@@ -676,6 +677,44 @@ function cfAddRow(k = "", v = "", sec = false) {
 $("b-cf-add").onclick = () => cfAddRow();
 function collectCustom() {
   return [...$("cf-list").querySelectorAll(".cf-row")].map(r => ({ k: r.querySelector(".cf-k").value.trim(), v: r.querySelector(".cf-v").value, s: r.querySelector(".cf-s").checked })).filter(c => c.k || c.v.trim());
+}
+// Вложения: файлы хранятся в записи как data-URL и шифруются вместе со всем остальным
+let formAtt = [];
+const ATT_MAX = 1024 * 1024;
+function fmtSize(n) { return n < 1024 ? n + " B" : n < 1048576 ? (n / 1024).toFixed(0) + " KB" : (n / 1048576).toFixed(1) + " MB"; }
+function renderAttList() {
+  const el = $("att-list"); if (!el) return;
+  el.innerHTML = formAtt.map((a, i) => `<div class="att-row"><span class="att-ic">${a.t && a.t.startsWith("image/") ? "🖼" : "📎"}</span><span class="att-n">${esc(a.n)}</span><span class="att-s">${fmtSize(a.s)}</span><button class="ib att-del" type="button" data-att-del="${i}" aria-label="×">✕</button></div>`).join("");
+}
+if ($("e-att")) $("e-att").onchange = async e => {
+  for (const f of [...e.target.files]) {
+    if (f.size > ATT_MAX) { toast(T("Файл больше 1 МБ: ", "File over 1 MB: ") + f.name); continue; }
+    const d = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f); });
+    formAtt.push({ n: f.name, t: f.type || "application/octet-stream", s: f.size, d }); formDirty = true;
+  }
+  e.target.value = ""; renderAttList();
+};
+if ($("att-list")) $("att-list").onclick = e => { const b = e.target.closest("[data-att-del]"); if (!b) return; formAtt.splice(+b.dataset.attDel, 1); formDirty = true; renderAttList(); };
+function attBytes(a) { const b64 = a.d.split(",")[1]; const bin = atob(b64); const u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return u8; }
+function attDownload(a) { try { const url = URL.createObjectURL(new Blob([attBytes(a)], { type: a.t })); const el = document.createElement("a"); el.href = url; el.download = a.n; el.click(); setTimeout(() => URL.revokeObjectURL(url), 4000); } catch { toast(T("Не удалось открыть файл", "Could not open file")); } }
+let detailBlobUrls = [];
+function attBlobUrl(a) { try { const url = URL.createObjectURL(new Blob([attBytes(a)], { type: a.t })); detailBlobUrls.push(url); return url; } catch { return ""; } }
+// Шаринг одной записи самодостаточной ссылкой: шифротекст и ключ живут в #-фрагменте,
+// сервер их никогда не видит и ничего не хранит (zero-knowledge, без бэкенда). Вложения не включаются.
+async function makeShareLink(x, expMs) {
+  const kb = rand(32);
+  const sk = await C.importKey("raw", kb, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+  const payload = { t: x.title, ty: x.type, login: x.login || "", url: x.url || "", pass: x.pass || "", totp: x.totp || "", note: x.note || "", f: x.f || null, custom: x.custom || null, exp: expMs ? Date.now() + expMs : 0 };
+  const box = await seal(sk, enc.encode(JSON.stringify(payload)));
+  const data = btoa(JSON.stringify({ k: b64(kb), iv: box.iv, ct: box.ct })).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return new URL("s.html", location.href).href + "#" + data;
+}
+async function shareFlow(x) {
+  const exp = await modal(T("Срок действия ссылки:", "Link expires in:"), [["1 " + T("час", "hour"), 36e5], [T("1 день", "1 day"), 864e5], [T("7 дней", "7 days"), 7 * 864e5, "ghost"], [T("Отмена", "Cancel"), null, "ghost"]]);
+  if (!exp) return;
+  const link = await makeShareLink(x, exp);
+  try { await navigator.clipboard.writeText(link); toast(T("Ссылка скопирована", "Link copied")); } catch {}
+  await alertBox(T("Ссылка скопирована. Любой, у кого есть ссылка, увидит эту запись до истечения срока. Отправьте её по защищённому каналу.", "Link copied. Anyone with the link can view this entry until it expires. Send it over a secure channel.") + "\n\n" + link);
 }
 function safeUrl(u) {
   u = (u || "").trim(); if (!u) return "";
@@ -695,6 +734,7 @@ $("b-add").onclick = async () => {
   if (formType === "login") base.url = safeUrl(d.url);
   if (EXTRA[formType]) { base.f = {}; EXTRA[formType].forEach(f => { const v = $("ex-" + f.k).value; if (v.trim()) base.f[f.k] = f.s || f.m ? v : v.trim(); }); }
   const custom = collectCustom(); if (custom.length) base.custom = custom;
+  if (formAtt.length) base.att = formAtt;
   let id;
   if (editingId) {
     const i = entries.findIndex(x => x.id === editingId), old = entries[i]; id = old.id;
@@ -731,6 +771,7 @@ function startEdit(x) {
   $("e-fav").checked = !!x.fav; meterEntry();
   $("e-extra").innerHTML = ""; applyTypeLabels(); renderExtraForm(x.f || {});
   $("cf-list").innerHTML = ""; (x.custom || []).forEach(c => cfAddRow(c.k, c.v, c.s));
+  formAtt = x.att ? x.att.map(a => ({ ...a })) : []; renderAttList();
   showForm();
 }
 
@@ -882,6 +923,7 @@ function renderDetail() {
     box.innerHTML = `<div class="d-empty"><svg class="ic accent"><use href="#i-logo"/></svg><div>${entries.length ? T("Выберите запись слева", "Select an entry") : T("Добавьте первую запись — она будет зашифрована на этом устройстве.", "Add your first entry — it will be encrypted on this device.")}</div>${entries.length ? "" : `<button data-act="new">${T("+ Добавить", "+ Add")}</button>`}</div>`;
     return;
   }
+  detailBlobUrls.forEach(u => URL.revokeObjectURL(u)); detailBlobUrls = [];
   const show = T("Показать", "Show"), copy = T("Скопировать", "Copy"), dots = '<span class="dots">••••••••••••</span>';
   const changed = new Date(x.updated || x.created).toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "long", year: "numeric" });
   let h = `<div class="d-head"><button class="ib back" data-detail-back aria-label="${T("Назад", "Back")}"><svg class="ic"><use href="#i-back"/></svg></button>
@@ -912,6 +954,13 @@ function renderDetail() {
     if (c.s) h += field(esc(c.k), `<span data-secret="c:${i}">${dots}</span>`, ib("show", "i-eye", show) + ib("copy-c:" + i, "i-copy", copy));
     else h += field(esc(c.k), esc(c.v), ib("copy-c:" + i, "i-copy", copy));
   });
+  if (x.att && x.att.length) {
+    h += `<p class="d-label">${T("Вложения", "Attachments")}</p>`;
+    x.att.forEach((a, i) => {
+      const isImg = a.t && a.t.startsWith("image/");
+      h += `<div class="d-field att-view">${isImg ? `<img class="att-img" src="${attBlobUrl(a)}" alt="${esc(a.n)}">` : `<span class="att-ic">📎</span>`}<span class="att-n">${esc(a.n)}</span><span class="att-s">${fmtSize(a.s)}</span>${ib("att:" + i, "i-copy", T("Скачать", "Download"))}</div>`;
+    });
+  }
   if (x.history && x.history.length) h += `<details class="hist"><summary>${T("История паролей", "Password history")} (${x.history.length})</summary>` +
     x.history.map((hh, i) => `<div class="d-field"><span data-secret="h:${i}">${dots}</span><small>${esc(new Date(hh.at).toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU"))}</small>${ib("show", "i-eye", show)}${ib("copy-h:" + i, "i-copy", copy)}</div>`).join("") + `</details>`;
   if (x.category) h += `<span class="d-tag">${esc(x.category)}</span>`;
@@ -919,7 +968,7 @@ function renderDetail() {
     h += `<p class="trash-note">${T("Запись в корзине. Она удалится навсегда ", "This entry is in the trash. It will be deleted for good on ")}${new Date(x.deletedAt + TRASH_DAYS * 864e5).toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "long" })}.</p>` +
       `<div class="d-btns"><button data-act="restore">${T("Восстановить", "Restore")}</button><button class="danger" data-act="purge">${T("Удалить навсегда", "Delete forever")}</button></div>`;
   } else
-  h += `<div class="d-btns"><button class="ghost" data-act="edit">${T("Изменить", "Edit")}</button><button class="ghost" data-act="fav">${x.fav ? T("Убрать из избранного", "Unfavorite") : T("В избранное", "Favorite")}</button><button class="danger" data-act="del">${T("В корзину", "Move to trash")}</button></div>`;
+  h += `<div class="d-btns"><button class="ghost" data-act="edit">${T("Изменить", "Edit")}</button><button class="ghost" data-act="share">${T("Поделиться", "Share")}</button><button class="ghost" data-act="fav">${x.fav ? T("Убрать из избранного", "Unfavorite") : T("В избранное", "Favorite")}</button><button class="danger" data-act="del">${T("В корзину", "Move to trash")}</button></div>`;
   const cp = $("copied"); $("detail").appendChild(cp); cp.classList.add("hidden");
   box.innerHTML = h;
   // таймер TOTP пишет в .code и .left: привязываем элемент обратного отсчёта
@@ -965,6 +1014,8 @@ $("detail-view").onclick = async e => {
   if (act === "copy-login") await copySecret(x.login);
   if (act.startsWith("copy-f:")) { await copySecret((x.f || {})[act.slice(7)]); markUsed(x); }
   if (act.startsWith("copy-h:")) await copySecret(x.history[+act.slice(7)].pass);
+  if (act.startsWith("att:")) attDownload(x.att[+act.slice(4)]);
+  if (act === "share") return shareFlow(x);
   if (act.startsWith("copy-c:")) { await copySecret((x.custom || [])[+act.slice(7)].v); markUsed(x); }
   if (act === "restore") { delete x.deletedAt; await persist(); filter = "all"; renderNav(); render(); toast(T("Запись восстановлена", "Entry restored")); }
   if (act === "purge" && await confirmBox(T("Удалить «", "Delete “") + x.title + T("» навсегда? Это нельзя отменить.", "” forever? This cannot be undone."), T("Удалить навсегда", "Delete forever"), true)) {

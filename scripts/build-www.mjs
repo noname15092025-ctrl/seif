@@ -12,6 +12,7 @@ const out = join(root, "www");
 // Явный список файлов и папок приложения.
 const INCLUDE = [
   "index.html",
+  "s.html",
   "app.js",
   "style.css",
   "sw.js",

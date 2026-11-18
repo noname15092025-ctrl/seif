@@ -1500,3 +1500,15 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .vault-chips{ display:flex; gap:8px; flex-wrap:wrap; margin:2px 12px 2px; padding:2px 0; }
 .vault-chips.hidden{ display:none !important; }
 .app.ws-home .vault-chips, .app.ws-notes .vault-chips, .app.ws-tasks .vault-chips{ display:none !important; }
+
+/* Вложения к записи */
+.att-list{ display:flex; flex-direction:column; gap:6px; margin:0 0 8px; }
+.att-row, .att-view{ display:flex; align-items:center; gap:10px; }
+.att-row{ background:#242428; border:1px solid #30303a; border-radius:12px; padding:8px 10px; }
+.att-ic{ font-size:16px; flex:0 0 auto; }
+.att-n{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px; }
+.att-s{ color:#8A8A90; font-size:12px; flex:0 0 auto; }
+.att-del{ min-width:30px; height:30px; }
+.att-add{ display:inline-flex; align-items:center; cursor:pointer; margin-bottom:6px; }
+.att-img{ width:44px; height:44px; border-radius:10px; object-fit:cover; flex:0 0 auto; }
+.app .detail .att-view{ background:#fff0; }

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<title>SHUT — общая запись</title>
+<style>
+  :root{ --bg:#0B0B0C; --card:#1C1C1E; --line:#2A2A2E; --lime:#C8E27A; --text:#F0F0EE; --muted:#8E8E93; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+    font-family:"Urbanist","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif; display:flex; align-items:flex-start; justify-content:center; padding:24px 16px 48px; }
+  .wrap{ width:100%; max-width:520px; }
+  .brand{ display:flex; align-items:center; gap:10px; margin:6px 2px 18px; font-weight:800; font-size:20px; letter-spacing:.5px; }
+  .brand svg{ width:24px; height:24px; fill:var(--lime); }
+  .warn{ background:rgba(200,226,122,.1); border:1px solid rgba(200,226,122,.3); color:#D7E4B4; border-radius:16px; padding:12px 16px; font-size:13px; margin-bottom:16px; line-height:1.5; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:24px; padding:22px 24px; }
+  h1{ font-size:26px; font-weight:600; margin:0 0 4px; }
+  .type{ color:var(--muted); font-size:14px; margin:0 0 18px; }
+  .field{ border-top:1px solid var(--line); padding:14px 0; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .field:first-of-type{ border-top:0; }
+  .k{ color:var(--muted); font-size:13px; margin-bottom:3px; }
+  .v{ font-size:17px; word-break:break-word; }
+  .v a{ color:var(--lime); }
+  .mono{ font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace; }
+  button{ font:inherit; font-weight:600; font-size:13px; border:0; border-radius:16px; padding:8px 14px; cursor:pointer;
+    background:#2E2E33; color:var(--text); flex:0 0 auto; }
+  button:hover{ background:#3A3A40; }
+  .msg{ text-align:center; color:var(--muted); padding:60px 20px; font-size:16px; line-height:1.6; }
+  .foot{ text-align:center; color:var(--muted); font-size:12px; margin-top:18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6z"/></svg><span>SHUT</span></div>
+  <div id="root"><div class="msg">…</div></div>
+  <div class="foot">Расшифровано на вашем устройстве. Сервер не видит содержимое.</div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const dec = new TextDecoder(), root = $("root");
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+function unb64(s){ const b=atob(s); const u=new Uint8Array(b.length); for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i); return u; }
+function fromUrl64(s){ s=s.replace(/-/g,"+").replace(/_/g,"/"); while(s.length%4)s+="="; return s; }
+const TYPE={login:"Пароль",note:"Заметка",card:"Карта",wifi:"Wi-Fi",doc:"Документ",crypto:"Криптокошелёк",key:"Ключ",bank:"Счёт",contact:"Контакт",custom:"Своё"};
+function msg(t){ root.innerHTML = '<div class="msg">'+esc(t)+'</div>'; }
+function row(k,v,opts){ opts=opts||{};
+  const vid='v'+Math.random().toString(36).slice(2);
+  const masked = opts.secret;
+  const shown = masked ? "••••••••••••" : v;
+  return '<div class="field"><div><div class="k">'+esc(k)+'</div><div class="v'+(opts.mono?' mono':'')+'" id="'+vid+'" data-real="'+esc(v)+'" data-masked="'+(masked?1:0)+'">'+
+    (opts.link? '<a href="'+esc(v)+'" target="_blank" rel="noopener noreferrer">'+esc(v.replace(/^https?:\/\//,''))+'</a>' : esc(shown))+'</div></div>'+
+    '<div style="display:flex;gap:6px">'+(masked?'<button data-show="'+vid+'">Показать</button>':'')+'<button data-copy="'+vid+'">Копировать</button></div></div>';
+}
+async function main(){
+  const frag = location.hash.slice(1);
+  if(!frag){ msg("Ссылка неполная. Откройте полную ссылку целиком."); return; }
+  let obj;
+  try{ obj = JSON.parse(atob(fromUrl64(frag))); }catch(e){ msg("Не удалось прочитать ссылку."); return; }
+  try{
+    const key = await crypto.subtle.importKey("raw", unb64(obj.k), {name:"AES-GCM"}, false, ["decrypt"]);
+    const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:unb64(obj.iv)}, key, unb64(obj.ct));
+    const p = JSON.parse(dec.decode(pt));
+    if(p.exp && Date.now() > p.exp){ msg("Срок действия ссылки истёк."); return; }
+    let h = '<div class="warn">Эту запись вам отправили по ссылке. Любой, у кого есть ссылка, видит то же самое. Не пересылайте её дальше.</div><div class="card">';
+    h += '<h1>'+esc(p.t||"Без названия")+'</h1><p class="type">'+esc(TYPE[p.ty]||p.ty||"")+(p.exp?' · до '+new Date(p.exp).toLocaleString():'')+'</p>';
+    if(p.login) h += row(p.ty==="card"?"Владелец":"Логин", p.login);
+    if(p.url) h += row("Сайт", p.url, {link:true});
+    if(p.pass) h += row(p.ty==="card"?"PIN":"Пароль", p.pass, {secret:true, mono:true});
+    if(p.totp) h += row("Ключ 2FA", p.totp, {secret:true, mono:true});
+    if(p.f) for(const k in p.f){ if(p.f[k]) h += row(k, p.f[k]); }
+    if(p.custom) p.custom.forEach(c => { if(c.k||c.v) h += row(c.k||"Поле", c.v, {secret:!!c.s}); });
+    if(p.note) h += row("Заметки", p.note);
+    h += '</div>';
+    root.innerHTML = h;
+  }catch(e){ msg("Не удалось расшифровать. Ссылка повреждена или ключ неверный."); }
+}
+root.addEventListener("click", async e => {
+  const sh = e.target.closest("[data-show]"), cp = e.target.closest("[data-copy]");
+  if(sh){ const el=$(sh.dataset.show); const m=el.dataset.masked==="1"; if(m){ el.textContent=el.dataset.real; el.dataset.masked="2"; sh.textContent="Скрыть"; } else { el.textContent="••••••••••••"; el.dataset.masked="1"; sh.textContent="Показать"; } }
+  if(cp){ const el=$(cp.dataset.copy); try{ await navigator.clipboard.writeText(el.dataset.real); cp.textContent="Скопировано"; setTimeout(()=>cp.textContent="Копировать",1200); }catch(_){} }
+});
+main();
+</script>
+</body>
+</html>
