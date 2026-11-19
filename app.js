@@ -1384,15 +1384,40 @@ function audit() {
   const reused = withPass.filter(x => counts[x.pass] > 1);
   const old = withPass.filter(x => Date.now() - (x.pwChanged || x.created) > 365 * 864e5);
   const leaked = withPass.filter(x => breached.get(x.id) > 0);
-  const sec = (title, list, why) => `<h3>${title} <span class="count${list.length ? " bad" : ""}">${list.length}</span></h3>` +
-    (list.length ? `<div>${list.map(x => `<div class="mini"><div><b>${esc(x.title)}</b><small>${esc(why(x))}</small></div><button class="ghost" data-audit-edit="${esc(x.id)}">${T("Изменить", "Edit")}</button></div>`).join("")}</div>`
-      : `<p class="muted small">${T("Всё в порядке", "All good")}</p>`);
-  const score = withPass.length ? Math.round(100 * (1 - new Set([...weak, ...reused, ...old, ...leaked]).size / withPass.length)) : 100;
-  $("audit-body").innerHTML = `<div class="score"><b>${score}</b><span>${T("из 100 — общая оценка", "out of 100 — overall score")}</span></div>` +
-    sec(T("Найдены в утечках", "Found in breaches"), leaked, x => T("Встречался в утечках ", "Seen in breaches ") + breached.get(x.id).toLocaleString() + T(" раз — смените срочно", " times — change it now")) +
-    sec(T("Слабые пароли", "Weak passwords"), weak, x => strength(x.pass).label) +
-    sec(T("Повторяющиеся", "Reused"), reused, x => T("Используется в ", "Used in ") + counts[x.pass] + T(" записях", " entries")) +
-    sec(T("Старше года", "Older than a year"), old, x => T("Не менялся с ", "Not changed since ") + new Date(x.pwChanged || x.created).toLocaleDateString());
+  const bad = new Set([...weak, ...reused, ...old, ...leaked].map(x => x.id)).size;
+  const score = withPass.length ? Math.round(100 * (1 - bad / withPass.length)) : 100;
+  const label = score >= 90 ? T("Хорошее состояние", "Good condition") : score >= 60 ? T("Нужно внимание", "Needs attention") : T("Слабое состояние", "Poor condition");
+  const names = list => list.slice(0, 3).map(x => esc(x.title)).join(", ") + (list.length > 3 ? ` +${list.length - 3}` : "");
+  const cards = [
+    { n: leaked.length, t: T("Найдены в утечках", "Found in breaches"), d: leaked.length ? names(leaked) : "", col: "#E5484D", id: leaked[0] && leaked[0].id },
+    { n: weak.length, t: T("Слабые пароли", "Weak passwords"), d: weak.length ? names(weak) : "", col: "#E8A54B", id: weak[0] && weak[0].id },
+    { n: reused.length, t: T("Повторяются", "Reused"), d: reused.length ? names(reused) : "", col: "#C8E27A", id: reused[0] && reused[0].id },
+    { n: old.length, t: T("Старше года", "Older than a year"), d: old.length ? names(old) : "", col: "#9AA387", id: old[0] && old[0].id },
+  ].filter(c => c.n);
+  const issues = cards.length
+    ? cards.map(c => `<div class="au-card"><span class="au-glow" style="background:${c.col}"></span><span class="au-num">${c.n}</span><span class="au-txt"><b>${c.t}</b><small>${c.d}</small></span><button class="au-fix" data-audit-edit="${esc(c.id)}">${T("Исправить", "Fix")}</button></div>`).join("")
+    : `<div class="au-card au-ok"><span class="au-glow" style="background:#C8E27A"></span><span class="au-num">✓</span><span class="au-txt"><b>${T("Всё в порядке", "All good")}</b><small>${T("Слабых, повторных и устаревших паролей нет", "No weak, reused or outdated passwords")}</small></span></div>`;
+  $("audit-body").innerHTML = `
+    <div class="au-hero">
+      <div class="au-hero-txt"><span>${T("Проверка на этом устройстве", "Checked on this device")}</span><b>${T("Аудит паролей", "Password audit")}</b></div>
+      <button class="au-recheck" id="au-recheck">${T("Проверить снова", "Check again")}</button>
+    </div>
+    <div class="au-grid">
+      <section class="au-dial-card">
+        <div class="au-dial"><span class="au-dial-blob"></span><svg class="au-ring" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="none" stroke="#111" stroke-width="1.5" stroke-dasharray="4 6"></circle></svg><b>${score}</b></div>
+        <span class="au-label">${label}</span>
+        <span class="au-sub">${bad ? T("Записей к исправлению: ", "Entries to fix: ") + bad : T("Всё безопасно", "All safe")}</span>
+      </section>
+      <div class="au-col">
+        ${issues}
+        <div class="au-stats">
+          <div class="au-stat"><span class="au-glow"></span><span class="au-stat-txt"><small>${T("Надёжных", "Strong")}</small><b>${withPass.length - bad}</b></span></div>
+          <div class="au-stat"><span class="au-glow"></span><span class="au-stat-txt"><small>${T("Всего паролей", "Total passwords")}</small><b>${withPass.length}</b></span></div>
+          <div class="au-stat"><span class="au-glow"></span><span class="au-stat-txt"><small>${T("Старше года", "Older than a year")}</small><b>${old.length}</b></span></div>
+        </div>
+      </div>
+    </div>`;
+  $("au-recheck").onclick = () => audit();
 }
 $("b-audit").onclick = () => { audit(); show("audit"); };
 $("audit-body").onclick = e => { const id = e.target.dataset.auditEdit; if (!id) return; openVaultView(); selectedId = id; render(); startEdit(entries.find(x => x.id === id)); };
