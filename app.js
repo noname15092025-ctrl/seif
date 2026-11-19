@@ -1139,9 +1139,13 @@ function renderHome() {
   const dateStr = new Date().toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { weekday: "long", day: "numeric", month: "long" });
   const name = (s.name || "").trim();
   const cnt = t => L.filter(x => x.type === t).length;
-  const cats = [{ n: T("Логины", "Logins"), k: cnt("login"), f: "t:login" }, { n: T("Карты", "Cards"), k: cnt("card"), f: "t:card" }, { n: "Wi-Fi", k: cnt("wifi"), f: "t:wifi" }, { n: T("Заметки", "Notes"), k: notesList().length, v: "notes" }];
-  const shapes = ["40% 60% 50% 50%", "60% 40% 30% 70%", "50% 50% 60% 40%", "35% 65% 45% 55%"];
-  const catHtml = cats.map((c, i) => `<a class="dash-cat" ${c.v ? `data-view="${c.v}"` : `data-filter="${c.f}"`}><span class="dash-cat-blob" style="border-radius:${shapes[i]}"></span><span class="dash-cat-top"><span class="dash-cat-n">${esc(c.n)}</span><span class="dash-cat-k">${c.k} ${T("шт.", "items")}</span></span><span class="dash-cat-go">›</span></a>`).join("");
+  // Плитки категорий = как список в сайдбаре: разделы, типы (с записями), пользовательские категории, корзина
+  const cats = [{ n: T("Пароли", "Passwords"), k: pwEntries().length, f: "all" }, { n: T("Заметки", "Notes"), k: notesList().length, v: "notes" }, { n: T("Задачи", "Tasks"), k: tasksList().filter(t => !t.done).length, v: "tasks" }];
+  [["login", T("Логины", "Logins")], ["card", T("Карты", "Cards")], ["wifi", "Wi-Fi"], ["doc", T("Документы", "Documents")], ["crypto", T("Крипто", "Crypto")], ["key", T("Ключи", "Keys")], ["bank", T("Счета", "Accounts")], ["contact", T("Контакты", "Contacts")]].forEach(([t, label]) => { const c = cnt(t); if (c) cats.push({ n: label, k: c, f: "t:" + t }); });
+  [...new Set(L.map(x => x.category).filter(Boolean))].forEach(cat => cats.push({ n: cat, k: L.filter(x => x.category === cat).length, f: "c:" + cat }));
+  const trashN = entries.filter(x => x.deletedAt).length; if (trashN) cats.push({ n: T("Корзина", "Trash"), k: trashN, f: "trash" });
+  const shapes = ["40% 60% 50% 50%", "60% 40% 30% 70%", "50% 50% 60% 40%", "35% 65% 45% 55%", "55% 45% 40% 60%", "45% 55% 65% 35%"];
+  const catHtml = cats.map((c, i) => `<a class="dash-cat" ${c.v ? `data-view="${c.v}"` : `data-filter="${esc(c.f)}"`}><span class="dash-cat-blob" style="border-radius:${shapes[i % shapes.length]}"></span><span class="dash-cat-top"><span class="dash-cat-n">${esc(c.n)}</span><span class="dash-cat-k">${c.k} ${T("шт.", "items")}</span></span><span class="dash-cat-go">›</span></a>`).join("");
   const recent = L.filter(x => x.used || x.updated !== x.created).sort((a, b) => Math.max(b.used || 0, b.updated) - Math.max(a.used || 0, a.updated)).slice(0, 5);
   const tLabel = x => x.type === "page" ? T("Заметка", "Note") : x.type === "task" ? T("Задача", "Task") : TYPE_NAME(x.type);
   const recentHtml = recent.length ? recent.map(x => `<a class="dash-rec" data-open="${esc(x.id)}"><span class="dash-rec-ava">${esc(initial(x.title))}</span><span class="dash-rec-n">${esc(x.title)}</span><span class="dash-rec-u">${esc(subline(x))}</span><span class="dash-rec-t">${esc(relTime(Math.max(x.used || 0, x.updated)))}</span></a>`).join("") : `<div class="dash-empty">${T("Пока пусто", "Nothing yet")}</div>`;
