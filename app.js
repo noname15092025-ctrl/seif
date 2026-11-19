@@ -776,7 +776,7 @@ function startEdit(x) {
 }
 
 /* ---------------- Список ---------------- */
-let filter = "all", selectedId = null, view = "vault";
+let filter = "all", selectedId = null, view = "vault", listMode = "list";
 const navOpen = new Set();
 function renderNav() {
   const L = pwEntries(), cats = [...new Set(L.map(x => x.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
@@ -860,28 +860,66 @@ function render() {
   if (view === "notes") return renderNotes();
   if (view === "tasks") return renderTasks();
   $("note-editor").classList.add("hidden");
-  const vc = $("vault-chips");
-  if (vc) {
-    vc.classList.remove("hidden");
-    const chips = [["all", T("Все", "All")], ["fav", T("Избранное", "Favorites")], ["attention", T("Внимание", "Attention")], ["recent", T("Недавние", "Recent")]];
-    vc.innerHTML = chips.map(([k, l]) => `<button class="ws-chip${filter === k ? " on" : ""}" data-chip="${esc(k)}">${esc(l)}</button>`).join("");
-  }
+  const vcx = $("vault-chips"); if (vcx) vcx.classList.add("hidden");
   const list = visibleList();
   if (!list.some(x => x.id === selectedId)) selectedId = null;
-  // запись выбирается кликом — модалка не открывается автоматически
   $("list-count").textContent = list.length + " " + T(plural(list.length, "запись", "записи", "записей"), list.length === 1 ? "entry" : "entries");
   const att = attentionSet();
-  $("list").innerHTML = list.length ? list.map((x, i) => `
-    <div class="row${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
-      <span class="ava">${esc(initial(x.title))}</span>
-      <span class="t"><b>${esc(x.title)}</b><small${expiringSoon(x) ? ' class="exp-soon"' : ""}>${esc(subline(x))}</small></span>
-      ${att.has(x.id) ? `<span class="row-warn" title="${T("Требует внимания", "Needs attention")}"></span>` : ""}
-      ${(x.type === "login" && parseTotp(x.totp)) ? `<span class="row-totp" data-totp="${esc(x.id)}" data-copy-totp title="${T("Код 2FA — скопировать", "2FA code — copy")}"><span class="totp-code code">···&nbsp;···</span><span class="left"></span></span>` : ""}
-      ${x.login ? `<button type="button" class="row-copy" data-copy-login aria-label="${T("Скопировать логин", "Copy login")}" title="${T("Скопировать логин", "Copy login")}"><svg class="ic"><use href="#i-copy"/></svg></button>` : ""}
-      ${x.fav ? `<svg class="ic fav"><use href="#i-star"/></svg>` : ""}
-    </div>`).join("") : `<div class="empty">${filter === "trash" ? T("Корзина пуста", "Trash is empty") : filter === "attention" ? T("Всё в порядке — проблемных паролей нет", "All good — no problem passwords") : live().length ? T("Ничего не найдено", "Nothing found") : T("Сейф пока пуст. Нажмите «+ Добавить».", "The safe is empty. Click “+ Add”.")}</div>`;
-  $("list").querySelectorAll(".row").forEach((r, i) => r.style.animationDelay = Math.min(i, 8) * 0.04 + "s");
+  // ---- Hero «Записи» (стиль ShutRecords v2): заголовок, переключатель, карточки-фильтры ----
+  const head = $("ws-head");
+  if (head) {
+    head.classList.remove("hidden");
+    const pw = pwEntries();
+    const cAll = filter === "trash" ? entries.filter(x => x.deletedAt).length : pw.length;
+    const cFav = pw.filter(x => x.fav).length, cAtt = att.size;
+    const cRec = pw.filter(x => x.used || x.updated !== x.created).length;
+    const stat = (k, n, v, kind) => `<a class="rec-stat ${kind}${filter === k ? " on" : ""}" data-filter="${k}"><span class="rec-stat-top"><span class="rec-stat-n">${n}</span><span class="rec-stat-dot"></span></span><span class="rec-stat-v">${v}</span></a>`;
+    head.innerHTML = `<section class="rec-hero">
+      <div class="rec-hero-top">
+        <div class="rec-hero-l"><span class="rec-sub">${T("Хранилище · зашифровано на устройстве", "Vault · encrypted on device")}</span><h1 class="rec-title">${filter === "trash" ? T("Корзина", "Trash") : T("Записи", "Records")}</h1></div>
+        <div class="rec-toggle"><button class="rec-seg${listMode === "list" ? " on" : ""}" data-listmode="list">${T("Список", "List")}</button><button class="rec-seg${listMode === "tiles" ? " on" : ""}" data-listmode="tiles">${T("Плитка", "Tiles")}</button></div>
+      </div>
+      <div class="rec-stats">${stat("all", T("Все", "All"), cAll, "k-all")}${stat("fav", T("Избранное", "Favorites"), cFav, "k-plain")}${stat("attention", T("Внимание", "Attention"), cAtt, "k-warn")}${stat("recent", T("Недавние", "Recent"), cRec, "k-plain")}</div>
+    </section>`;
+  }
+  // ---- Строки / плитки ----
+  const empty = `<div class="empty">${filter === "trash" ? T("Корзина пуста", "Trash is empty") : filter === "attention" ? T("Всё в порядке — проблемных паролей нет", "All good — no problem passwords") : live().length ? T("Ничего не найдено", "Nothing found") : T("Сейф пока пуст. Нажмите «+ Добавить».", "The safe is empty. Click “+ Add”.")}</div>`;
+  const listEl = $("list");
+  listEl.classList.toggle("tiles-mode", listMode === "tiles");
+  if (!list.length) { listEl.innerHTML = empty; if ($("form-card").classList.contains("hidden")) renderDetail(); return; }
+  if (listMode === "tiles") {
+    listEl.innerHTML = list.map(x => {
+      const sg = strengthTag(x);
+      return `<a class="tile${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
+        <span class="tile-glow${sg.cls === "weak" ? " warn" : ""}"></span>
+        <span class="tile-top"><span class="tile-ava">${esc(initial(x.title))}</span><span class="tile-type">${esc(TYPE_NAME(x.type))}</span></span>
+        <span class="tile-mid"><span class="tile-n">${esc(x.title)}</span><span class="tile-u">${esc(subline(x))}</span></span>
+        <span class="tile-bot">${sg.label ? `<span class="pill-str ${sg.cls}">${sg.label}</span>` : "<span></span>"}<span class="tile-d">${esc(relTime(x.updated))}</span></span>
+      </a>`;
+    }).join("") + `<button class="tile tile-new" data-act-new><span class="tile-plus">+</span>${T("Новая запись", "New entry")}</button>`;
+  } else {
+    listEl.innerHTML = `<div class="rec-head"><span></span><span>${T("НАЗВАНИЕ", "NAME")}</span><span>${T("ТИП", "TYPE")}</span><span>${T("НАДЁЖНОСТЬ", "STRENGTH")}</span><span>${T("ИЗМЕНЕНО", "CHANGED")}</span><span></span></div>` +
+      list.map((x, i) => {
+        const sg = strengthTag(x);
+        return `<a class="rrow${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
+          <span class="rrow-ava">${esc(initial(x.title))}</span>
+          <span class="rrow-t"><span class="rrow-n">${esc(x.title)}</span><span class="rrow-u${expiringSoon(x) ? " exp-soon" : ""}">${esc(subline(x))}</span></span>
+          <span class="pill-type">${esc(TYPE_NAME(x.type))}</span>
+          <span class="rrow-str">${sg.label ? `<span class="pill-str ${sg.cls}">${sg.label}</span>` : ""}</span>
+          <span class="rrow-d">${esc(relTime(x.updated))}</span>
+          <span class="rrow-act">${(x.type === "login" && parseTotp(x.totp)) ? `<button type="button" class="ib" data-copy-totp aria-label="${T("Код 2FA", "2FA code")}"><span class="row-totp" data-totp="${esc(x.id)}"><span class="totp-code code"></span><span class="left"></span></span></button>` : ""}${x.login ? `<button type="button" class="ib" data-copy-login aria-label="${T("Логин", "Login")}" title="${T("Скопировать логин", "Copy login")}"><svg class="ic"><use href="#i-copy"/></svg></button>` : ""}${x.fav ? `<svg class="ic fav"><use href="#i-star"/></svg>` : ""}</span>
+        </a>`;
+      }).join("");
+  }
+  listEl.querySelectorAll(".rrow, .tile").forEach((r, i) => r.style.animationDelay = Math.min(i, 8) * 0.04 + "s");
   if ($("form-card").classList.contains("hidden")) renderDetail();
+  tickTotp();
+}
+// Метка надёжности для строки/плитки
+function strengthTag(x) {
+  if (!x.pass || x.type === "card") return { label: "", cls: "" };
+  const s = strength(x.pass).score;
+  return s < 3 ? { label: T("Слабый", "Weak"), cls: "weak" } : { label: T("Надёжный", "Strong"), cls: "ok" };
 }
 function plural(n, one, few, many) { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; }
 $("top-brand") && ($("top-brand").onclick = e => { e.preventDefault(); $("search").value = ""; $("v-vault").classList.remove("nav-open"); setView("home"); scrollTo(0, 0); });
@@ -915,11 +953,12 @@ $("list").onclick = async e => {
     selectedId = r.dataset.id; $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; renderNotes();
     return;
   }
-  const r = e.target.closest(".row"); if (!r) return;
+  if (e.target.closest("[data-act-new]")) { clearForm(); showForm(); return; }
+  const r = e.target.closest(".rrow, .tile"); if (!r || !r.dataset.id) return;
   if (e.target.closest("[data-copy-totp]")) { const xt = entries.find(y => y.id === r.dataset.id); const cfg = xt && parseTotp(xt.totp); if (cfg) totpCode(cfg).then(rr => { copySecret(rr.code); markUsed(xt); }); return; }
   if (e.target.closest("[data-copy-login]")) { const xi = entries.find(y => y.id === r.dataset.id); if (xi && xi.login) { copySecret(xi.login); markUsed(xi); } return; }
   selectedId = r.dataset.id; clearForm(); showDetail();
-  $("list").querySelectorAll(".row").forEach(x => x.classList.toggle("active", x.dataset.id === selectedId));
+  $("list").querySelectorAll(".rrow, .tile").forEach(x => x.classList.toggle("active", x.dataset.id === selectedId));
   $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0;
 };
 const ib = (act, icon, label) => `<button type="button" class="ib" data-act="${act}" aria-label="${esc(label)}" title="${esc(label)}"><svg class="ic"><use href="#${icon}"/></svg></button>`;
@@ -1070,9 +1109,12 @@ function wsHero(title, sub, chips) {
   h.innerHTML = `<section class="ws-hero"><div class="ws-hero-l"><span class="ws-hero-sub">${sub}</span><h1 class="ws-hero-t">${title}</h1></div>${chips ? `<div class="ws-chips">${chips}</div>` : ""}</section>`;
 }
 $("ws-head") && $("ws-head").addEventListener("click", e => {
+  const lm = e.target.closest("[data-listmode]"); if (lm) { listMode = lm.dataset.listmode; try { localStorage.setItem("vault.listmode", listMode); } catch {} render(); return; }
+  const df = e.target.closest("[data-filter]"); if (df) { filter = df.dataset.filter; renderNav(); render(); scrollTo(0, 0); return; }
   const c = e.target.closest("[data-task-filter]"); if (!c) return;
   taskFilter = c.dataset.taskFilter; renderTasks();
 });
+try { const lm = localStorage.getItem("vault.listmode"); if (lm) listMode = lm; } catch {}
 /* ---------------- Домашний экран «Обзор» (стиль 34) ---------------- */
 function greet() { const h = new Date().getHours(); return h < 6 ? T("Доброй ночи", "Good night") : h < 12 ? T("Доброе утро", "Good morning") : h < 18 ? T("Добрый день", "Good afternoon") : T("Добрый вечер", "Good evening"); }
 function relTime(ts) { if (!ts) return ""; const d = new Date(ts), now = new Date(); if (d.toDateString() === now.toDateString()) return T("сегодня", "today"); if (d.toDateString() === new Date(now - 864e5).toDateString()) return T("вчера", "yesterday"); return d.toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "short" }); }
