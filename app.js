@@ -776,7 +776,7 @@ function startEdit(x) {
 }
 
 /* ---------------- Список ---------------- */
-let filter = "all", selectedId = null, view = "vault", listMode = "list", recentMode = "list";
+let filter = "all", selectedId = null, view = "vault", listMode = "list", recentMode = "list", notesViewMode = "list";
 const navOpen = new Set();
 function renderNav() {
   const L = pwEntries(), cats = [...new Set(L.map(x => x.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
@@ -953,7 +953,8 @@ $("list").onclick = async e => {
     return;
   }
   if (view === "notes") {
-    const r = e.target.closest(".note-row"); if (!r) return;
+    if (e.target.closest("[data-new-note]")) { newNote(); return; }
+    const r = e.target.closest(".note-row, .tile"); if (!r || !r.dataset.id) return;
     selectedId = r.dataset.id; $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; renderNotes();
     return;
   }
@@ -1117,11 +1118,12 @@ function wsHero(title, sub, chips) {
 }
 $("ws-head") && $("ws-head").addEventListener("click", e => {
   const lm = e.target.closest("[data-listmode]"); if (lm) { listMode = lm.dataset.listmode; try { localStorage.setItem("vault.listmode", listMode); } catch {} render(); return; }
+  const nm = e.target.closest("[data-notesmode]"); if (nm) { notesViewMode = nm.dataset.notesmode; try { localStorage.setItem("vault.notesmode", notesViewMode); } catch {} renderNotes(); return; }
   const df = e.target.closest("[data-filter]"); if (df) { filter = df.dataset.filter; renderNav(); render(); scrollTo(0, 0); return; }
   const c = e.target.closest("[data-task-filter]"); if (!c) return;
   taskFilter = c.dataset.taskFilter; renderTasks();
 });
-try { const lm = localStorage.getItem("vault.listmode"); if (lm) listMode = lm; const rm = localStorage.getItem("vault.recentmode"); if (rm) recentMode = rm; } catch {}
+try { const lm = localStorage.getItem("vault.listmode"); if (lm) listMode = lm; const rm = localStorage.getItem("vault.recentmode"); if (rm) recentMode = rm; const nm = localStorage.getItem("vault.notesmode"); if (nm) notesViewMode = nm; } catch {}
 /* ---------------- Домашний экран «Обзор» (стиль 34) ---------------- */
 function greet() { const h = new Date().getHours(); return h < 6 ? T("Доброй ночи", "Good night") : h < 12 ? T("Доброе утро", "Good morning") : h < 18 ? T("Добрый день", "Good afternoon") : T("Добрый вечер", "Good evening"); }
 function relTime(ts) { if (!ts) return ""; const d = new Date(ts), now = new Date(); if (d.toDateString() === now.toDateString()) return T("сегодня", "today"); if (d.toDateString() === new Date(now - 864e5).toDateString()) return T("вчера", "yesterday"); return d.toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "short" }); }
@@ -1212,12 +1214,20 @@ function renderNotes() {
   // запись выбирается кликом — модалка не открывается автоматически
   const cnt = all.length + " " + T(plural(all.length, "заметка", "заметки", "заметок"), all.length === 1 ? "note" : "notes");
   $("list-count").textContent = cnt;
-  wsHero(T("Заметки", "Notes"), all.length ? cnt : T("Зашифрованы на устройстве", "Encrypted on device"), "");
-  $("list").innerHTML = list.length ? list.map(x => `
+  const toggle = `<div class="rec-toggle sm"><button class="rec-seg${notesViewMode === "list" ? " on" : ""}" data-notesmode="list">${T("Список", "List")}</button><button class="rec-seg${notesViewMode === "tiles" ? " on" : ""}" data-notesmode="tiles">${T("Плитка", "Tiles")}</button></div>`;
+  wsHero(T("Заметки", "Notes"), all.length ? cnt : T("Зашифрованы на устройстве", "Encrypted on device"), toggle);
+  const preview = x => esc((x.body || "").replace(/[#*`>\-\[\]]/g, "").replace(/\s+/g, " ").trim().slice(0, 70)) || T("Пустая заметка", "Empty note");
+  $("list").classList.toggle("tiles-mode", notesViewMode === "tiles");
+  if (!list.length) { $("list").innerHTML = `<div class="empty">${all.length ? T("Ничего не найдено", "Nothing found") : T("Заметок пока нет. Нажмите «+ Заметка».", "No notes yet. Click “+ Note”.")}</div>`; renderNoteEditor(); return; }
+  if (notesViewMode === "tiles") {
+    $("list").innerHTML = list.map(x => `<a class="tile${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}"><span class="tile-glow"></span><span class="tile-top"><span class="tile-ava">${esc(initial(x.title || "?"))}</span><span class="tile-type">${T("Заметка", "Note")}</span></span><span class="tile-mid"><span class="tile-n">${esc(x.title || T("Без названия", "Untitled"))}</span><span class="tile-u">${preview(x)}</span></span><span class="tile-bot"><span></span><span class="tile-d">${esc(relTime(x.updated))}</span></span></a>`).join("") + `<button class="tile tile-new" data-new-note><span class="tile-plus">+</span>${T("Новая заметка", "New note")}</button>`;
+  } else {
+    $("list").innerHTML = list.map(x => `
     <div class="note-row${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
       <b>${esc(x.title || T("Без названия", "Untitled"))}</b>
-      <small>${esc((x.body || "").replace(/[#*`>\-\[\]]/g, "").replace(/\s+/g, " ").trim().slice(0, 70)) || T("Пустая заметка", "Empty note")}</small>
-    </div>`).join("") : `<div class="empty">${all.length ? T("Ничего не найдено", "Nothing found") : T("Заметок пока нет. Нажмите «+ Заметка».", "No notes yet. Click “+ Note”.")}</div>`;
+      <small>${preview(x)}</small>
+    </div>`).join("");
+  }
   renderNoteEditor();
 }
 async function newNote() {
