@@ -1188,13 +1188,27 @@ function renderNoteEditor() {
     <input id="note-title" class="note-title" maxlength="120" placeholder="${T("Без названия", "Untitled")}">
     ${edit ? `<textarea id="note-body" class="note-body" placeholder="${T("Пишите здесь… Поддерживается Markdown: # заголовок, **жирный**, - список, - [ ] задача", "Write here… Markdown supported: # heading, **bold**, - list, - [ ] task")}" spellcheck="true"></textarea>`
       : `<div class="note-view md" id="note-view">${mdToHtml(x.body) || `<p class="muted">${T("Пусто. Нажмите «Правка».", "Empty. Click “Edit”.")}</p>`}</div>`}
+    <div class="note-att">
+      ${(x.att || []).map((a, i) => `<div class="att-row"><span class="att-ic">${a.t && a.t.startsWith("image/") ? "🖼" : "📎"}</span><span class="att-n">${esc(a.n)}</span><span class="att-s">${fmtSize(a.s)}</span><button class="ib" type="button" data-note-att-dl="${i}" title="${T("Скачать", "Download")}"><svg class="ic"><use href="#i-copy"/></svg></button><button class="ib att-del" type="button" data-note-att-del="${i}" aria-label="×">✕</button></div>`).join("")}
+      <label class="ghost cf-add att-add"><span>${T("+ Прикрепить файл", "+ Attach file")}</span><input type="file" id="note-att-input" multiple hidden></label>
+    </div>
     <div class="note-foot"><span class="muted small" id="note-saved">${T("Изменено ", "Edited ") + new Date(x.updated).toLocaleString()}</span></div>
   </div>`;
   $("note-title").value = x.title; $("note-title").oninput = saveNote;
   if (edit) { $("note-body").value = x.body || ""; $("note-body").oninput = saveNote; }
+  const ai = $("note-att-input"); if (ai) ai.onchange = async ev => {
+    for (const f of [...ev.target.files]) {
+      if (f.size > ATT_MAX) { toast(T("Файл больше 1 МБ: ", "File over 1 MB: ") + f.name); continue; }
+      const d = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f); });
+      (x.att = x.att || []).push({ n: f.name, t: f.type || "application/octet-stream", s: f.size, d });
+    }
+    ev.target.value = ""; x.updated = Date.now(); await persist(); renderNoteEditor();
+  };
 }
 $("note-editor").addEventListener("click", async e => {
   if (e.target.closest("[data-new-note]")) return newNote();
+  const adl = e.target.closest("[data-note-att-dl]"); if (adl) { const x = notesList().find(y => y.id === selectedId); if (x && x.att) attDownload(x.att[+adl.dataset.noteAttDl]); return; }
+  const adel = e.target.closest("[data-note-att-del]"); if (adel) { const x = notesList().find(y => y.id === selectedId); if (x && x.att) { x.att.splice(+adel.dataset.noteAttDel, 1); x.updated = Date.now(); await persist(); renderNoteEditor(); } return; }
   if (e.target.closest("[data-note-back],[data-note-done]")) { await saveNoteCore(); $("v-vault").classList.remove("show-detail"); return; }
   const mb = e.target.closest("[data-note-mode]"); if (mb) { noteMode = mb.dataset.noteMode; renderNoteEditor(); return; }
   const box = e.target.closest(".md-box"); // клик по чекбоксу в режиме просмотра — переключает в тексте
