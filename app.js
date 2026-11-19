@@ -776,7 +776,7 @@ function startEdit(x) {
 }
 
 /* ---------------- Список ---------------- */
-let filter = "all", selectedId = null, view = "vault", listMode = "list";
+let filter = "all", selectedId = null, view = "vault", listMode = "list", recentMode = "list";
 const navOpen = new Set();
 function renderNav() {
   const L = pwEntries(), cats = [...new Set(L.map(x => x.category).filter(Boolean))].sort((a, b) => a.localeCompare(b));
@@ -931,6 +931,7 @@ $("search").oninput = () => { if (view === "home" && $("search").value) { view =
 $("sort").onchange = render;
 $("list").onclick = async e => {
   if (view === "home") {
+    const rm = e.target.closest("[data-recentmode]"); if (rm) { recentMode = rm.dataset.recentmode; try { localStorage.setItem("vault.recentmode", recentMode); } catch {} renderHome(); return; }
     const dv = e.target.closest("[data-view]"); if (dv) { setView(dv.dataset.view); return; }
     const df = e.target.closest("[data-filter]"); if (df) { view = "vault"; filter = df.dataset.filter; setViewChrome("vault"); renderNav(); render(); scrollTo(0, 0); return; }
     const op = e.target.closest("[data-open]"); if (op) {
@@ -1120,7 +1121,7 @@ $("ws-head") && $("ws-head").addEventListener("click", e => {
   const c = e.target.closest("[data-task-filter]"); if (!c) return;
   taskFilter = c.dataset.taskFilter; renderTasks();
 });
-try { const lm = localStorage.getItem("vault.listmode"); if (lm) listMode = lm; } catch {}
+try { const lm = localStorage.getItem("vault.listmode"); if (lm) listMode = lm; const rm = localStorage.getItem("vault.recentmode"); if (rm) recentMode = rm; } catch {}
 /* ---------------- Домашний экран «Обзор» (стиль 34) ---------------- */
 function greet() { const h = new Date().getHours(); return h < 6 ? T("Доброй ночи", "Good night") : h < 12 ? T("Доброе утро", "Good morning") : h < 18 ? T("Добрый день", "Good afternoon") : T("Добрый вечер", "Good evening"); }
 function relTime(ts) { if (!ts) return ""; const d = new Date(ts), now = new Date(); if (d.toDateString() === now.toDateString()) return T("сегодня", "today"); if (d.toDateString() === new Date(now - 864e5).toDateString()) return T("вчера", "yesterday"); return d.toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "short" }); }
@@ -1142,7 +1143,10 @@ function renderHome() {
   const shapes = ["40% 60% 50% 50%", "60% 40% 30% 70%", "50% 50% 60% 40%", "35% 65% 45% 55%"];
   const catHtml = cats.map((c, i) => `<a class="dash-cat" ${c.v ? `data-view="${c.v}"` : `data-filter="${c.f}"`}><span class="dash-cat-blob" style="border-radius:${shapes[i]}"></span><span class="dash-cat-top"><span class="dash-cat-n">${esc(c.n)}</span><span class="dash-cat-k">${c.k} ${T("шт.", "items")}</span></span><span class="dash-cat-go">›</span></a>`).join("");
   const recent = L.filter(x => x.used || x.updated !== x.created).sort((a, b) => Math.max(b.used || 0, b.updated) - Math.max(a.used || 0, a.updated)).slice(0, 5);
+  const tLabel = x => x.type === "page" ? T("Заметка", "Note") : x.type === "task" ? T("Задача", "Task") : TYPE_NAME(x.type);
   const recentHtml = recent.length ? recent.map(x => `<a class="dash-rec" data-open="${esc(x.id)}"><span class="dash-rec-ava">${esc(initial(x.title))}</span><span class="dash-rec-n">${esc(x.title)}</span><span class="dash-rec-u">${esc(subline(x))}</span><span class="dash-rec-t">${esc(relTime(Math.max(x.used || 0, x.updated)))}</span></a>`).join("") : `<div class="dash-empty">${T("Пока пусто", "Nothing yet")}</div>`;
+  const recentTiles = recent.length ? recent.map(x => { const sg = strengthTag(x); return `<a class="tile" data-open="${esc(x.id)}"><span class="tile-glow${sg.cls === "weak" ? " warn" : ""}"></span><span class="tile-top"><span class="tile-ava">${esc(initial(x.title))}</span><span class="tile-type">${esc(tLabel(x))}</span></span><span class="tile-mid"><span class="tile-n">${esc(x.title)}</span><span class="tile-u">${esc(subline(x))}</span></span><span class="tile-bot">${sg.label ? `<span class="pill-str ${sg.cls}">${sg.label}</span>` : "<span></span>"}<span class="tile-d">${esc(relTime(Math.max(x.used || 0, x.updated)))}</span></span></a>`; }).join("") : `<div class="dash-empty">${T("Пока пусто", "Nothing yet")}</div>`;
+  const recentBlock = `<div class="dash-recent-head"><h2 class="dash-h2">${T("Недавние", "Recent")}</h2><div class="rec-toggle sm"><button class="rec-seg${recentMode === "list" ? " on" : ""}" data-recentmode="list">${T("Список", "List")}</button><button class="rec-seg${recentMode === "tiles" ? " on" : ""}" data-recentmode="tiles">${T("Плитка", "Tiles")}</button></div></div>` + (recentMode === "tiles" ? `<div class="rec-tiles-grid">${recentTiles}</div>` : `<div class="dash-recent">${recentHtml}</div>`);
   const stat = (k, v, col) => `<div class="dash-stat"><span class="dash-stat-k">${k}</span><span class="dash-stat-v" style="color:${col}">${v}</span></div>`;
   $("list").innerHTML = `
     <section class="dash-hero">
@@ -1154,8 +1158,7 @@ function renderHome() {
     </section>
     <h2 class="dash-h2">${T("Категории", "Categories")}</h2>
     <div class="dash-cats">${catHtml}</div>
-    <h2 class="dash-h2">${T("Недавние", "Recent")}</h2>
-    <div class="dash-recent">${recentHtml}</div>`;
+    ${recentBlock}`;
 }
 
 /* ---- Markdown (безопасный: экранируем, затем расставляем свои теги) ---- */
