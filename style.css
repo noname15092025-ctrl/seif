@@ -1672,21 +1672,21 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .au-label{ font-size:18px; font-weight:500; }
 .au-sub{ font-size:14px; color:#6E6E74; text-align:center; }
 .au-col{ display:flex; flex-direction:column; gap:12px; min-width:0; }
-.au-card{ min-height:96px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.04); border-radius:28px; background:#1E1E21; position:relative; overflow:hidden; display:flex; align-items:center; gap:18px; padding:0 24px; color:#FFF; border:1px solid rgba(255,255,255,.08); }
+.au-card{ min-height:96px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.04); border-radius:28px; background:#F1F1F3; position:relative; overflow:hidden; display:flex; align-items:center; gap:18px; padding:0 24px; color:#111; border:1px solid rgba(0,0,0,.05); }
 .au-glow{ position:absolute; right:-20px; top:-30px; width:260px; height:160px; border-radius:50%; filter:blur(40px); opacity:.6; pointer-events:none; }
 .au-stat .au-glow{ left:30%; top:40%; right:auto; width:60%; height:90%; border-radius:45% 55% 50% 50%; background:#C8E27A !important; filter:blur(34px); opacity:.8; }
 .au-num{ position:relative; font-size:40px; font-weight:300; width:44px; flex-shrink:0; }
 .au-txt{ position:relative; flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
 .au-txt b{ font-size:18px; font-weight:500; }
-.au-txt small{ font-size:14px; color:#C9CFB8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.au-fix{ position:relative; height:40px; padding:0 16px; border-radius:20px; border:1px solid rgba(255,255,255,.35); background:none; color:#FFF; font:500 14px Urbanist, sans-serif; cursor:pointer; flex-shrink:0; }
-.au-fix:hover{ background:rgba(255,255,255,.08); }
-.au-ok .au-num{ color:#C8E27A; }
+.au-txt small{ font-size:14px; color:#6E6E74; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.au-fix{ position:relative; height:40px; padding:0 16px; border-radius:20px; border:0; background:#111; color:#FFF; font:500 14px Urbanist, sans-serif; cursor:pointer; flex-shrink:0; }
+.au-fix:hover{ filter:brightness(1.2); }
+.au-ok .au-num{ color:#6B7F2A; }
 .au-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-.au-stat{ min-height:140px; border-radius:28px; background:#1E1E21; position:relative; overflow:hidden; color:#FFF; border:1px solid rgba(255,255,255,.08); }
+.au-stat{ min-height:140px; border-radius:28px; background:#F1F1F3; position:relative; overflow:hidden; color:#111; border:1px solid rgba(0,0,0,.05); }
 .au-stat-txt{ position:absolute; left:22px; top:18px; display:flex; flex-direction:column; gap:4px; }
-.au-stat-txt small{ font-size:14px; color:#C9CFB8; }
-.au-stat-txt b{ font-size:30px; font-weight:500; }
+.au-stat-txt small{ font-size:14px; color:#6E6E74; }
+.au-stat-txt b{ font-size:30px; font-weight:500; color:#111; }
 #v-audit #b-hibp{ margin-top:4px; height:48px; border-radius:24px; background:#111; color:#fff; border:0; padding:0 22px; font:600 15px Urbanist, sans-serif; cursor:pointer; }
 #v-audit .muted.small{ color:#8E9383; }
 @media (max-width:760px){ .au-grid{ grid-template-columns:1fr; } .au-stats{ grid-template-columns:1fr 1fr 1fr; } .au-txt b{ font-size:16px; } }
