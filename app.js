@@ -834,6 +834,8 @@ const subline = x => {
     case "bank": return f.account ? "•••• " + f.account.replace(/\s/g, "").slice(-4) : TYPE_NAME("bank");
     case "contact": return f.relation || f.phone || f.email || TYPE_NAME("contact");
     case "custom": return (x.custom && x.custom[0] && x.custom[0].k) || TYPE_NAME("custom");
+    case "page": return T("Заметка", "Note");
+    case "task": return x.done ? T("Выполнено", "Done") : T("Задача", "Task");
     default: return x.login || (x.url || "").replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "") || TYPE_NAME(x.type);
   }
 };
@@ -890,7 +892,12 @@ $("list").onclick = async e => {
   if (view === "home") {
     const dv = e.target.closest("[data-view]"); if (dv) { setView(dv.dataset.view); return; }
     const df = e.target.closest("[data-filter]"); if (df) { view = "vault"; filter = df.dataset.filter; setViewChrome("vault"); renderNav(); render(); scrollTo(0, 0); return; }
-    const op = e.target.closest("[data-open]"); if (op) { view = "vault"; filter = "all"; selectedId = op.dataset.open; setViewChrome("vault"); renderNav(); render(); clearForm(); showDetail(); $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; return; }
+    const op = e.target.closest("[data-open]"); if (op) {
+      const id = op.dataset.open, ent = entries.find(y => y.id === id); if (!ent) return;
+      if (ent.type === "task") { setView("tasks"); return; }
+      if (ent.type === "page") { view = "notes"; selectedId = id; noteMode = "preview"; setViewChrome("notes"); renderNav(); renderNotes(); $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; return; }
+      view = "vault"; filter = "all"; selectedId = id; setViewChrome("vault"); renderNav(); render(); clearForm(); showDetail(); $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; return;
+    }
     return;
   }
   if (view === "tasks") {
