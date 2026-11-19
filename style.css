@@ -1649,3 +1649,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .cats-more:hover{ background:#242428; color:#fff; filter:none; transform:none; }
 .cats-more .chev{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; transition:transform .2s ease; }
 .cats-more.open .chev{ transform:rotate(180deg); }
+
+/* v78: окна подтверждения поверх полноэкранной заметки (.detail z-index 60) — раньше открывались под ней */
+.modal{ z-index:200 !important; }
