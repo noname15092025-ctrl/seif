@@ -1404,7 +1404,7 @@ function audit() {
     </div>
     <div class="au-grid">
       <section class="au-dial-card">
-        <div class="au-dial"><span class="au-dial-blob"></span><svg class="au-ring" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="none" stroke="#111" stroke-width="1.5" stroke-dasharray="4 6"></circle></svg><b>${score}</b></div>
+        <div class="au-dial"><span class="au-dial-blob"></span><svg class="au-ring" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="none" stroke="#C9CFB8" stroke-width="1.5" stroke-dasharray="4 6"></circle></svg><b>${score}</b></div>
         <span class="au-label">${label}</span>
         <span class="au-sub">${bad ? T("Записей к исправлению: ", "Entries to fix: ") + bad : T("Всё безопасно", "All safe")}</span>
       </section>

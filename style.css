@@ -1658,19 +1658,19 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 #v-audit .panel.wide-panel{ max-width:1080px; margin:0 auto; background:transparent !important; border:0 !important; box-shadow:none !important; padding:0 !important; color:#fff; }
 #v-audit .p-back{ color:#9AA387; margin-bottom:14px; display:inline-flex; }
 #v-audit #audit-body{ display:flex; flex-direction:column; gap:16px; }
-.au-hero{ position:relative; overflow:hidden; background:#F1F1F3; color:#111; border-radius:36px; padding:32px 36px; display:flex; justify-content:space-between; align-items:flex-end; gap:24px; flex-wrap:wrap; }
+.au-hero{ position:relative; overflow:hidden; background:#1E1E21; color:#FFF; border-radius:36px; padding:32px 36px; display:flex; justify-content:space-between; align-items:flex-end; gap:24px; flex-wrap:wrap; }
 .au-hero-txt{ display:flex; flex-direction:column; gap:6px; }
-.au-hero-txt span{ font-size:14px; color:#6E6E74; }
+.au-hero-txt span{ font-size:14px; color:#8E9383; }
 .au-hero-txt b{ font-size:44px; font-weight:500; line-height:1.05; letter-spacing:-.02em; font-family:var(--d-font, inherit); }
-.au-recheck{ height:52px; padding:0 24px; border-radius:26px; border:0; background:#111; color:#FFF; font:600 15px Urbanist, sans-serif; cursor:pointer; }
+.au-recheck{ height:52px; padding:0 24px; border-radius:26px; border:0; background:#FFF; color:#111; font:600 15px Urbanist, sans-serif; cursor:pointer; }
 .au-grid{ display:grid; grid-template-columns:340px 1fr; gap:16px; align-items:start; }
-.au-dial-card{ background:#F1F1F3; color:#111; border-radius:36px; padding:28px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+.au-dial-card{ background:#1E1E21; color:#FFF; border-radius:36px; padding:28px; display:flex; flex-direction:column; align-items:center; gap:14px; }
 .au-dial{ position:relative; width:220px; height:220px; }
-.au-dial-blob{ position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle, #111 0%, #77777D 50%, rgba(241,241,243,0) 70%); }
+.au-dial-blob{ position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle, #5A5A60 0%, #34343A 50%, rgba(30,30,33,0) 70%); }
 .au-ring{ position:absolute; inset:0; width:220px; height:220px; }
 .au-dial b{ position:absolute; left:0; right:0; top:76px; text-align:center; color:#FFF; font-size:58px; font-weight:300; }
 .au-label{ font-size:18px; font-weight:500; }
-.au-sub{ font-size:14px; color:#6E6E74; text-align:center; }
+.au-sub{ font-size:14px; color:#8E9383; text-align:center; }
 .au-col{ display:flex; flex-direction:column; gap:12px; min-width:0; }
 .au-card{ min-height:96px; border-radius:28px; background:#1E2410; position:relative; overflow:hidden; display:flex; align-items:center; gap:18px; padding:0 24px; color:#FFF; border:1px solid rgba(255,255,255,.08); }
 .au-glow{ position:absolute; right:-20px; top:-30px; width:260px; height:160px; border-radius:50%; filter:blur(40px); opacity:.6; pointer-events:none; }
