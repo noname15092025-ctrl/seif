@@ -1649,9 +1649,3 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .cats-more:hover{ background:#242428; color:#fff; filter:none; transform:none; }
 .cats-more .chev{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; transition:transform .2s ease; }
 .cats-more.open .chev{ transform:rotate(180deg); }
-
-/* v78: удаление заметки — отдельная ссылка внизу, а не рядом с «Готово» */
-.note-ed .note-foot{ display:flex; align-items:center; gap:14px; margin-top:auto; padding-top:18px; }
-.note-ed .note-foot #note-saved{ margin-left:auto; }
-.app .note-ed .note-del-link{ height:36px; padding:0 14px; border-radius:999px; background:none; border:1px solid rgba(229,112,111,.35); color:#E5706F; font-size:13px; font-weight:600; cursor:pointer; }
-.app .note-ed .note-del-link:hover{ background:rgba(229,112,111,.12); }
