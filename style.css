@@ -1635,8 +1635,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 @media (max-width:980px){ .rec-tiles-grid{ grid-template-columns:repeat(2,1fr); } }
 @media (max-width:620px){ .rec-tiles-grid{ grid-template-columns:1fr; } }
 
-/* Плитки в заметках (перекрываем flex-раскладку списка заметок) */
-.app.ws-notes #list.tiles-mode{ display:grid !important; grid-template-columns:repeat(3,1fr); gap:14px; background:transparent !important; padding:8px 0 24px !important; }
+/* Плитки в заметках (перекрываем flex-раскладку и убираем рамку-контейнер списка) */
+.app.ws-notes #list.tiles-mode{ display:grid !important; grid-template-columns:repeat(3,1fr); gap:14px; background:transparent !important;
+  border:0 !important; border-radius:0 !important; padding:8px 0 24px !important; }
 @media (max-width:980px){ .app.ws-notes #list.tiles-mode{ grid-template-columns:repeat(2,1fr); } }
 @media (max-width:620px){ .app.ws-notes #list.tiles-mode{ grid-template-columns:1fr; } }
 
