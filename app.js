@@ -69,9 +69,11 @@ function modal(text, buttons) {
   return new Promise(res => {
     $("modal-text").textContent = text;
     $("modal-btns").innerHTML = "";
+    const openedAt = Date.now();
     buttons.forEach(([label, value, cls]) => {
       const b = document.createElement("button"); b.textContent = label; if (cls) b.className = cls;
-      b.onclick = () => { $("modal").classList.add("hidden"); res(value); };
+      // Защита от «призрачного» клика: кнопки окна не срабатывают, пока палец/курсор не отпущен после открытия
+      b.onclick = () => { if (Date.now() - openedAt < 350) return; $("modal").classList.add("hidden"); res(value); };
       $("modal-btns").appendChild(b);
     });
     $("modal").classList.remove("hidden");
@@ -1263,7 +1265,7 @@ function renderNoteEditor() {
     <div class="note-bar">
       <button class="ib back" data-note-back aria-label="${T("Назад", "Back")}"><svg class="ic"><use href="#i-back"/></svg></button>
       <div class="note-modes"><button class="seg${edit ? " on" : ""}" data-note-mode="edit">${T("✏ Правка", "✏ Edit")}</button><button class="seg${edit ? "" : " on"}" data-note-mode="preview">${T("👁 Просмотр", "👁 Preview")}</button></div>
-      <button class="seg-done" data-note-done>${T("Готово", "Done")}</button><button class="ib danger-text" data-note-del>${T("Удалить", "Delete")}</button>
+      <button class="seg-done" data-note-done>${T("Готово", "Done")}</button>
     </div>
     <input id="note-title" class="note-title" maxlength="120" placeholder="${T("Без названия", "Untitled")}">
     ${edit ? `<textarea id="note-body" class="note-body" placeholder="${T("Пишите здесь… Поддерживается Markdown: # заголовок, **жирный**, - список, - [ ] задача", "Write here… Markdown supported: # heading, **bold**, - list, - [ ] task")}" spellcheck="true"></textarea>`
@@ -1272,7 +1274,7 @@ function renderNoteEditor() {
       ${(x.att || []).map((a, i) => `<div class="att-row"><span class="att-ic">${a.t && a.t.startsWith("image/") ? "🖼" : "📎"}</span><span class="att-n">${esc(a.n)}</span><span class="att-s">${fmtSize(a.s)}</span><button class="ib" type="button" data-note-att-dl="${i}" title="${T("Скачать", "Download")}"><svg class="ic"><use href="#i-copy"/></svg></button><button class="ib att-del" type="button" data-note-att-del="${i}" aria-label="×">✕</button></div>`).join("")}
       <label class="ghost cf-add att-add"><span>${T("+ Прикрепить файл", "+ Attach file")}</span><input type="file" id="note-att-input" multiple hidden></label>
     </div>
-    <div class="note-foot"><span class="muted small" id="note-saved">${T("Изменено ", "Edited ") + new Date(x.updated).toLocaleString()}</span></div>
+    <div class="note-foot"><button class="note-del-link" data-note-del>${T("Удалить заметку", "Delete note")}</button><span class="muted small" id="note-saved">${T("Изменено ", "Edited ") + new Date(x.updated).toLocaleString()}</span></div>
   </div>`;
   $("note-title").value = x.title; $("note-title").oninput = saveNote;
   if (edit) { $("note-body").value = x.body || ""; $("note-body").oninput = saveNote; }
