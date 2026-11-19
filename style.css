@@ -1608,3 +1608,20 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; font-size:15px; font-weight:500; cursor:pointer; box-shadow:none; }
 .tile-new:hover{ background:rgba(255,255,255,.03); color:#A7A7AD; filter:none; transform:none; }
 .tile-plus{ font-size:34px; color:var(--lime); line-height:1; }
+
+/* Записи v2 — единый контейнер списка + нижняя плашка (правки под дизайн) */
+.rec-list{ background:#161618; border:1px solid #232326; border-radius:28px; padding:8px 10px; margin-top:12px; }
+.rec-list .rec-head{ padding:6px 14px 10px; }
+.rec-list .rrow{ background:transparent !important; border:1.5px solid transparent !important; margin:0 !important; border-radius:20px !important; padding:10px 14px !important; }
+.rec-list .rrow:hover{ background:#1E1E21 !important; }
+.rec-list .rrow.active{ background:#1E1E21 !important; border-color:var(--lime) !important; }
+.rec-alert{ position:relative; overflow:hidden; border-radius:24px; background:#1E2410; border:1px solid rgba(255,255,255,.08); padding:18px 22px; margin-top:12px; display:flex; align-items:center; gap:18px; }
+.rec-alert-glow{ position:absolute; right:-40px; top:-60px; width:360px; height:200px; border-radius:50%; background:#E8A54B; filter:blur(50px); opacity:.4; pointer-events:none; }
+.rec-alert-v{ position:relative; font-size:38px; font-weight:300; color:#fff; flex:0 0 auto; }
+.rec-alert-t{ position:relative; flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
+.rec-alert-h{ font-size:17px; font-weight:500; color:#fff; }
+.rec-alert-s{ font-size:14px; color:#C9CFB8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rec-alert-btn{ position:relative; height:46px; padding:0 22px; border-radius:23px; border:0; background:var(--lime); color:#111; font-weight:600; flex:0 0 auto; }
+.rec-alert-btn:hover{ filter:brightness(1.05); transform:none; }
+.fav-btn.on .ic{ stroke:var(--lime); fill:var(--lime); }
+@media (max-width:620px){ .rec-alert-s{ display:none; } }

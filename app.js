@@ -898,18 +898,21 @@ function render() {
       </a>`;
     }).join("") + `<button class="tile tile-new" data-act-new><span class="tile-plus">+</span>${T("Новая запись", "New entry")}</button>`;
   } else {
-    listEl.innerHTML = `<div class="rec-head"><span></span><span>${T("НАЗВАНИЕ", "NAME")}</span><span>${T("ТИП", "TYPE")}</span><span>${T("НАДЁЖНОСТЬ", "STRENGTH")}</span><span>${T("ИЗМЕНЕНО", "CHANGED")}</span><span></span></div>` +
-      list.map((x, i) => {
-        const sg = strengthTag(x);
-        return `<a class="rrow${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
-          <span class="rrow-ava">${esc(initial(x.title))}</span>
-          <span class="rrow-t"><span class="rrow-n">${esc(x.title)}</span><span class="rrow-u${expiringSoon(x) ? " exp-soon" : ""}">${esc(subline(x))}</span></span>
-          <span class="pill-type">${esc(TYPE_NAME(x.type))}</span>
-          <span class="rrow-str">${sg.label ? `<span class="pill-str ${sg.cls}">${sg.label}</span>` : ""}</span>
-          <span class="rrow-d">${esc(relTime(x.updated))}</span>
-          <span class="rrow-act">${(x.type === "login" && parseTotp(x.totp)) ? `<button type="button" class="ib" data-copy-totp aria-label="${T("Код 2FA", "2FA code")}"><span class="row-totp" data-totp="${esc(x.id)}"><span class="totp-code code"></span><span class="left"></span></span></button>` : ""}${x.login ? `<button type="button" class="ib" data-copy-login aria-label="${T("Логин", "Login")}" title="${T("Скопировать логин", "Copy login")}"><svg class="ic"><use href="#i-copy"/></svg></button>` : ""}${x.fav ? `<svg class="ic fav"><use href="#i-star"/></svg>` : ""}</span>
-        </a>`;
-      }).join("");
+    const rows = list.map(x => {
+      const sg = strengthTag(x);
+      return `<a class="rrow${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
+        <span class="rrow-ava">${esc(initial(x.title))}</span>
+        <span class="rrow-t"><span class="rrow-n">${esc(x.title)}</span><span class="rrow-u${expiringSoon(x) ? " exp-soon" : ""}">${esc(subline(x))}</span></span>
+        <span class="pill-type">${esc(TYPE_NAME(x.type))}</span>
+        <span class="rrow-str">${sg.label ? `<span class="pill-str ${sg.cls}">${sg.label}</span>` : ""}</span>
+        <span class="rrow-d">${esc(relTime(x.updated))}</span>
+        <span class="rrow-act">${x.login ? `<button type="button" class="ib" data-copy-login title="${T("Скопировать логин", "Copy login")}"><svg class="ic"><use href="#i-copy"/></svg></button>` : ""}${x.pass ? `<button type="button" class="ib" data-copy-pass title="${T("Скопировать пароль", "Copy password")}"><svg class="ic"><use href="#i-eye"/></svg></button>` : ""}<button type="button" class="ib fav-btn${x.fav ? " on" : ""}" data-fav title="${T("В избранное", "Favorite")}"><svg class="ic"><use href="#i-star"/></svg></button></span>
+      </a>`;
+    }).join("");
+    const head = `<div class="rec-head"><span></span><span>${T("НАЗВАНИЕ", "NAME")}</span><span>${T("ТИП", "TYPE")}</span><span>${T("НАДЁЖНОСТЬ", "STRENGTH")}</span><span>${T("ИЗМЕНЕНО", "CHANGED")}</span><span></span></div>`;
+    const weakList = filter === "trash" ? [] : pwEntries().filter(x => x.pass && x.type !== "card" && strength(x.pass).score < 3);
+    const alert = weakList.length ? `<div class="rec-alert"><span class="rec-alert-glow"></span><span class="rec-alert-v">${weakList.length}</span><span class="rec-alert-t"><span class="rec-alert-h">${plural(weakList.length, "слабый пароль", "слабых пароля", "слабых паролей")}</span><span class="rec-alert-s">${esc(weakList.slice(0, 3).map(x => x.title).join(", "))}${weakList.length > 3 ? "…" : ""} — ${T("замените их сгенерированными", "replace them with generated ones")}</span></span><button class="rec-alert-btn" data-fix-weak>${T("Проверить", "Review")}</button></div>` : "";
+    listEl.innerHTML = `<div class="rec-list">${head}${rows}</div>${alert}`;
   }
   listEl.querySelectorAll(".rrow, .tile").forEach((r, i) => r.style.animationDelay = Math.min(i, 8) * 0.04 + "s");
   if ($("form-card").classList.contains("hidden")) renderDetail();
@@ -953,10 +956,13 @@ $("list").onclick = async e => {
     selectedId = r.dataset.id; $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0; renderNotes();
     return;
   }
+  if (e.target.closest("[data-fix-weak]")) { $("b-audit").click(); return; }
   if (e.target.closest("[data-act-new]")) { clearForm(); showForm(); return; }
   const r = e.target.closest(".rrow, .tile"); if (!r || !r.dataset.id) return;
   if (e.target.closest("[data-copy-totp]")) { const xt = entries.find(y => y.id === r.dataset.id); const cfg = xt && parseTotp(xt.totp); if (cfg) totpCode(cfg).then(rr => { copySecret(rr.code); markUsed(xt); }); return; }
   if (e.target.closest("[data-copy-login]")) { const xi = entries.find(y => y.id === r.dataset.id); if (xi && xi.login) { copySecret(xi.login); markUsed(xi); } return; }
+  if (e.target.closest("[data-copy-pass]")) { const xp = entries.find(y => y.id === r.dataset.id); if (xp && xp.pass) { copySecret(xp.pass); markUsed(xp); } return; }
+  if (e.target.closest("[data-fav]")) { const xf = entries.find(y => y.id === r.dataset.id); if (xf) { xf.fav = !xf.fav; xf.updated = Date.now(); await persist(); renderNav(); render(); } return; }
   selectedId = r.dataset.id; clearForm(); showDetail();
   $("list").querySelectorAll(".rrow, .tile").forEach(x => x.classList.toggle("active", x.dataset.id === selectedId));
   $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0;
