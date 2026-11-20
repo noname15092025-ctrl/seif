@@ -1844,3 +1844,4 @@ body{ -webkit-tap-highlight-color:transparent; }
 .app .detail #type-tabs .tab{ min-width:0; width:auto; margin:0; padding-left:6px; padding-right:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .app .detail #type-tabs .tab-custom{ grid-column:1 / -1; }
 @media (max-width:600px){ .app .detail #type-tabs{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.lc-tile{ user-select:none; -webkit-user-select:none; }

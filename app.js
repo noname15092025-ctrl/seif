@@ -984,13 +984,13 @@ $("list").onclick = async e => {
   }
   if (e.target.closest("[data-fix-weak]")) { $("b-audit").click(); return; }
   if (e.target.closest("[data-act-new]")) { clearForm(); if (filter === "t:loyalty") { formType = "loyalty"; applyTypeLabels(); } showForm(); return; }
-  const r = e.target.closest(".rrow, .tile"); if (!r || !r.dataset.id) return;
+  const r = e.target.closest(".rrow, .tile, .lc-tile"); if (!r || !r.dataset.id) return;
   if (e.target.closest("[data-copy-totp]")) { const xt = entries.find(y => y.id === r.dataset.id); const cfg = xt && parseTotp(xt.totp); if (cfg) totpCode(cfg).then(rr => { copySecret(rr.code); markUsed(xt); }); return; }
   if (e.target.closest("[data-copy-login]")) { const xi = entries.find(y => y.id === r.dataset.id); if (xi && xi.login) { copySecret(xi.login); markUsed(xi); } return; }
   if (e.target.closest("[data-copy-pass]")) { const xp = entries.find(y => y.id === r.dataset.id); if (xp && xp.pass) { copySecret(xp.pass); markUsed(xp); } return; }
   if (e.target.closest("[data-fav]")) { const xf = entries.find(y => y.id === r.dataset.id); if (xf) { xf.fav = !xf.fav; xf.updated = Date.now(); await persist(); renderNav(); render(); } return; }
   selectedId = r.dataset.id; clearForm(); showDetail();
-  $("list").querySelectorAll(".rrow, .tile").forEach(x => x.classList.toggle("active", x.dataset.id === selectedId));
+  $("list").querySelectorAll(".rrow, .tile, .lc-tile").forEach(x => x.classList.toggle("active", x.dataset.id === selectedId));
   $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0;
 };
 const ib = (act, icon, label) => `<button type="button" class="ib" data-act="${act}" aria-label="${esc(label)}" title="${esc(label)}"><svg class="ic"><use href="#${icon}"/></svg></button>`;
