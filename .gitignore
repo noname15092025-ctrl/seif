@@ -5,5 +5,5 @@ ios/App/App/public/
 ios/App/Pods/
 ios/App/build/
 # ios/ целиком генерируется командой `npm run ios:setup`
-ios/
+/ios/
 .DS_Store
