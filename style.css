@@ -1832,3 +1832,9 @@ body{ -webkit-tap-highlight-color:transparent; }
 .scan-btns{ position:absolute; left:0; right:0; bottom:calc(28px + env(safe-area-inset-bottom)); display:flex; justify-content:center; gap:10px; }
 .scan-btns .pill{ height:48px; padding:0 22px; display:inline-flex; align-items:center; cursor:pointer; }
 @media (max-width:600px){ .lc-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .lc-tile{ border-radius:14px; padding:12px 13px; } .lc-name{ font-size:16px; } .lc-num{ font-size:12px; } }
+
+/* Вкладки типа записи: серая подложка вместо чёрной */
+.app .detail #type-tabs{ background:rgba(255,255,255,.045) !important; border:1px solid rgba(255,255,255,.08) !important; border-radius:20px; padding:8px; }
+.app .detail #type-tabs .tab{ background:#34343B !important; border-color:#40404A !important; }
+.app .detail #type-tabs .tab:hover{ background:#3D3D45 !important; }
+.app .detail #type-tabs .tab.active{ background:var(--lime) !important; border-color:var(--lime) !important; color:#111 !important; }
