@@ -15,11 +15,11 @@
 <link rel="icon" href="shield.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=39">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=90">
+<link rel="stylesheet" href="style.css?v=91">
 <script src="wordlist.js" defer></script>
 <script src="argon2.js" defer></script>
-<script src="loyalty.js?v=90" defer></script>
-<script src="app.js?v=90" defer></script>
+<script src="loyalty.js?v=91" defer></script>
+<script src="app.js?v=91" defer></script>
 </head>
 <body>
 <svg width="0" height="0" class="sprite" aria-hidden="true">
@@ -273,6 +273,7 @@
         <h2 class="d-title" id="form-title" data-en="New entry">Новая запись</h2>
       </div>
       <div class="tabs" id="type-tabs">
+        <button class="tab tab-custom" data-type="custom" data-en="Custom">Своё</button>
         <button class="tab active" data-type="login" data-en="Login">Логин</button>
         <button class="tab" data-type="card" data-en="Card">Карта</button>
         <button class="tab" data-type="loyalty" data-en="Loyalty">Скидочная</button>
@@ -283,7 +284,6 @@
         <button class="tab" data-type="key" data-en="Key">Ключ</button>
         <button class="tab" data-type="bank" data-en="Account">Счёт</button>
         <button class="tab" data-type="contact" data-en="Contact">Контакт</button>
-        <button class="tab" data-type="custom" data-en="Custom">Своё</button>
       </div>
       <label data-f="title" for="e-title" data-en="Site / name">Сайт / название</label>
       <input id="e-title" class="field">
