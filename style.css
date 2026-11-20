@@ -1403,8 +1403,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   text-decoration:none; color:#fff; display:block; transition:transform .18s ease; }
 .dash-cat:hover{ transform:translateY(-3px); color:#fff; }
 .dash-cat-blob{ position:absolute; left:34px; top:70px; width:180px; height:150px; background:var(--lime); filter:blur(32px); opacity:.85; pointer-events:none; }
-.dash-cat-top{ position:absolute; left:20px; top:18px; display:flex; flex-direction:column; gap:4px; }
-.dash-cat-n{ font-size:19px; font-weight:500; }
+.dash-cat-top{ position:absolute; left:20px; right:62px; top:18px; display:flex; flex-direction:column; gap:4px; }
+.dash-cat-n{ font-size:19px; font-weight:500; line-height:1.15; overflow-wrap:anywhere; }
 .dash-cat-k{ font-size:13px; color:#C9CFB8; }
 .dash-cat-go{ position:absolute; right:16px; top:16px; width:38px; height:38px; border-radius:19px; border:1px solid rgba(255,255,255,.35); display:flex; align-items:center; justify-content:center; font-size:18px; }
 

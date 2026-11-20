@@ -1178,12 +1178,12 @@ function renderHome() {
     { n: T("Пароли", "Passwords"), k: pwEntries().length, f: "all" },
     { n: T("Скидочные карты", "Loyalty cards"), k: cnt("loyalty"), f: "t:loyalty" },
     { n: T("Заметки", "Notes"), k: notesList().length, v: "notes" },
-    { n: T("Задачи", "Tasks"), k: tasksList().filter(t => !t.done).length, v: "tasks" },
-    { n: T("Корзина", "Trash"), k: entries.filter(x => x.deletedAt).length, f: "trash" }
+    { n: T("Задачи", "Tasks"), k: tasksList().filter(t => !t.done).length, v: "tasks" }
   ];
   const moreCats = [];
   [["login", T("Логины", "Logins")], ["card", T("Карты", "Cards")], ["wifi", "Wi-Fi"], ["doc", T("Документы", "Documents")], ["crypto", T("Крипто", "Crypto")], ["key", T("Ключи", "Keys")], ["bank", T("Счета", "Accounts")], ["contact", T("Контакты", "Contacts")]].forEach(([t, label]) => { const c = cnt(t); if (c) moreCats.push({ n: label, k: c, f: "t:" + t }); });
   [...new Set(L.map(x => x.category).filter(Boolean))].forEach(cat => moreCats.push({ n: cat, k: L.filter(x => x.category === cat).length, f: "c:" + cat }));
+  moreCats.push({ n: T("Корзина", "Trash"), k: entries.filter(x => x.deletedAt).length, f: "trash" });
   const shapes = ["40% 60% 50% 50%", "60% 40% 30% 70%", "50% 50% 60% 40%", "35% 65% 45% 55%", "55% 45% 40% 60%", "45% 55% 65% 35%"];
   const catTile = (c, i) => `<a class="dash-cat" ${c.v ? `data-view="${c.v}"` : `data-filter="${esc(c.f)}"`}><span class="dash-cat-blob sh${i % shapes.length}"></span><span class="dash-cat-top"><span class="dash-cat-n">${esc(c.n)}</span><span class="dash-cat-k">${c.k} ${T("шт.", "items")}</span></span><span class="dash-cat-go">›</span></a>`;
   const catHtml = (catsExpanded ? mainCats.concat(moreCats) : mainCats).map(catTile).join("");
