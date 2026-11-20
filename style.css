@@ -1665,10 +1665,14 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .au-recheck{ height:52px; padding:0 24px; border-radius:26px; border:0; background:#FFF; color:#111; font:600 15px Urbanist, sans-serif; cursor:pointer; }
 .au-grid{ display:grid; grid-template-columns:340px 1fr; gap:16px; align-items:start; }
 .au-dial-card{ background:#1E1E21; color:#FFF; border-radius:36px; padding:28px; display:flex; flex-direction:column; align-items:center; gap:14px; }
-.au-dial{ position:relative; width:220px; height:220px; }
-.au-dial-blob{ position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle, #5A5A60 0%, #34343A 50%, rgba(30,30,33,0) 70%); }
-.au-ring{ position:absolute; inset:0; width:220px; height:220px; }
-.au-dial b{ position:absolute; left:0; right:0; top:76px; text-align:center; color:#FFF; font-size:58px; font-weight:300; }
+.au-dial{ position:relative; width:220px; height:220px; display:flex; align-items:center; justify-content:center; }
+.au-dial-blob{ position:absolute; inset:30px; border-radius:50%; background:radial-gradient(circle at 50% 35%, rgba(255,255,255,.06), rgba(255,255,255,.015) 70%); box-shadow:0 0 70px -20px var(--au-c); }
+.au-ring{ position:absolute; inset:0; width:220px; height:220px; transform:rotate(-90deg); }
+.au-ring-track{ fill:none; stroke:rgba(255,255,255,.08); stroke-width:10; }
+.au-ring-val{ fill:none; stroke:var(--au-c); stroke-width:10; stroke-linecap:round; }
+.au-dial-num{ position:relative; display:flex; flex-direction:column; align-items:center; line-height:1; }
+.au-dial-num b{ color:#FFF; font-size:60px; font-weight:300; letter-spacing:-.02em; }
+.au-dial-num small{ margin-top:6px; font-size:13px; color:#8E9383; }
 .au-label{ font-size:18px; font-weight:500; }
 .au-sub{ font-size:14px; color:#8E9383; text-align:center; }
 .au-col{ display:flex; flex-direction:column; gap:12px; min-width:0; }

@@ -1387,6 +1387,7 @@ function audit() {
   const bad = new Set([...weak, ...reused, ...old, ...leaked].map(x => x.id)).size;
   const score = withPass.length ? Math.round(100 * (1 - bad / withPass.length)) : 100;
   const label = score >= 90 ? T("Хорошее состояние", "Good condition") : score >= 60 ? T("Нужно внимание", "Needs attention") : T("Слабое состояние", "Poor condition");
+  const dialCol = score >= 90 ? "#C8E27A" : score >= 60 ? "#E8A54B" : "#E5484D";
   const names = list => list.slice(0, 3).map(x => esc(x.title)).join(", ") + (list.length > 3 ? ` +${list.length - 3}` : "");
   const cards = [
     { n: leaked.length, t: T("Найдены в утечках", "Found in breaches"), d: leaked.length ? names(leaked) : "", col: "#E5484D", id: leaked[0] && leaked[0].id },
@@ -1404,7 +1405,7 @@ function audit() {
     </div>
     <div class="au-grid">
       <section class="au-dial-card">
-        <div class="au-dial"><span class="au-dial-blob"></span><svg class="au-ring" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="none" stroke="#C9CFB8" stroke-width="1.5" stroke-dasharray="4 6"></circle></svg><b>${score}</b></div>
+        <div class="au-dial" style="--au-c:${dialCol}"><span class="au-dial-blob"></span><svg class="au-ring" viewBox="0 0 200 200" aria-hidden="true"><circle class="au-ring-track" cx="100" cy="100" r="88"></circle><circle class="au-ring-val" cx="100" cy="100" r="88" pathLength="100" stroke-dasharray="${Math.max(score, 0.5)} 100"></circle></svg><div class="au-dial-num"><b>${score}</b><small>${T("из 100", "of 100")}</small></div></div>
         <span class="au-label">${label}</span>
         <span class="au-sub">${bad ? T("Записей к исправлению: ", "Entries to fix: ") + bad : T("Всё безопасно", "All safe")}</span>
       </section>
