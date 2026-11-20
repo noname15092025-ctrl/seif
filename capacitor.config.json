@@ -6,7 +6,21 @@
     "iosScheme": "capacitor"
   },
   "ios": {
-    "contentInset": "always",
-    "backgroundColor": "#121212"
+    "contentInset": "never",
+    "backgroundColor": "#121212",
+    "scrollEnabled": true,
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "launchAutoHide": true,
+      "backgroundColor": "#121212",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "overlaysWebView": true
+    }
   }
 }

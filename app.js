@@ -60,6 +60,7 @@ function applyTheme() {
   document.documentElement.dataset.theme = theme;
   document.querySelectorAll("[data-theme-toggle]").forEach(b => b.textContent = theme === "dark" ? "☀" : "☾");
   document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#0A0A0A" : "#ffffff";
+  nativeStatusBar();
 }
 const toggleTheme = () => { theme = theme === "dark" ? "light" : "dark"; try { localStorage.setItem("vault.theme", theme); } catch {} applyTheme(); };
 document.querySelectorAll("[data-theme-toggle]").forEach(b => b.onclick = toggleTheme);
@@ -257,13 +258,15 @@ function renderProfiles() {
 // Всегда сначала показываем лендинг; вход — по кнопке «Войти».
 function home() { landing(); }
 function landing() { $("b-signin").hidden = !store.all().length; show("start"); }
-function gotoUnlock() {
+function gotoUnlock(noAuto) {
   if (!store.all().length) return landing();
-  renderProfiles(); $("unlock-err").textContent = ""; show("unlock"); setTimeout(() => $("unlock-pw").focus(), 50);
+  renderProfiles(); $("unlock-err").textContent = ""; show("unlock");
+  // В iOS-приложении с включённым Face ID сразу спрашиваем лицо, клавиатуру не открываем
+  updateBioBtn(noAuto !== true).then(asked => { if (!asked && !(NATIVE && noAuto === true)) setTimeout(() => $("unlock-pw").focus(), 50); });
 }
 $("profiles").onclick = e => {
   const b = e.target.closest("[data-pid]"); if (!b) return;
-  currentId = b.dataset.pid; renderProfiles(); $("unlock-err").textContent = ""; $("unlock-pw").focus();
+  currentId = b.dataset.pid; renderProfiles(); $("unlock-err").textContent = ""; updateBioBtn(false); $("unlock-pw").focus();
 };
 $("b-signin").onclick = gotoUnlock;
 $("b-new3") && ($("b-new3").onclick = () => $("b-new").click());
@@ -327,10 +330,12 @@ $("b-setpw").onclick = async e => {
   try {
     await setupDevice(pendingKey, p1, pendingKey._vaultBox || null, pname);
     const raw = new Uint8Array(await C.exportKey("raw", pendingKey));
-    vaultKey = await importVaultKey(raw); saveSession(raw, currentId); raw.fill(0); pendingKey = null;
+    vaultKey = await importVaultKey(raw); saveSession(raw, currentId);
+    const bioRaw = raw.slice(); raw.fill(0); pendingKey = null;
     entries = JSON.parse(dec.decode(await open(vaultKey, store.get().vault))).map(migrateEntry);
     $("pw1").value = $("pw2").value = $("p-name").value = ""; meterPw1();
     openVaultView();
+    bioOffer(bioRaw, currentId).finally(() => bioRaw.fill(0));
   } catch (err) { $("setpw-err").textContent = T("Ошибка: ", "Error: ") + err.message; }
   busy(e.target, false, "");
 };
@@ -398,10 +403,12 @@ $("b-unlock").onclick = async e => {
         back.fill(0);
       } catch {}
     }
+    const bioRaw = raw.slice();
     raw.fill(0);
     store.set(s);
     $("unlock-pw").value = ""; $("unlock-err").textContent = ""; $("ldial-turn").style.transform = "";
     openVaultView();
+    bioOffer(bioRaw, s.id).finally(() => bioRaw.fill(0));
   } catch (err) {
     if (authed) { try { store.set(s); } catch {} $("unlock-err").textContent = ""; try { openVaultView(); } catch {} busy(e.target, false, ""); return; }
     s.fails = (s.fails || 0) + 1;
@@ -1359,7 +1366,7 @@ function startRenameTask(row, x) {
 }
 
 /* ---------------- Настройки: смена пароля, имя ---------------- */
-$("b-settings").onclick = () => { $("rename").value = store.get().name || ""; $("cp-err").textContent = ""; show("settings"); };
+$("b-settings").onclick = () => { $("rename").value = store.get().name || ""; $("cp-err").textContent = ""; show("settings"); refreshBioSetting(); };
 $("b-switch").onclick = () => lock();
 $("b-cp").onclick = async e => {
   const s = store.get(), oldPw = $("cp-old").value, p1 = $("cp-new1").value, p2 = $("cp-new2").value;
@@ -1652,11 +1659,12 @@ function lock() {
   clearSession();
   vaultKey = null; entries = []; selectedId = null; view = "vault"; breached = new Map(); totpKeys.clear();
   $("list").innerHTML = ""; $("detail-view").innerHTML = ""; $("search").value = ""; $("audit-body").innerHTML = ""; $("import-body").innerHTML = ""; importRows = [];
-  clearForm(); home();
+  clearForm();
+  if (NATIVE && store.all().length) gotoUnlock(true); else home(); // в приложении — сразу экран входа, без лендинга
 }
 $("b-logout").onclick = lock;
 $("b-wipe").onclick = async () => {
-  if (await confirmBox(T("Удалить профиль «", "Delete profile “") + (store.get().name || "") + T("» с этого устройства? Восстановить можно будет только по секретной фразе и резервной копии.", "” from this device? It can only be restored with the secret phrase and a backup."), T("Удалить", "Delete"), true)) { store.remove(currentId); currentId = null; lock(); }
+  if (await confirmBox(T("Удалить профиль «", "Delete profile “") + (store.get().name || "") + T("» с этого устройства? Восстановить можно будет только по секретной фразе и резервной копии.", "” from this device? It can only be restored with the secret phrase and a backup."), T("Удалить", "Delete"), true)) { bioForget(currentId); store.remove(currentId); currentId = null; lock(); }
 };
 let idle, hiddenTimer;
 function resetIdle() { clearTimeout(idle); if (vaultKey && LOCK_IDLE_MS > 0) idle = setTimeout(lock, LOCK_IDLE_MS); }
@@ -1746,5 +1754,106 @@ if ($("gp-presets")) $("gp-presets").onclick = e => {
   if (p === "max") set("chars", 24); else if (p === "words") set("words", 24); else if (p === "pin") set("pin", 6); else if (p === "pron") set("pron", 14);
 };
 
-initWords().then(async () => { applyLang(); clearForm(); updGenUi(); if (!(await tryResume())) home(); })
+/* ---------------- iOS-приложение (Capacitor): Face ID / Touch ID, статус-бар ----------------
+   Ключ сейфа (не мастер-пароль!) кладётся в Keychain iPhone с доступом только по биометрии
+   (плагин native/shut-keychain). На сайте всё это не активно: NATIVE = false. */
+function isNative() { try { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); } catch { return false; } }
+function capPlugin(name) {
+  const Cp = window.Capacitor; if (!Cp) return null;
+  return (Cp.Plugins && Cp.Plugins[name]) || (Cp.registerPlugin ? Cp.registerPlugin(name) : null);
+}
+function nativeStatusBar() {
+  if (!isNative()) return;
+  const sb = capPlugin("StatusBar"); if (sb) sb.setStyle({ style: theme === "dark" ? "DARK" : "LIGHT" }).catch(() => {});
+}
+const NATIVE = isNative();
+const KC = NATIVE ? capPlugin("ShutKeychain") : null;
+const BIO_NO = "vault.bio.no."; // + id профиля: пользователь отказался от предложения
+let bioType = "faceId";
+const bioName = () => bioType === "touchId" ? "Touch ID" : "Face ID";
+async function bioStatus(id) {
+  if (!KC) return { available: false, has: false };
+  try { const r = await KC.status({ id: id || "" }); if (r.type && r.type !== "none") bioType = r.type; return r; }
+  catch { return { available: false, has: false }; }
+}
+// После входа по паролю: предложить Face ID (raw — копия ключа, вызывающий затирает её сам)
+async function bioOffer(raw, id) {
+  if (!KC || !id) return;
+  const st = await bioStatus(id); if (!st.available || st.has) return;
+  let no = false; try { no = localStorage.getItem(BIO_NO + id) === "1"; } catch {}
+  if (no) return;
+  const ok = await confirmBox(T("Открывать сейф по ", "Unlock the vault with ") + bioName() + T("? Ключ сейфа сохранится в защищённом хранилище iPhone (Keychain) и откроется только вашим лицом или пальцем. Мастер-пароль не сохраняется.", "? The vault key is kept in the iPhone Keychain and opens only with your face or finger. The master password is never stored."), T("Включить", "Turn on"));
+  if (!ok) { try { localStorage.setItem(BIO_NO + id, "1"); } catch {} return; }
+  try { await KC.save({ id, key: b64(raw) }); toast(bioName() + T(" включён", " is on")); }
+  catch (e) { alertBox(T("Не удалось включить ", "Could not turn on ") + bioName() + ": " + (e && e.code === "nopasscode" ? T("на iPhone не задан код-пароль.", "no passcode is set on this iPhone.") : (e && e.message) || "")); }
+}
+function bioForget(id) { if (KC && id) KC.remove({ id }).catch(() => {}); }
+// Кнопка «Войти по Face ID» на экране входа. auto=true — сразу запросить лицо. Возвращает true, если запросили.
+async function updateBioBtn(auto) {
+  const btn = $("b-bio"); if (!btn) return false;
+  const st = KC && currentId ? await bioStatus(currentId) : { has: false };
+  const on = !!(st.available && st.has);
+  btn.classList.toggle("hidden", !on); btn.textContent = T("Войти по ", "Sign in with ") + bioName();
+  if (on && auto) { bioUnlock(); return true; }
+  return false;
+}
+let bioBusy = false;
+async function bioUnlock() {
+  const s = store.get(); if (!KC || !s || bioBusy || vaultKey) return;
+  bioBusy = true;
+  let raw = null;
+  try {
+    const r = await KC.load({ id: s.id, reason: T("Открыть сейф", "Open the vault") });
+    raw = unb64(r.key);
+  } catch (e) {
+    bioBusy = false;
+    if (e && e.code === "notfound") { // биометрию на телефоне меняли — запись Keychain стала недействительной
+      $("unlock-err").textContent = bioName() + T(" сброшен: войдите по паролю, и его можно будет включить снова.", " was reset: sign in with your password to turn it on again.");
+      try { localStorage.removeItem(BIO_NO + s.id); } catch {}
+      updateBioBtn(false);
+    }
+    setTimeout(() => $("unlock-pw").focus(), 50);
+    return;
+  }
+  try {
+    vaultKey = await importVaultKey(raw);
+    entries = JSON.parse(dec.decode(await open(vaultKey, s.vault))).map(migrateEntry);
+  } catch {
+    raw.fill(0); vaultKey = null; entries = []; bioBusy = false;
+    bioForget(s.id); updateBioBtn(false);
+    $("unlock-err").textContent = T("Сохранённый ключ не подошёл — войдите по паролю.", "The saved key didn't fit — sign in with your password.");
+    return;
+  }
+  s.fails = 0; s.lockUntil = 0; s.lastLogin = Date.now();
+  saveSession(raw, s.id); try { localStorage.setItem("vault.last", s.id); } catch {}
+  try { await ensureSyncIds(s, raw); } catch {}
+  raw.fill(0);
+  store.set(s);
+  if (syncUrl()) setTimeout(() => { const cur = store.get(); if (cur && vaultKey) syncPull(cur).catch(() => {}); }, 200);
+  $("unlock-pw").value = ""; $("unlock-err").textContent = "";
+  bioBusy = false;
+  openVaultView();
+}
+if ($("b-bio")) $("b-bio").onclick = () => bioUnlock();
+// Вернулись в приложение на экран входа — сразу спросить лицо
+if (NATIVE) document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && !vaultKey && !$("v-unlock").classList.contains("hidden") && !$("b-bio").classList.contains("hidden")) bioUnlock();
+});
+// Настройки: переключатель Face ID (виден только в iOS-приложении с биометрией)
+async function refreshBioSetting() {
+  const row = $("bio-row"); if (!row) return;
+  const st = await bioStatus(currentId);
+  row.classList.toggle("hidden", !st.available);
+  $("bio-label").textContent = T("Вход по ", "Sign in with ") + bioName();
+  $("set-bio").checked = !!st.has;
+}
+if ($("set-bio")) $("set-bio").onchange = async e => {
+  if (!e.target.checked) { bioForget(currentId); try { localStorage.setItem(BIO_NO + currentId, "1"); } catch {} toast(bioName() + T(" выключен", " is off")); return; }
+  e.target.checked = false; // ключ не извлекается из памяти — включаем при следующем входе по паролю
+  try { localStorage.removeItem(BIO_NO + currentId); } catch {}
+  alertBox(T("Заблокируйте сейф и войдите по мастер-паролю — приложение предложит включить ", "Lock the vault and sign in with your master password — the app will offer to turn on ") + bioName() + ".");
+};
+nativeStatusBar();
+
+initWords().then(async () => { applyLang(); clearForm(); updGenUi(); if (!(await tryResume())) { if (NATIVE && store.all().length) gotoUnlock(); else home(); } })
   .catch(err => { $("loading-msg").textContent = "Ошибка: " + err.message + ". Обновите страницу."; });

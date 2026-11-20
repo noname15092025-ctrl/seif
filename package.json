@@ -5,14 +5,20 @@
   "description": "SHUT — zero-knowledge password manager (iOS wrapper via Capacitor)",
   "scripts": {
     "build:www": "node scripts/build-www.mjs",
-    "ios:sync": "npm run build:www && npx cap sync ios",
+    "ios:setup": "npm run build:www && npx cap add ios && npm run ios:assets && npm run ios:sync",
+    "ios:assets": "npx @capacitor/assets generate --ios --assetPath assets --iconBackgroundColor \"#121212\" --iconBackgroundColorDark \"#121212\" --splashBackgroundColor \"#121212\" --splashBackgroundColorDark \"#121212\"",
+    "ios:sync": "npm run build:www && npx cap sync ios && node scripts/ios-patch.mjs",
     "ios:open": "npx cap open ios"
   },
   "dependencies": {
     "@capacitor/core": "^6.1.2",
-    "@capacitor/ios": "^6.1.2"
+    "@capacitor/ios": "^6.1.2",
+    "@capacitor/splash-screen": "^6.0.2",
+    "@capacitor/status-bar": "^6.0.1",
+    "shut-keychain": "file:native/shut-keychain"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^6.1.2"
   }
 }

@@ -4,4 +4,6 @@ www/
 ios/App/App/public/
 ios/App/Pods/
 ios/App/build/
+# ios/ целиком генерируется командой `npm run ios:setup`
+ios/
 .DS_Store

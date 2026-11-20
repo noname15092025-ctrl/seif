@@ -15,10 +15,10 @@
 <link rel="icon" href="shield.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=39">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=85">
+<link rel="stylesheet" href="style.css?v=86">
 <script src="wordlist.js" defer></script>
 <script src="argon2.js" defer></script>
-<script src="app.js?v=85" defer></script>
+<script src="app.js?v=86" defer></script>
 </head>
 <body>
 <svg width="0" height="0" class="sprite" aria-hidden="true">
@@ -143,6 +143,7 @@
       <input type="password" id="unlock-pw" class="field" placeholder="••••••••••••" autocomplete="current-password">
       <div class="err" id="unlock-err"></div>
       <button class="wide pill accent-btn" id="b-unlock" data-en="Open the safe">Открыть сейф</button>
+      <button type="button" class="wide pill ghost hidden bio-btn" id="b-bio">Войти по Face ID</button>
       <div class="p-links">
         <a id="b-forgot" data-en="Restore with phrase">Восстановить по фразе</a>
         <a id="b-new2" data-en="+ New profile">+ Новый профиль</a>
@@ -373,6 +374,7 @@
       <option value="1800000" data-en="30 minutes">30 минут</option>
       <option value="0" data-en="Never">Никогда</option>
     </select>
+    <label class="chk mt12 hidden" id="bio-row"><input type="checkbox" id="set-bio"> <span id="bio-label">Вход по Face ID</span></label>
     <label class="chk mt12"><input type="checkbox" id="set-stay"> <span data-en="Stay unlocked after page refresh">Оставаться в сейфе после обновления страницы</span></label>
     <p class="muted small" data-en="Closing the tab always locks the vault. The master password is still required then.">Закрытие вкладки всегда блокирует сейф — тогда мастер-пароль нужен заново.</p>
     <div class="btn-row"><button class="ghost" data-install hidden data-en="Install as app">Установить как приложение</button></div>
