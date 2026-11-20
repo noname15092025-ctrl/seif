@@ -4,16 +4,21 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; font-src 'self'; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.pwnedpasswords.com https://*.workers.dev; base-uri 'none'; form-action 'none'; frame-src 'none'; child-src 'none'; object-src 'none'; media-src 'none'">
 <meta name="referrer" content="no-referrer">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SHUT">
+<meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#0A0A0A">
 <title>SHUT — хранилище</title>
 <link rel="icon" href="shield.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=39">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=84">
+<link rel="stylesheet" href="style.css?v=85">
 <script src="wordlist.js" defer></script>
 <script src="argon2.js" defer></script>
-<script src="app.js?v=84" defer></script>
+<script src="app.js?v=85" defer></script>
 </head>
 <body>
 <svg width="0" height="0" class="sprite" aria-hidden="true">
@@ -368,7 +373,7 @@
       <option value="1800000" data-en="30 minutes">30 минут</option>
       <option value="0" data-en="Never">Никогда</option>
     </select>
-    <label class="chk" style="margin-top:12px"><input type="checkbox" id="set-stay"> <span data-en="Stay unlocked after page refresh">Оставаться в сейфе после обновления страницы</span></label>
+    <label class="chk mt12"><input type="checkbox" id="set-stay"> <span data-en="Stay unlocked after page refresh">Оставаться в сейфе после обновления страницы</span></label>
     <p class="muted small" data-en="Closing the tab always locks the vault. The master password is still required then.">Закрытие вкладки всегда блокирует сейф — тогда мастер-пароль нужен заново.</p>
     <div class="btn-row"><button class="ghost" data-install hidden data-en="Install as app">Установить как приложение</button></div>
     <h3 data-en="Sync across devices">Синхронизация между устройствами</h3>

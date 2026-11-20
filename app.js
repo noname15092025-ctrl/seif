@@ -1153,7 +1153,7 @@ function renderHome() {
   [["login", T("Логины", "Logins")], ["card", T("Карты", "Cards")], ["wifi", "Wi-Fi"], ["doc", T("Документы", "Documents")], ["crypto", T("Крипто", "Crypto")], ["key", T("Ключи", "Keys")], ["bank", T("Счета", "Accounts")], ["contact", T("Контакты", "Contacts")]].forEach(([t, label]) => { const c = cnt(t); if (c) moreCats.push({ n: label, k: c, f: "t:" + t }); });
   [...new Set(L.map(x => x.category).filter(Boolean))].forEach(cat => moreCats.push({ n: cat, k: L.filter(x => x.category === cat).length, f: "c:" + cat }));
   const shapes = ["40% 60% 50% 50%", "60% 40% 30% 70%", "50% 50% 60% 40%", "35% 65% 45% 55%", "55% 45% 40% 60%", "45% 55% 65% 35%"];
-  const catTile = (c, i) => `<a class="dash-cat" ${c.v ? `data-view="${c.v}"` : `data-filter="${esc(c.f)}"`}><span class="dash-cat-blob" style="border-radius:${shapes[i % shapes.length]}"></span><span class="dash-cat-top"><span class="dash-cat-n">${esc(c.n)}</span><span class="dash-cat-k">${c.k} ${T("шт.", "items")}</span></span><span class="dash-cat-go">›</span></a>`;
+  const catTile = (c, i) => `<a class="dash-cat" ${c.v ? `data-view="${c.v}"` : `data-filter="${esc(c.f)}"`}><span class="dash-cat-blob sh${i % shapes.length}"></span><span class="dash-cat-top"><span class="dash-cat-n">${esc(c.n)}</span><span class="dash-cat-k">${c.k} ${T("шт.", "items")}</span></span><span class="dash-cat-go">›</span></a>`;
   const catHtml = (catsExpanded ? mainCats.concat(moreCats) : mainCats).map(catTile).join("");
   const catsHead = `<div class="dash-cats-head"><h2 class="dash-h2">${T("Категории", "Categories")}</h2>${moreCats.length ? `<button class="cats-more${catsExpanded ? " open" : ""}" data-cats-more>${catsExpanded ? T("Свернуть", "Collapse") : T("Ещё", "More") + " " + moreCats.length}<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>` : ""}</div>`;
   const recent = L.filter(x => x.used || x.updated !== x.created).sort((a, b) => Math.max(b.used || 0, b.updated) - Math.max(a.used || 0, a.updated)).slice(0, 5);
@@ -1161,13 +1161,13 @@ function renderHome() {
   const recentHtml = recent.length ? recent.map(x => `<a class="dash-rec" data-open="${esc(x.id)}"><span class="dash-rec-ava">${esc(initial(x.title))}</span><span class="dash-rec-n">${esc(x.title)}</span><span class="dash-rec-u">${esc(subline(x))}</span><span class="dash-rec-t">${esc(relTime(Math.max(x.used || 0, x.updated)))}</span></a>`).join("") : `<div class="dash-empty">${T("Пока пусто", "Nothing yet")}</div>`;
   const recentTiles = recent.length ? recent.map(x => { const sg = strengthTag(x); return `<a class="tile" data-open="${esc(x.id)}"><span class="tile-glow${sg.cls === "weak" ? " warn" : ""}"></span><span class="tile-top"><span class="tile-ava">${esc(initial(x.title))}</span><span class="tile-type">${esc(tLabel(x))}</span></span><span class="tile-mid"><span class="tile-n">${esc(x.title)}</span><span class="tile-u">${esc(subline(x))}</span></span><span class="tile-bot">${sg.label ? `<span class="pill-str ${sg.cls}">${sg.label}</span>` : "<span></span>"}<span class="tile-d">${esc(relTime(Math.max(x.used || 0, x.updated)))}</span></span></a>`; }).join("") : `<div class="dash-empty">${T("Пока пусто", "Nothing yet")}</div>`;
   const recentBlock = `<div class="dash-recent-head"><h2 class="dash-h2">${T("Недавние", "Recent")}</h2><div class="rec-toggle sm"><button class="rec-seg${recentMode === "list" ? " on" : ""}" data-recentmode="list">${T("Список", "List")}</button><button class="rec-seg${recentMode === "tiles" ? " on" : ""}" data-recentmode="tiles">${T("Плитка", "Tiles")}</button></div></div>` + (recentMode === "tiles" ? `<div class="rec-tiles-grid">${recentTiles}</div>` : `<div class="dash-recent">${recentHtml}</div>`);
-  const stat = (k, v, col) => `<div class="dash-stat"><span class="dash-stat-k">${k}</span><span class="dash-stat-v" style="color:${col}">${v}</span></div>`;
+  const stat = (k, v, cls) => `<div class="dash-stat"><span class="dash-stat-k">${k}</span><span class="dash-stat-v${cls ? " " + cls : ""}">${v}</span></div>`;
   $("list").innerHTML = `
     <section class="dash-hero">
       <div class="dash-hero-l"><span class="dash-date">${esc(dateStr)}</span><h1 class="dash-greet">${esc(greet())}${name ? ", " + esc(name) : ""}</h1></div>
       <div class="dash-cards">
         <div class="dash-score"><div class="dash-score-l"><span class="dash-stat-k">${T("Защита сегодня", "Protection today")}</span><span class="dash-score-v">${d.score} <span>%</span></span></div><span class="dash-dial"><span class="dash-dial-dot"></span></span></div>
-        ${stat(T("Записей", "Entries"), d.total, "#F0F0EE")}${stat(T("Слабые", "Weak"), d.weak, d.weak ? "#E8A54B" : "#F0F0EE")}${stat(T("Утечки", "Leaks"), d.leaked, d.leaked ? "#E5706F" : "#F0F0EE")}
+        ${stat(T("Записей", "Entries"), d.total, "")}${stat(T("Слабые", "Weak"), d.weak, d.weak ? "c-warn" : "")}${stat(T("Утечки", "Leaks"), d.leaked, d.leaked ? "c-bad" : "")}
       </div>
     </section>
     ${catsHead}
@@ -1387,17 +1387,17 @@ function audit() {
   const bad = new Set([...weak, ...reused, ...old, ...leaked].map(x => x.id)).size;
   const score = withPass.length ? Math.round(100 * (1 - bad / withPass.length)) : 100;
   const label = score >= 90 ? T("Хорошее состояние", "Good condition") : score >= 60 ? T("Нужно внимание", "Needs attention") : T("Слабое состояние", "Poor condition");
-  const dialCol = score >= 90 ? "#C8E27A" : score >= 60 ? "#E8A54B" : "#E5484D";
+  const dialCls = score >= 90 ? "s-good" : score >= 60 ? "s-mid" : "s-bad";
   const names = list => list.slice(0, 3).map(x => esc(x.title)).join(", ") + (list.length > 3 ? ` +${list.length - 3}` : "");
   const cards = [
-    { n: leaked.length, t: T("Найдены в утечках", "Found in breaches"), d: leaked.length ? names(leaked) : "", col: "#E5484D", id: leaked[0] && leaked[0].id },
-    { n: weak.length, t: T("Слабые пароли", "Weak passwords"), d: weak.length ? names(weak) : "", col: "#E8A54B", id: weak[0] && weak[0].id },
-    { n: reused.length, t: T("Повторяются", "Reused"), d: reused.length ? names(reused) : "", col: "#C8E27A", id: reused[0] && reused[0].id },
-    { n: old.length, t: T("Старше года", "Older than a year"), d: old.length ? names(old) : "", col: "#9AA387", id: old[0] && old[0].id },
+    { n: leaked.length, t: T("Найдены в утечках", "Found in breaches"), d: leaked.length ? names(leaked) : "", col: "g-red", id: leaked[0] && leaked[0].id },
+    { n: weak.length, t: T("Слабые пароли", "Weak passwords"), d: weak.length ? names(weak) : "", col: "g-amber", id: weak[0] && weak[0].id },
+    { n: reused.length, t: T("Повторяются", "Reused"), d: reused.length ? names(reused) : "", col: "g-lime", id: reused[0] && reused[0].id },
+    { n: old.length, t: T("Старше года", "Older than a year"), d: old.length ? names(old) : "", col: "g-olive", id: old[0] && old[0].id },
   ].filter(c => c.n);
   const issues = cards.length
-    ? cards.map(c => `<div class="au-card"><span class="au-glow" style="background:${c.col}"></span><span class="au-num">${c.n}</span><span class="au-txt"><b>${c.t}</b><small>${c.d}</small></span><button class="au-fix" data-audit-edit="${esc(c.id)}">${T("Исправить", "Fix")}</button></div>`).join("")
-    : `<div class="au-card au-ok"><span class="au-glow" style="background:#C8E27A"></span><span class="au-num">✓</span><span class="au-txt"><b>${T("Всё в порядке", "All good")}</b><small>${T("Слабых, повторных и устаревших паролей нет", "No weak, reused or outdated passwords")}</small></span></div>`;
+    ? cards.map(c => `<div class="au-card"><span class="au-glow ${c.col}"></span><span class="au-num">${c.n}</span><span class="au-txt"><b>${c.t}</b><small>${c.d}</small></span><button class="au-fix" data-audit-edit="${esc(c.id)}">${T("Исправить", "Fix")}</button></div>`).join("")
+    : `<div class="au-card au-ok"><span class="au-glow g-lime"></span><span class="au-num">✓</span><span class="au-txt"><b>${T("Всё в порядке", "All good")}</b><small>${T("Слабых, повторных и устаревших паролей нет", "No weak, reused or outdated passwords")}</small></span></div>`;
   $("audit-body").innerHTML = `
     <div class="au-hero">
       <div class="au-hero-txt"><span>${T("Проверка на этом устройстве", "Checked on this device")}</span><b>${T("Аудит паролей", "Password audit")}</b></div>
@@ -1405,7 +1405,7 @@ function audit() {
     </div>
     <div class="au-grid">
       <section class="au-dial-card">
-        <div class="au-dial" style="--au-c:${dialCol}"><span class="au-dial-blob"></span><svg class="au-ring" viewBox="0 0 200 200" aria-hidden="true"><circle class="au-ring-track" cx="100" cy="100" r="88"></circle><circle class="au-ring-val" cx="100" cy="100" r="88" pathLength="100" stroke-dasharray="${Math.max(score, 0.5)} 100"></circle></svg><div class="au-dial-num"><b>${score}</b><small>${T("из 100", "of 100")}</small></div></div>
+        <div class="au-dial ${dialCls}"><span class="au-dial-blob"></span><svg class="au-ring" viewBox="0 0 200 200" aria-hidden="true"><circle class="au-ring-track" cx="100" cy="100" r="88"></circle><circle class="au-ring-val" cx="100" cy="100" r="88" pathLength="100" stroke-dasharray="${Math.max(score, 0.5)} 100"></circle></svg><div class="au-dial-num"><b>${score}</b><small>${T("из 100", "of 100")}</small></div></div>
         <span class="au-label">${label}</span>
         <span class="au-sub">${bad ? T("Записей к исправлению: ", "Entries to fix: ") + bad : T("Всё безопасно", "All safe")}</span>
       </section>
