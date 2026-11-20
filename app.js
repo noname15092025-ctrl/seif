@@ -544,7 +544,9 @@ const EXTRA = {
         { k: "bik", ru: "БИК", en: "BIC / SWIFT", c: 1 }, { k: "corr", ru: "Корр. счёт", en: "Correspondent account", c: 1 },
         { k: "inn", ru: "ИНН", en: "Tax ID", c: 1 }],
   contact: [{ k: "relation", ru: "Кем приходится", en: "Relationship" }, { k: "phone", ru: "Телефон", en: "Phone", c: 1 },
-        { k: "email", ru: "Email", en: "Email", c: 1 }, { k: "address", ru: "Адрес", en: "Address", m: 1 }]
+        { k: "email", ru: "Email", en: "Email", c: 1 }, { k: "address", ru: "Адрес", en: "Address", m: 1 }],
+  loyalty: [{ k: "num", ru: "Номер карты", en: "Card number", c: 1, mono: 1, ph: ["Введите или отсканируйте", "Type or scan"] },
+        { k: "holder", ru: "Владелец (необязательно)", en: "Holder (optional)" }]
 };
 const exLabel = f => lang === "en" ? f.en : f.ru;
 function renderExtraForm(values) {
@@ -654,6 +656,7 @@ const TYPE_LABELS = () => ({
   wifi: { title: T("Название сети (SSID)", "Network name (SSID)"), pass: T("Пароль Wi-Fi", "Wi-Fi password") },
   doc: { title: T("Название", "Name") }, crypto: { title: T("Название кошелька", "Wallet name") },
   key: { title: T("Название", "Name") }, bank: { title: T("Банк", "Bank") }, contact: { title: T("Имя", "Name") },
+  loyalty: { title: T("Магазин", "Store") },
   custom: { title: T("Название записи", "Entry name") }
 });
 function applyTypeLabels() {
@@ -663,6 +666,7 @@ function applyTypeLabels() {
   document.querySelectorAll("#type-tabs .tab").forEach(b => b.classList.toggle("active", b.dataset.type === formType));
   const keepVals = {}; (EXTRA[formType] || []).forEach(f => { const el = $("ex-" + f.k); if (el) keepVals[f.k] = el.value; });
   renderExtraForm(keepVals);
+  loyaltyFormSetup();
   $("form-title").textContent = editingId ? T("Редактирование", "Editing") : T("Новая запись", "New entry");
   $("b-add").textContent = T("Сохранить", "Save");
 }
@@ -671,7 +675,7 @@ const FIELDS = { title: "e-title", login: "e-login", url: "e-url", pass: "e-pass
 function clearForm() {
   Object.values(FIELDS).forEach(id => $(id).value = ""); $("e-fav").checked = false; $("e-extra").innerHTML = ""; $("cf-list").innerHTML = "";
   formAtt = []; renderAttList();
-  editingId = null; $("form-err").textContent = ""; $("gen-opts").classList.add("hidden"); meterEntry(); applyTypeLabels();
+  editingId = null; loyaltyFmt = "auto"; $("form-err").textContent = ""; $("gen-opts").classList.add("hidden"); meterEntry(); applyTypeLabels();
 }
 // Свои (произвольные) поля записи — любые пары «название: значение», можно пометить секретными
 function cfAddRow(k = "", v = "", sec = false) {
@@ -740,6 +744,10 @@ $("b-add").onclick = async () => {
   keep.forEach(k => base[k] = d[k]);
   if (formType === "login") base.url = safeUrl(d.url);
   if (EXTRA[formType]) { base.f = {}; EXTRA[formType].forEach(f => { const v = $("ex-" + f.k).value; if (v.trim()) base.f[f.k] = f.s || f.m ? v : v.trim(); }); }
+  if (formType === "loyalty") {
+    if (!base.f.num) { $("form-err").textContent = T("Укажите номер карты", "Enter the card number"); return; }
+    base.f.num = base.f.num.replace(/\s+/g, ""); base.f.fmt = barcodeFormat(base.f.num, loyaltyFmt);
+  }
   const custom = collectCustom(); if (custom.length) base.custom = custom;
   if (formAtt.length) base.att = formAtt;
   let id;
@@ -776,7 +784,7 @@ function startEdit(x) {
   editingId = x.id; formType = x.type;
   for (const [k, id] of Object.entries(FIELDS)) $(id).value = x[k] || "";
   $("e-fav").checked = !!x.fav; meterEntry();
-  $("e-extra").innerHTML = ""; applyTypeLabels(); renderExtraForm(x.f || {});
+  $("e-extra").innerHTML = ""; applyTypeLabels(); renderExtraForm(x.f || {}); loyaltyFmt = (x.f && x.f.fmt) || "auto"; loyaltyFormSetup();
   $("cf-list").innerHTML = ""; (x.custom || []).forEach(c => cfAddRow(c.k, c.v, c.s));
   formAtt = x.att ? x.att.map(a => ({ ...a })) : []; renderAttList();
   showForm();
@@ -840,6 +848,7 @@ const subline = x => {
     case "key": return f.product || TYPE_NAME("key");
     case "bank": return f.account ? "•••• " + f.account.replace(/\s/g, "").slice(-4) : TYPE_NAME("bank");
     case "contact": return f.relation || f.phone || f.email || TYPE_NAME("contact");
+    case "loyalty": return f.num ? T("Карта · ", "Card · ") + f.num.slice(-4) : TYPE_NAME("loyalty");
     case "custom": return (x.custom && x.custom[0] && x.custom[0].k) || TYPE_NAME("custom");
     case "page": return T("Заметка", "Note");
     case "task": return x.done ? T("Выполнено", "Done") : T("Задача", "Task");
@@ -883,7 +892,7 @@ function render() {
     const stat = (k, n, v, kind) => `<a class="rec-stat ${kind}${filter === k ? " on" : ""}" data-filter="${k}"><span class="rec-stat-top"><span class="rec-stat-n">${n}</span><span class="rec-stat-dot"></span></span><span class="rec-stat-v">${v}</span></a>`;
     head.innerHTML = `<section class="rec-hero">
       <div class="rec-hero-top">
-        <div class="rec-hero-l"><span class="rec-sub">${T("Хранилище · зашифровано на устройстве", "Vault · encrypted on device")}</span><h1 class="rec-title">${filter === "trash" ? T("Корзина", "Trash") : T("Записи", "Records")}</h1></div>
+        <div class="rec-hero-l"><span class="rec-sub">${T("Хранилище · зашифровано на устройстве", "Vault · encrypted on device")}</span><h1 class="rec-title">${filter === "trash" ? T("Корзина", "Trash") : filter === "t:loyalty" ? T("Скидочные карты", "Loyalty cards") : T("Записи", "Records")}</h1></div>
         <div class="rec-toggle"><button class="rec-seg${listMode === "list" ? " on" : ""}" data-listmode="list">${T("Список", "List")}</button><button class="rec-seg${listMode === "tiles" ? " on" : ""}" data-listmode="tiles">${T("Плитка", "Tiles")}</button></div>
       </div>
       <div class="rec-stats">${stat("all", T("Все", "All"), cAll, "k-all")}${stat("fav", T("Избранное", "Favorites"), cFav, "k-plain")}${stat("attention", T("Внимание", "Attention"), cAtt, "k-warn")}${stat("recent", T("Недавние", "Recent"), cRec, "k-plain")}</div>
@@ -893,7 +902,14 @@ function render() {
   const empty = `<div class="empty">${filter === "trash" ? T("Корзина пуста", "Trash is empty") : filter === "attention" ? T("Всё в порядке — проблемных паролей нет", "All good — no problem passwords") : live().length ? T("Ничего не найдено", "Nothing found") : T("Сейф пока пуст. Нажмите «+ Добавить».", "The safe is empty. Click “+ Add”.")}</div>`;
   const listEl = $("list");
   listEl.classList.toggle("tiles-mode", listMode === "tiles");
-  if (!list.length) { listEl.innerHTML = empty; if ($("form-card").classList.contains("hidden")) renderDetail(); return; }
+  if (!list.length && filter !== "t:loyalty") { listEl.innerHTML = empty; if ($("form-card").classList.contains("hidden")) renderDetail(); return; }
+  if (filter === "t:loyalty") { // «Кошелёк»: карты магазинов плитками в фирменных цветах
+    listEl.classList.remove("tiles-mode");
+    listEl.innerHTML = `<div class="lc-grid">${list.map(x => `<a class="lc-tile${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}" data-brand="${esc(x.title)}"><span class="lc-name">${esc(x.title)}</span><span class="lc-num">${esc(((x.f || {}).num || "").slice(-4))}</span></a>`).join("")}<button class="lc-tile lc-new" data-act-new><span class="lc-plus">+</span>${T("Добавить карту", "Add card")}</button></div>`;
+    paintBrands(listEl);
+    if ($("form-card").classList.contains("hidden")) renderDetail();
+    return;
+  }
   if (listMode === "tiles") {
     listEl.innerHTML = list.map(x => {
       const sg = strengthTag(x);
@@ -967,7 +983,7 @@ $("list").onclick = async e => {
     return;
   }
   if (e.target.closest("[data-fix-weak]")) { $("b-audit").click(); return; }
-  if (e.target.closest("[data-act-new]")) { clearForm(); showForm(); return; }
+  if (e.target.closest("[data-act-new]")) { clearForm(); if (filter === "t:loyalty") { formType = "loyalty"; applyTypeLabels(); } showForm(); return; }
   const r = e.target.closest(".rrow, .tile"); if (!r || !r.dataset.id) return;
   if (e.target.closest("[data-copy-totp]")) { const xt = entries.find(y => y.id === r.dataset.id); const cfg = xt && parseTotp(xt.totp); if (cfg) totpCode(cfg).then(rr => { copySecret(rr.code); markUsed(xt); }); return; }
   if (e.target.closest("[data-copy-login]")) { const xi = entries.find(y => y.id === r.dataset.id); if (xi && xi.login) { copySecret(xi.login); markUsed(xi); } return; }
@@ -990,6 +1006,12 @@ function renderDetail() {
   const changed = new Date(x.updated || x.created).toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "long", year: "numeric" });
   let h = `<div class="d-head"><button class="ib back" data-detail-back aria-label="${T("Назад", "Back")}"><svg class="ic"><use href="#i-back"/></svg></button>
     <span class="ava">${esc(initial(x.title))}</span><div><h2 class="d-title">${esc(x.title)}</h2><span class="d-meta">${TYPE_NAME(x.type)} · ${T("Изменено ", "Changed ")}${changed}</span></div></div>`;
+  if (x.type === "loyalty" && x.f && x.f.num) {
+    const svg = barcodeSvg(x.f.num, x.f.fmt);
+    h += `<div class="lc-card" data-brand="${esc(x.title)}"><span class="lc-card-n">${esc(x.title)}</span>${x.f.holder ? `<span class="lc-card-h">${esc(x.f.holder)}</span>` : ""}</div>
+      <button type="button" class="lc-code" data-act="lc-full" aria-label="${T("Показать на весь экран", "Show full screen")}">${svg || `<span class="lc-qr-note">${T("QR-код: покажите номер кассиру", "QR code: show the number to the cashier")}</span>`}<span class="lc-code-num mono">${esc(x.f.num)}</span></button>
+      <p class="lc-hint">${T("Нажмите на штрихкод, чтобы открыть его крупно для кассы", "Tap the barcode to show it large at the checkout")}</p>`;
+  }
   if (x.login) h += field(x.type === "card" ? T("Владелец", "Cardholder") : T("Логин", "Login"), esc(x.login), ib("copy-login", "i-copy", copy));
   if (x.type === "card" && x.number) {
     h += field(T("Номер карты", "Card number"), `<span data-secret="number">${esc(maskCard(x.number))}</span>`, ib("show", "i-eye", show) + ib("copy-number", "i-copy", copy));
@@ -1035,6 +1057,7 @@ function renderDetail() {
   box.innerHTML = h;
   // таймер TOTP пишет в .code и .left: привязываем элемент обратного отсчёта
   const t = box.querySelector("[data-totp]"); if (t) { t.appendChild(box.querySelector("[data-totp-left]")); }
+  paintBrands(box);
   tickTotp();
 }
 function decryptInto(el, text) {
@@ -1088,6 +1111,7 @@ $("detail-view").onclick = async e => {
   if (act === "open") { const u = safeUrl(x.url); if (u) { window.open(u, "_blank", "noopener,noreferrer"); markUsed(x); } }
   if (act === "fav") { x.fav = !x.fav; await persist(); renderNav(); render(); }
   if (act === "edit") startEdit(x);
+  if (act === "lc-full") { showBarcodeFull(x); markUsed(x); return; }
   if (act === "del") {
     x.deletedAt = Date.now(); selectedId = null; await persist(); renderNav(); render(); $("v-vault").classList.remove("show-detail");
     toast(T("Перемещено в корзину на 30 дней", "Moved to trash for 30 days"));
@@ -1152,6 +1176,7 @@ function renderHome() {
   // 4 основных плитки + остальные (типы с записями, пользовательские категории) под стрелкой
   const mainCats = [
     { n: T("Пароли", "Passwords"), k: pwEntries().length, f: "all" },
+    { n: T("Скидочные карты", "Loyalty cards"), k: cnt("loyalty"), f: "t:loyalty" },
     { n: T("Заметки", "Notes"), k: notesList().length, v: "notes" },
     { n: T("Задачи", "Tasks"), k: tasksList().filter(t => !t.done).length, v: "tasks" },
     { n: T("Корзина", "Trash"), k: entries.filter(x => x.deletedAt).length, f: "trash" }
@@ -1498,7 +1523,8 @@ function buildXlsx(rows, widths) {
   ]);
 }
 const TYPE_NAME = t => ({ login: T("Пароль", "Password"), note: T("Заметка", "Note"), card: T("Карта", "Card"), wifi: "Wi-Fi", doc: T("Документ", "Document"),
-  crypto: T("Криптокошелёк", "Crypto wallet"), key: T("Ключ", "Key"), bank: T("Счёт", "Bank account"), contact: T("Контакт", "Contact"), custom: T("Своё", "Custom") }[t] || t);
+  crypto: T("Криптокошелёк", "Crypto wallet"), key: T("Ключ", "Key"), bank: T("Счёт", "Bank account"), contact: T("Контакт", "Contact"), custom: T("Своё", "Custom"),
+  loyalty: T("Скидочная карта", "Loyalty card") }[t] || t);
 /* Выгрузка: выбор записей и колонок */
 const EX_COLS = () => [
   ["type", T("Тип", "Type"), 10, x => TYPE_NAME(x.type)], ["title", T("Название", "Name"), 28, x => x.title],

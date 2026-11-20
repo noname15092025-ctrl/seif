@@ -1781,3 +1781,54 @@ body{ -webkit-tap-highlight-color:transparent; }
   .au-stats{ grid-template-columns:repeat(2,1fr) !important; }
 }
 .bio-btn{ margin-top:10px; }
+
+/* ======================================================================
+   SHUT · Скидочные карты (кошелёк)
+   ====================================================================== */
+.lc-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; padding:4px 0 24px; }
+.lc-tile{ position:relative; aspect-ratio:1.586; border-radius:18px; padding:16px 18px; display:flex; flex-direction:column; justify-content:space-between;
+  background:#2A2A2E; color:#fff; text-decoration:none; cursor:pointer; overflow:hidden; border:0; box-shadow:0 10px 26px rgba(0,0,0,.35); transition:transform .15s ease; font:inherit; text-align:left; height:auto; }
+.lc-tile:hover{ transform:translateY(-2px); }
+.lc-tile::after{ content:""; position:absolute; right:-40px; bottom:-60px; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,.12); pointer-events:none; }
+.lc-tile.active{ outline:2px solid var(--lime); outline-offset:2px; }
+.lc-name{ position:relative; font-size:22px; font-weight:700; line-height:1.1; letter-spacing:-.01em; word-break:break-word; }
+.lc-num{ position:relative; font-size:14px; opacity:.85; font-variant-numeric:tabular-nums; }
+.lc-num:not(:empty)::before{ content:"•••• "; }
+.lc-new{ background:transparent !important; color:#C9CFB8 !important; border:1.5px dashed #3A3A40; box-shadow:none; align-items:center; justify-content:center; gap:6px; font-weight:600; }
+.lc-new::after{ display:none; }
+.lc-plus{ font-size:34px; font-weight:300; line-height:1; }
+
+.lc-card{ border-radius:20px; padding:18px 20px; min-height:96px; display:flex; flex-direction:column; justify-content:space-between; margin:18px 0 0; background:#2A2A2E; color:#fff; }
+.lc-card-n{ font-size:24px; font-weight:700; }
+.lc-card-h{ font-size:14px; opacity:.85; }
+.lc-code{ display:flex; flex-direction:column; align-items:center; gap:8px; width:100%; height:auto; margin:12px 0 0; padding:18px 18px 12px; border-radius:18px;
+  background:#FFFFFF !important; color:#111 !important; border:0; cursor:zoom-in; box-shadow:none; }
+.lc-code:hover{ filter:none; transform:none; background:#FFF !important; }
+.bc-svg{ width:100%; height:90px; display:block; fill:#000; }
+.lc-code-num{ font-size:17px; letter-spacing:2px; color:#111; }
+.lc-qr-note{ font-size:14px; color:#555; }
+.lc-hint{ font-size:13px; color:#8A8A90; margin:8px 2px 0; }
+
+.lc-tools{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.lc-scan{ align-self:flex-start; }
+.lc-guess a{ color:var(--lime); }
+.lc-preview:not(:empty){ background:#fff; border-radius:12px; padding:10px 12px; }
+.lc-preview .bc-svg{ height:56px; }
+
+.lc-full{ position:fixed; inset:0; z-index:120; background:rgba(0,0,0,.82); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+  padding:calc(20px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom)); }
+.lc-full-head{ width:min(560px,100%); border-radius:18px 18px 0 0; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; font-size:20px; font-weight:700; margin-bottom:-16px; background:#2A2A2E; color:#fff; }
+.lc-full-x{ background:rgba(0,0,0,.25) !important; color:inherit !important; border:0; width:36px; height:36px; min-width:36px; border-radius:18px; padding:0; font-size:16px; box-shadow:none; }
+.lc-full-code{ width:min(560px,100%); background:#fff; border-radius:0 0 18px 18px; padding:28px 20px 18px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+.lc-full-code .bc-svg{ height:150px; }
+.lc-full-num{ font-size:22px; letter-spacing:3px; color:#111; }
+.lc-full-tip{ color:#B9B9C0; font-size:13px; text-align:center; }
+
+.scan-ov{ position:fixed; inset:0; z-index:130; background:#000; }
+.scan-box{ position:relative; width:100%; height:100%; }
+.scan-video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.scan-frame{ position:absolute; left:8%; right:8%; top:34%; height:22%; border:2px solid var(--lime); border-radius:18px; box-shadow:0 0 0 9999px rgba(0,0,0,.45); }
+.scan-msg{ position:absolute; left:16px; right:16px; top:calc(18% + env(safe-area-inset-top)); text-align:center; color:#fff; font-size:16px; font-weight:500; }
+.scan-btns{ position:absolute; left:0; right:0; bottom:calc(28px + env(safe-area-inset-bottom)); display:flex; justify-content:center; gap:10px; }
+.scan-btns .pill{ height:48px; padding:0 22px; display:inline-flex; align-items:center; cursor:pointer; }
+@media (max-width:600px){ .lc-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .lc-tile{ border-radius:14px; padding:12px 13px; } .lc-name{ font-size:16px; } .lc-num{ font-size:12px; } }
