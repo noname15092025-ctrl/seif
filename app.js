@@ -448,7 +448,43 @@ function genPassword(o) {
   for (let i = out.length - 1; i > 0; i--) { const j = randInt(i + 1); [out[i], out[j]] = [out[j], out[i]]; }
   return out.join("");
 }
-$("b-gen").onclick = () => { $("e-pass").value = genPassword(); meterEntry(); };
+$("b-gen").onclick = () => { pwTrailPush($("e-pass").value); $("e-pass").value = genPassword(); meterEntry(); formDirty = true; renderPwTrail(); };
+// Предыдущие пароли прямо в форме: исходный (сохранённый), сгенерированные в этом сеансе и история записи.
+// Живёт только в памяти, пока открыта форма; в запись попадает как обычная история при сохранении.
+let pwTrail = [];
+const pwTrailDate = ts => new Date(ts).toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "short", year: "numeric" });
+function pwTrailInit(x) {
+  pwTrail = [];
+  if (x && x.pass) pwTrail.push({ v: x.pass, l: T("Сохранённый сейчас", "Currently saved") });
+  if (x && x.history) x.history.forEach(h => { if (h.pass && !pwTrail.some(t => t.v === h.pass)) pwTrail.push({ v: h.pass, l: T("Был до ", "Used until ") + pwTrailDate(h.at) }); });
+  renderPwTrail();
+}
+function pwTrailPush(v) {
+  if (!v || pwTrail.some(t => t.v === v)) return;
+  pwTrail.unshift({ v, l: T("Был в поле ", "Was in the field at ") + new Date().toLocaleTimeString(lang === "en" ? "en-GB" : "ru-RU", { hour: "2-digit", minute: "2-digit" }) });
+  renderPwTrail();
+}
+function renderPwTrail() {
+  const el = $("pw-trail"); if (!el) return;
+  const cur = $("e-pass").value;
+  const list = pwTrail.filter(t => t.v !== cur);
+  el.classList.toggle("hidden", !list.length);
+  if (!list.length) { el.innerHTML = ""; return; }
+  const wasOpen = el.querySelector("details")?.open;
+  el.innerHTML = `<details${wasOpen ? " open" : ""}><summary>${T("Предыдущие пароли", "Previous passwords")} (${list.length})</summary>` +
+    list.map(t => { const i = pwTrail.indexOf(t); return `<div class="pwt-row"><span class="pwt-v mono" data-pwt-v="${i}">••••••••••</span><small class="pwt-l">${esc(t.l)}</small>` +
+      `<button type="button" class="ib" data-pwt-show="${i}" title="${T("Показать", "Show")}" aria-label="${T("Показать", "Show")}"><svg class="ic"><use href="#i-eye"/></svg></button>` +
+      `<button type="button" class="ib" data-pwt-copy="${i}" title="${T("Скопировать", "Copy")}" aria-label="${T("Скопировать", "Copy")}"><svg class="ic"><use href="#i-copy"/></svg></button>` +
+      `<button type="button" class="ghost pwt-back" data-pwt-back="${i}">${T("Вернуть", "Restore")}</button></div>`; }).join("") + `</details>`;
+}
+if ($("pw-trail")) $("pw-trail").onclick = e => {
+  const s = e.target.closest("[data-pwt-show]"), c = e.target.closest("[data-pwt-copy]"), b = e.target.closest("[data-pwt-back]");
+  if (s) { const i = +s.dataset.pwtShow, sp = $("pw-trail").querySelector(`[data-pwt-v="${i}"]`); if (!sp) return;
+    if (sp.classList.toggle("open")) sp.textContent = pwTrail[i].v; else sp.textContent = "••••••••••"; return; }
+  if (c) { copySecret(pwTrail[+c.dataset.pwtCopy].v); return; }
+  if (b) { const v = pwTrail[+b.dataset.pwtBack].v; pwTrailPush($("e-pass").value); $("e-pass").value = v; meterEntry(); formDirty = true; renderPwTrail(); toast(T("Пароль возвращён — не забудьте сохранить", "Password restored — remember to save")); }
+};
+$("e-pass").addEventListener("change", () => renderPwTrail());
 $("b-gen-opts").onclick = () => $("gen-opts").classList.toggle("hidden");
 const updGenUi = () => {
   const words = document.querySelector('input[name="gmode"]:checked').value === "words";
@@ -675,7 +711,7 @@ const FIELDS = { title: "e-title", login: "e-login", url: "e-url", pass: "e-pass
 function clearForm() {
   Object.values(FIELDS).forEach(id => $(id).value = ""); $("e-fav").checked = false; $("e-extra").innerHTML = ""; $("cf-list").innerHTML = "";
   formAtt = []; renderAttList();
-  editingId = null; loyaltyFmt = "auto"; $("form-err").textContent = ""; $("gen-opts").classList.add("hidden"); meterEntry(); applyTypeLabels();
+  pwTrailInit(null); editingId = null; loyaltyFmt = "auto"; $("form-err").textContent = ""; $("gen-opts").classList.add("hidden"); meterEntry(); applyTypeLabels();
 }
 // Свои (произвольные) поля записи — любые пары «название: значение», можно пометить секретными
 function cfAddRow(k = "", v = "", sec = false) {
@@ -782,11 +818,12 @@ $("detail").addEventListener("click", e => { if (e.target === $("detail")) { if 
 document.addEventListener("click", e => { if (e.target.closest("[data-detail-back]")) { closeForm(); } });
 function startEdit(x) {
   editingId = x.id; formType = x.type;
+  pwTrailInit(x);
   for (const [k, id] of Object.entries(FIELDS)) $(id).value = x[k] || "";
   $("e-fav").checked = !!x.fav; meterEntry();
   $("e-extra").innerHTML = ""; applyTypeLabels(); renderExtraForm(x.f || {}); loyaltyFmt = (x.f && x.f.fmt) || "auto"; loyaltyFormSetup();
   $("cf-list").innerHTML = ""; (x.custom || []).forEach(c => cfAddRow(c.k, c.v, c.s));
-  formAtt = x.att ? x.att.map(a => ({ ...a })) : []; renderAttList();
+  formAtt = x.att ? x.att.map(a => ({ ...a })) : []; renderAttList(); renderPwTrail();
   showForm();
 }
 

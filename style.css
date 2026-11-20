@@ -1846,3 +1846,14 @@ body{ -webkit-tap-highlight-color:transparent; }
 @media (max-width:600px){ .app .detail #type-tabs{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .lc-tile{ user-select:none; -webkit-user-select:none; }
 .pill-type{ white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+
+/* Предыдущие пароли в форме */
+.pw-trail{ margin-top:10px; border-radius:16px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); }
+.pw-trail summary{ cursor:pointer; padding:12px 14px; font-size:14px; font-weight:600; color:#D7D7DC; list-style:none; }
+.pw-trail summary::-webkit-details-marker{ display:none; }
+.pw-trail summary::before{ content:"↺ "; color:var(--lime); }
+.pwt-row{ display:flex; align-items:center; gap:8px; padding:8px 12px; border-top:1px solid rgba(255,255,255,.06); }
+.pwt-v{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#ECECEE; }
+.pwt-l{ color:#8A8A90; font-size:12px; white-space:nowrap; }
+.pwt-back{ height:32px !important; padding:0 12px !important; font-size:13px !important; }
+@media (max-width:600px){ .pwt-row{ flex-wrap:wrap; } .pwt-v{ flex:1 0 100%; } .pwt-l{ flex:1; } }

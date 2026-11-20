@@ -15,11 +15,11 @@
 <link rel="icon" href="shield.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=39">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=93">
+<link rel="stylesheet" href="style.css?v=94">
 <script src="wordlist.js" defer></script>
 <script src="argon2.js" defer></script>
-<script src="loyalty.js?v=93" defer></script>
-<script src="app.js?v=93" defer></script>
+<script src="loyalty.js?v=94" defer></script>
+<script src="app.js?v=94" defer></script>
 </head>
 <body>
 <svg width="0" height="0" class="sprite" aria-hidden="true">
@@ -301,6 +301,7 @@
         <div class="input-group"><input id="e-pass" class="field" autocomplete="off"><button class="ib" id="b-gen" title="Сгенерировать" data-en="Generate">Создать</button><button class="ib" id="b-gen-opts" aria-label="Параметры">⋯</button></div>
         <div class="meter"><div class="meter-bar" id="e-pass-bar"></div></div>
         <div class="meter-text" id="e-pass-text"></div>
+        <div class="pw-trail hidden" id="pw-trail"></div>
         <div class="gen-opts hidden" id="gen-opts">
           <div class="two">
             <label class="chk"><input type="radio" name="gmode" value="chars" checked> <span data-en="Characters">Символы</span></label>
