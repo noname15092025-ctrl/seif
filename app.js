@@ -799,7 +799,7 @@ function renderNav() {
   const n = f => L.filter(f).length, att = attentionSet();
   const top = [["all", T("Все записи", "All entries"), L.length], ["fav", T("Избранное", "Favorites"), n(x => x.fav)],
     ["recent", T("Недавние", "Recent"), Math.min(n(x => x.used || x.updated !== x.created), 20)]];
-  const types = [["t:login", T("Логины", "Logins"), 1], ["t:card", T("Карты", "Cards"), 1], ["t:note", T("Заметки", "Notes"), 1],
+  const types = [["t:login", T("Логины", "Logins"), 1], ["t:loyalty", T("Скидочные карты", "Loyalty cards"), 1], ["t:card", T("Карты", "Cards"), 1], ["t:note", T("Заметки", "Notes"), 1],
     ["t:wifi", "Wi-Fi"], ["t:doc", T("Документы", "Documents")], ["totp", T("Коды 2FA", "2FA codes")], ["t:crypto", T("Криптокошельки", "Crypto wallets")],
     ["t:key", T("Ключи и лицензии", "Keys & licenses")], ["t:bank", T("Банковские счета", "Bank accounts")], ["t:contact", T("Контакты", "Contacts")]]
     .map(([v, l, always]) => [v, l, v === "totp" ? n(x => x.type === "login" && parseTotp(x.totp)) : n(x => x.type === v.slice(2)), always])
