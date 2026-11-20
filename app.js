@@ -1524,7 +1524,7 @@ function buildXlsx(rows, widths) {
 }
 const TYPE_NAME = t => ({ login: T("Пароль", "Password"), note: T("Заметка", "Note"), card: T("Карта", "Card"), wifi: "Wi-Fi", doc: T("Документ", "Document"),
   crypto: T("Криптокошелёк", "Crypto wallet"), key: T("Ключ", "Key"), bank: T("Счёт", "Bank account"), contact: T("Контакт", "Contact"), custom: T("Своё", "Custom"),
-  loyalty: T("Скидочная карта", "Loyalty card") }[t] || t);
+  loyalty: T("Скидочная", "Loyalty") }[t] || t);
 /* Выгрузка: выбор записей и колонок */
 const EX_COLS = () => [
   ["type", T("Тип", "Type"), 10, x => TYPE_NAME(x.type)], ["title", T("Название", "Name"), 28, x => x.title],

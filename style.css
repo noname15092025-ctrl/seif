@@ -1845,3 +1845,4 @@ body{ -webkit-tap-highlight-color:transparent; }
 .app .detail #type-tabs .tab-custom{ grid-column:1 / -1; }
 @media (max-width:600px){ .app .detail #type-tabs{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .lc-tile{ user-select:none; -webkit-user-select:none; }
+.pill-type{ white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
