@@ -604,7 +604,7 @@ function expiryOf(x) {
 const EXPIRE_SOON_MS = 90 * 864e5;
 const expiringSoon = x => { const d = expiryOf(x); return d && d - Date.now() < EXPIRE_SOON_MS; };
 const live = () => entries.filter(x => !x.deletedAt);
-const pwEntries = () => live().filter(x => x.type !== "page" && x.type !== "task");
+const pwEntries = () => live().filter(x => x.type !== "page" && x.type !== "task" && x.type !== "event");
 const notesList = () => live().filter(x => x.type === "page");
 const tasksList = () => live().filter(x => x.type === "task");
 const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
@@ -810,7 +810,7 @@ async function closeForm() {
   formDirty = false; clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("v-vault").classList.remove("show-detail"); renderDetail(); return true;
 }
 function showDetail() { $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); renderDetail(); }
-$("b-new-entry").onclick = () => { if (view === "notes") return newNote(); if (view === "tasks") return $("task-new")?.focus(); clearForm(); showForm(); };
+$("b-new-entry").onclick = () => { if (view === "notes") return newNote(); if (view === "tasks") return $("task-new")?.focus(); if (view === "calendar") return calNew(); clearForm(); showForm(); };
 if ($("b-menu")) $("b-menu").onclick = () => $("v-vault").classList.toggle("nav-open");
 $("v-vault").addEventListener("click", e => { if (e.target.classList.contains("nav-backdrop")) $("v-vault").classList.remove("nav-open"); });
 
@@ -850,7 +850,8 @@ function renderNav() {
   const activeTasks = tasksList().filter(t => !t.done).length;
   const ws = `<a class="nav-item ws${view === "home" ? " active" : ""}" data-view="home"><svg class="ic wsico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg> ${T("Обзор", "Overview")}<span></span></a>`
     + `<a class="nav-item ws${view === "notes" ? " active" : ""}" data-view="notes"><svg class="ic wsico"><use href="#i-note"/></svg> ${T("Заметки", "Notes")}<span>${notesList().length || ""}</span></a>`
-    + `<a class="nav-item ws${view === "tasks" ? " active" : ""}" data-view="tasks"><svg class="ic wsico"><use href="#i-check"/></svg> ${T("Задачи", "Tasks")}<span>${activeTasks || ""}</span></a>`;
+    + `<a class="nav-item ws${view === "tasks" ? " active" : ""}" data-view="tasks"><svg class="ic wsico"><use href="#i-check"/></svg> ${T("Задачи", "Tasks")}<span>${activeTasks || ""}</span></a>`
+    + `<a class="nav-item ws${view === "calendar" ? " active" : ""}" data-view="calendar"><svg class="ic wsico"><use href="#i-cal"/></svg> ${T("Календарь", "Calendar")}<span>${calTodayCount() || ""}</span></a>`;
   const topK = new Set(top.map(i => i[0])), typeK = new Set(types.map(i => i[0])), checkK = new Set(checks.map(i => i[0]));
   const activeSec = view === "vault" ? (topK.has(filter) ? "pw" : typeK.has(filter) ? "types" : checkK.has(filter) ? "checks" : filter.startsWith("c:") ? "cats" : null) : null;
   const isOpen = k => navOpen.has(k) || k === activeSec;
@@ -885,6 +886,7 @@ const subline = x => {
     case "key": return f.product || TYPE_NAME("key");
     case "bank": return f.account ? "•••• " + f.account.replace(/\s/g, "").slice(-4) : TYPE_NAME("bank");
     case "contact": return f.relation || f.phone || f.email || TYPE_NAME("contact");
+    case "event": return x.allDay ? (x.start || "") : (x.start || "").replace("T", " ");
     case "loyalty": return f.num ? T("Карта · ", "Card · ") + f.num.slice(-4) : TYPE_NAME("loyalty");
     case "custom": return (x.custom && x.custom[0] && x.custom[0].k) || TYPE_NAME("custom");
     case "page": return T("Заметка", "Note");
@@ -912,6 +914,7 @@ function render() {
   if (view === "home") return renderHome();
   if (view === "notes") return renderNotes();
   if (view === "tasks") return renderTasks();
+  if (view === "calendar") return renderCalendar();
   $("note-editor").classList.add("hidden");
   const vcx = $("vault-chips"); if (vcx) vcx.classList.add("hidden");
   const list = visibleList();
@@ -990,6 +993,7 @@ $("vault-chips") && ($("vault-chips").onclick = e => { const b = e.target.closes
 $("search").oninput = () => { if (view === "home" && $("search").value) { view = "vault"; filter = "all"; setViewChrome("vault"); renderNav(); } render(); };
 $("sort").onchange = render;
 $("list").onclick = async e => {
+  if (view === "calendar") { calClick(e); return; }
   if (view === "home") {
     const rm = e.target.closest("[data-recentmode]"); if (rm) { recentMode = rm.dataset.recentmode; try { localStorage.setItem("vault.recentmode", recentMode); } catch {} renderHome(); return; }
     if (e.target.closest("[data-cats-more]")) { catsExpanded = !catsExpanded; renderHome(); return; }
@@ -1167,12 +1171,12 @@ function openVaultView() {
 
 /* ---------------- Заметки и Задачи (воркспейс в стиле Notion) ---------------- */
 function setViewChrome(v) {
-  $("b-new-entry").textContent = v === "notes" ? T("+ Заметка", "+ Note") : v === "tasks" ? T("+ Задача", "+ Task") : T("+ Добавить", "+ Add");
+  $("b-new-entry").textContent = v === "notes" ? T("+ Заметка", "+ Note") : v === "tasks" ? T("+ Задача", "+ Task") : v === "calendar" ? T("+ Событие", "+ Event") : T("+ Добавить", "+ Add");
   $("sort").classList.toggle("hidden", v !== "vault");
-  $("search").placeholder = v === "notes" ? T("Поиск заметок", "Search notes") : v === "tasks" ? T("Поиск задач", "Search tasks") : T("Поиск по хранилищу", "Search the vault");
+  $("search").placeholder = v === "notes" ? T("Поиск заметок", "Search notes") : v === "tasks" ? T("Поиск задач", "Search tasks") : v === "calendar" ? T("Поиск событий", "Search events") : T("Поиск по хранилищу", "Search the vault");
   const head = $("ws-head"); if (head) head.classList.toggle("hidden", !(v === "notes" || v === "tasks"));
   const vc = $("vault-chips"); if (vc) vc.classList.toggle("hidden", v !== "vault");
-  const vv = $("v-vault"); if (vv) { vv.classList.remove("ws-notes", "ws-tasks", "ws-home"); if (v === "notes") vv.classList.add("ws-notes"); else if (v === "tasks") vv.classList.add("ws-tasks"); else if (v === "home") vv.classList.add("ws-home"); }
+  const vv = $("v-vault"); if (vv) { vv.classList.remove("ws-notes", "ws-tasks", "ws-home", "ws-cal"); if (v === "calendar") vv.classList.add("ws-cal"); if (v === "notes") vv.classList.add("ws-notes"); else if (v === "tasks") vv.classList.add("ws-tasks"); else if (v === "home") vv.classList.add("ws-home"); }
 }
 function setView(v) {
   view = v; selectedId = null; $("search").value = ""; setViewChrome(v);
@@ -1220,6 +1224,7 @@ function renderHome() {
   const moreCats = [];
   [["login", T("Логины", "Logins")], ["card", T("Карты", "Cards")], ["wifi", "Wi-Fi"], ["doc", T("Документы", "Documents")], ["crypto", T("Крипто", "Crypto")], ["key", T("Ключи", "Keys")], ["bank", T("Счета", "Accounts")], ["contact", T("Контакты", "Contacts")]].forEach(([t, label]) => { const c = cnt(t); if (c) moreCats.push({ n: label, k: c, f: "t:" + t }); });
   [...new Set(L.map(x => x.category).filter(Boolean))].forEach(cat => moreCats.push({ n: cat, k: L.filter(x => x.category === cat).length, f: "c:" + cat }));
+  moreCats.unshift({ n: T("Календарь", "Calendar"), k: eventsList().length, v: "calendar" });
   moreCats.push({ n: T("Корзина", "Trash"), k: entries.filter(x => x.deletedAt).length, f: "trash" });
   const shapes = ["40% 60% 50% 50%", "60% 40% 30% 70%", "50% 50% 60% 40%", "35% 65% 45% 55%", "55% 45% 40% 60%", "45% 55% 65% 35%"];
   const catTile = (c, i) => `<a class="dash-cat" ${c.v ? `data-view="${c.v}"` : `data-filter="${esc(c.f)}"`}><span class="dash-cat-blob sh${i % shapes.length}"></span><span class="dash-cat-top"><span class="dash-cat-n">${esc(c.n)}</span><span class="dash-cat-k">${c.k} ${T("шт.", "items")}</span></span><span class="dash-cat-go">›</span></a>`;
@@ -1561,7 +1566,7 @@ function buildXlsx(rows, widths) {
 }
 const TYPE_NAME = t => ({ login: T("Пароль", "Password"), note: T("Заметка", "Note"), card: T("Карта", "Card"), wifi: "Wi-Fi", doc: T("Документ", "Document"),
   crypto: T("Криптокошелёк", "Crypto wallet"), key: T("Ключ", "Key"), bank: T("Счёт", "Bank account"), contact: T("Контакт", "Contact"), custom: T("Своё", "Custom"),
-  loyalty: T("Скидочная", "Loyalty") }[t] || t);
+  loyalty: T("Скидочная", "Loyalty"), event: T("Событие", "Event") }[t] || t);
 /* Выгрузка: выбор записей и колонок */
 const EX_COLS = () => [
   ["type", T("Тип", "Type"), 10, x => TYPE_NAME(x.type)], ["title", T("Название", "Name"), 28, x => x.title],
