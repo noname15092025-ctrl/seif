@@ -2025,3 +2025,29 @@ body{ -webkit-tap-highlight-color:transparent; }
 .ci{ width:20px; height:20px; fill:none; stroke:#9A9AA2; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto; }
 .cp-join{ display:flex; align-items:center; justify-content:center; gap:8px; }
 .cp-join .ci{ stroke:#111; }
+
+/* Категории: 5 компактных плиток в ряд */
+.dash-cats{ grid-template-columns:repeat(5,minmax(0,1fr)) !important; gap:12px !important; }
+.dash-cat{ height:124px !important; border-radius:24px !important; }
+.dash-cat-blob{ left:20px !important; top:58px !important; width:140px !important; height:110px !important; filter:blur(28px) !important; }
+.dash-cat-top{ left:16px !important; right:48px !important; top:14px !important; gap:3px !important; }
+.dash-cat-n{ font-size:16px !important; }
+.dash-cat-k{ font-size:12px !important; }
+.dash-cat-go{ right:12px !important; top:12px !important; width:30px !important; height:30px !important; border-radius:15px !important; font-size:15px !important; }
+@media (max-width:860px){ .dash-cat-n{ font-size:14px !important; } .dash-cat-top{ right:40px !important; left:13px !important; } .dash-cat-go{ width:26px !important; height:26px !important; right:10px !important; } }
+@media (max-width:600px){
+  .dash-cats{ display:flex !important; overflow-x:auto; scroll-snap-type:x mandatory; margin:0 -16px; padding:2px 16px 6px; scrollbar-width:none; }
+  .dash-cats::-webkit-scrollbar{ display:none; }
+  .dash-cat{ flex:0 0 38%; height:112px !important; scroll-snap-align:start; }
+}
+
+/* Задачи: подсветка срока ровно по плашке */
+.app.ws-tasks #list .task-cal{ padding:0 !important; min-width:30px; height:30px; border-radius:15px !important; display:inline-flex; align-items:center; justify-content:center; background:transparent !important; }
+.app.ws-tasks #list .task-cal:hover{ background:rgba(255,255,255,.07) !important; }
+.app.ws-tasks #list .task-cal:has(.task-due):hover{ background:transparent !important; }
+.app.ws-tasks #list .task-cal:hover .task-due{ background:rgba(255,255,255,.08) !important; border-color:#55555C !important; }
+.app.ws-tasks #list .task-cal .ic{ width:17px; height:17px; }
+/* Категории: без разрыва слов */
+.dash-cat-n{ overflow-wrap:normal !important; word-break:normal !important; hyphens:manual; font-size:15px !important; }
+.dash-cat-top{ right:44px !important; }
+@media (max-width:600px){ .dash-cat-n{ font-size:13.5px !important; } .dash-cat-top{ right:40px !important; left:12px !important; } }
