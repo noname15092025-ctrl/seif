@@ -13,16 +13,16 @@
 <meta name="theme-color" content="#0A0A0A">
 <title>SHUT — хранилище</title>
 <link rel="icon" href="shield.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=111">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=113">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=111">
+<link rel="stylesheet" href="style.css?v=113">
 <script src="wordlist.js" defer></script>
 <script src="argon2.js" defer></script>
-<script src="loyalty.js?v=111" defer></script>
-<script src="calendar.js?v=111" defer></script>
-<script src="datepicker.js?v=111" defer></script>
-<script src="app.js?v=111" defer></script>
-<script src="passkey.js?v=111" defer></script>
+<script src="loyalty.js?v=113" defer></script>
+<script src="calendar.js?v=113" defer></script>
+<script src="datepicker.js?v=113" defer></script>
+<script src="app.js?v=113" defer></script>
+<script src="passkey.js?v=113" defer></script>
 </head>
 <body>
 <svg width="0" height="0" class="sprite" aria-hidden="true">
@@ -394,7 +394,7 @@
     <h3 data-en="Sync across devices">Синхронизация между устройствами</h3>
     <p class="muted small" data-en="Device sync is on: your vault is encrypted and saved to the cloud automatically, and you can sign in from any device with your secret phrase. The server sees only ciphertext — never your passwords or keys. The field below is optional: your own or backup servers (writes go to the first available, reads take the newest version).">Синхронизация включена: сейф автоматически шифруется и сохраняется в облаке, и войти можно с любого устройства по секретной фразе. Сервер видит только шифротекст — ни паролей, ни ключей. Поле ниже — необязательное: свои или резервные серверы (запись уходит на первый доступный, чтение берёт самую свежую версию).</p>
     <label for="sync-url" data-en="Sync servers (one per line, first is primary)">Серверы синхронизации (по одному в строке, первый — основной)</label>
-    <textarea id="sync-url" class="field mono" rows="3" placeholder="https://vault.ваш-аккаунт.workers.dev\nhttps://vault-backup.другой-аккаунт.workers.dev" autocomplete="off" spellcheck="false"></textarea>
+    <textarea id="sync-url" class="field mono" rows="3" placeholder="https://vault.ваш-аккаунт.workers.dev&#10;https://vault-backup.другой-аккаунт.workers.dev" autocomplete="off" spellcheck="false"></textarea>
     <div class="btn-row"><button class="ghost" id="b-sync-save" data-en="Save">Сохранить</button><button class="ghost" id="b-sync-now" data-en="Sync now">Синхронизировать сейчас</button></div>
     <div class="muted small" id="sync-status"></div>
     <h3 class="danger-h" data-en="Danger zone">Опасная зона</h3>
@@ -486,6 +486,7 @@
 <!-- ============ Инструкция ============ -->
 <section id="v-guide" class="center-page hidden">
   <div class="panel wide-panel guide rise" id="guide-ru">
+      <a class="p-back" data-guide-back><svg class="ic"><use href="#i-back"/></svg><span>Назад</span></a>
       <h2>Инструкция</h2>
       <p class="part">Часть 1. Как пользоваться</p>
       <h3><i>A</i>Создание профиля</h3>
@@ -603,6 +604,7 @@
       <button class="ghost" data-guide-back>← Назад</button>
   </div>
   <div class="panel wide-panel guide rise hidden" id="guide-en">
+      <a class="p-back" data-guide-back><svg class="ic"><use href="#i-back"/></svg><span>Back</span></a>
       <h2>Guide</h2>
       <p class="part">Part 1. How to use it</p>
       <h3><i>A</i>Creating a profile</h3>

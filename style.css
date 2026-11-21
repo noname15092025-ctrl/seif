@@ -2120,3 +2120,61 @@ body.cal-dragging{ user-select:none; cursor:grabbing; }
 .pk-row{ margin-top:16px; padding:14px 16px; border-radius:18px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); }
 .pk-row h4{ margin:0 0 6px; font-size:15px; }
 .pk-state{ color:var(--lime); font-weight:600; margin:4px 0 10px; }
+
+/* ======================================================================
+   SHUT · Генератор, настройки, инструкция — в общем стиле сайта
+   ====================================================================== */
+/* --- общие кнопки этих страниц: тёмные «пилюли», главное действие — лаймовое --- */
+#v-generator .chip, #v-settings .btn-row button.ghost, #v-settings #b-rename, #v-settings #b-pk-en, #v-settings #b-pk-off,
+#v-settings #b-sync-save, #v-settings #b-sync-now, #v-settings [data-install]{
+  height:42px; padding:0 18px !important; border-radius:21px !important; background:#2C2C32 !important; color:#ECECEE !important;
+  border:1px solid #3A3A40 !important; box-shadow:none !important; font:600 14px var(--d-font) !important; }
+#v-generator .chip:hover, #v-settings .btn-row button.ghost:hover, #v-settings #b-rename:hover, #v-settings #b-pk-en:hover, #v-settings #b-pk-off:hover,
+#v-settings #b-sync-save:hover, #v-settings #b-sync-now:hover{ background:#36363D !important; color:#fff !important; transform:none !important; filter:none !important; }
+#v-generator .chip.active{ background:var(--lime) !important; color:#111 !important; border-color:var(--lime) !important; }
+#v-settings #b-cp{ height:46px; padding:0 24px !important; border-radius:23px !important; background:var(--lime) !important; color:#111 !important; border:0 !important; font-weight:700 !important; box-shadow:none !important; }
+#v-settings #b-cp:hover{ filter:brightness(1.05) !important; transform:none !important; }
+
+/* --- сегменты («Символы / Слова / PIN…», разделитель) как «Список / Плитка» --- */
+#v-generator #gp-mode, #v-generator #gp-wordopts{ display:flex; flex-wrap:wrap; gap:4px; padding:4px; margin:22px 0 18px; border-radius:22px; background:#1E1E21 !important; border:1px solid #2E2E34 !important; }
+#v-generator #gp-mode .tab, #v-generator #gp-wordopts .tab{ flex:1 1 auto; height:38px; padding:0 14px; border-radius:18px !important; border:0 !important;
+  background:transparent !important; color:#9A9AA2 !important; font:600 14px var(--d-font) !important; box-shadow:none !important; }
+#v-generator #gp-mode .tab:hover, #v-generator #gp-wordopts .tab:hover{ color:#fff !important; transform:none !important; filter:none !important; }
+#v-generator #gp-mode .tab.active, #v-generator #gp-wordopts .tab.active{ background:#3A3A40 !important; color:#fff !important; }
+
+/* --- поле с паролем --- */
+#v-generator .gen-out{ display:flex; align-items:center; gap:8px; padding:14px 14px 14px 20px; border-radius:22px; background:#1E1E21 !important; border:1px solid #34343B !important; box-shadow:none !important; }
+#v-generator #gp-out{ flex:1; min-width:0; color:#FFFFFF !important; font-size:20px; letter-spacing:.06em; overflow-wrap:anywhere; }
+#v-generator #gp-again{ width:auto; height:38px; padding:0 16px; border-radius:19px; background:var(--lime) !important; color:#111 !important; border:0 !important; font-weight:700; }
+#v-generator #gp-copy{ width:38px; height:38px; min-width:38px; border-radius:19px; background:#2C2C32 !important; color:#ECECEE !important; border:1px solid #3A3A40 !important; }
+#v-generator #gp-copy:hover, #v-generator #gp-again:hover{ filter:brightness(1.08); transform:none; }
+#v-generator .gp-history .gp-hchip{ background:#242428 !important; color:#D7D7DC !important; border:1px solid #34343B !important; border-radius:14px !important; }
+#v-generator .gp-history .gp-hchip:hover{ background:#2E2E34 !important; color:#fff !important; }
+
+/* --- ползунок длины и галочки --- */
+#v-generator input[type=range], #v-settings input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:6px; margin:12px 0 18px; border-radius:3px; background:#34343B; outline:none; border:0; padding:0; }
+#v-generator input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:22px; height:22px; border-radius:11px; background:var(--lime); border:3px solid #1E1E21; box-shadow:0 0 0 1px var(--lime); cursor:pointer; }
+#v-generator input[type=range]::-moz-range-thumb{ width:18px; height:18px; border-radius:9px; background:var(--lime); border:3px solid #1E1E21; cursor:pointer; }
+#v-generator input[type=range]::-moz-range-track{ height:6px; border-radius:3px; background:#34343B; }
+#v-generator #gp-len-v{ color:var(--lime); }
+#v-generator #gp-sets{ display:flex; flex-wrap:wrap; gap:8px; }
+#v-generator #gp-sets .chk{ margin:0; padding:8px 14px 8px 10px; border-radius:18px; background:#242428; border:1px solid #34343B; color:#ECECEE; cursor:pointer; }
+#v-generator #gp-sets .chk:has(input:checked){ border-color:rgba(200,226,122,.5); background:rgba(200,226,122,.1); }
+#v-generator input[type=checkbox], #v-settings input[type=checkbox], #v-vault input[type=checkbox]{ accent-color:var(--lime); }
+
+/* --- настройки --- */
+#v-settings h3{ color:#FFFFFF !important; margin-top:30px !important; }
+#v-settings label:not(.chk){ color:#B9B9C0 !important; }
+#v-settings .meter{ background:#34343B !important; height:4px !important; border-radius:2px !important; overflow:hidden; }
+#v-settings .meter-text{ color:#9A9AA2 !important; }
+#v-settings .btn-row{ display:flex; flex-wrap:wrap; gap:10px; }
+#v-settings .danger{ height:42px; border-radius:21px !important; }
+#v-settings .input-row{ display:flex; gap:10px; align-items:center; }
+#v-settings .input-row .field{ flex:1; min-width:0; }
+#v-settings textarea.field{ border-radius:16px !important; }
+
+/* --- инструкция --- */
+#v-guide .guide b, #v-guide .guide strong{ color:#FFFFFF !important; }
+#v-guide .guide .p-back{ display:inline-flex; margin-bottom:14px; }
+#v-generator #gp-out, #v-generator #gp-out .dc{ color:#FFFFFF !important; }
+#v-generator input[type=range]{ background:#4A4A52 !important; }
