@@ -7,6 +7,17 @@
    ====================================================================== */
 const CAL_HOUR_PX = 48;
 const CAL_COLORS = 8;
+// Линейные иконки (в стиле остального интерфейса), вместо эмодзи
+const CI_PATHS = {
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  users: '<circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c.6-3 2.9-4.8 5.5-4.8s4.9 1.8 5.5 4.8"/><path d="M15.5 6.3a3 3 0 0 1 0 5.6M17.5 14.6c1.6.6 2.7 2.1 3 4.4"/>',
+  video: '<rect x="3" y="6.5" width="12.5" height="11" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3"/>',
+  pin: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/>',
+  text: '<path d="M4.5 7h15M4.5 12h15M4.5 17h9"/>',
+  bell: '<path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 1.5h-14z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
+  palette: '<path d="M12 3.5a8.5 8.5 0 0 0 0 17c1.3 0 1.8-.9 1.4-1.9-.5-1.1.2-2.3 1.4-2.3h2.1a3.6 3.6 0 0 0 3.6-3.6C20.5 7.6 16.7 3.5 12 3.5z"/><circle cx="7.8" cy="11" r="1.1"/><circle cx="10.5" cy="7.6" r="1.1"/><circle cx="14.6" cy="7.8" r="1.1"/>'
+};
+const ci = n => `<svg class="ci" viewBox="0 0 24 24" aria-hidden="true">${CI_PATHS[n]}</svg>`;
 let calView = (() => { try { return localStorage.getItem("vault.calview") || ""; } catch { return ""; } })() || (innerWidth <= 600 ? "day" : "week");
 let calDate = new Date(); calDate.setHours(0, 0, 0, 0);
 let calMini = null;          // месяц мини-календаря (Date 1-го числа) или null = как calDate
@@ -128,7 +139,7 @@ function calTimeGrid(days) {
       const top = (it.s - ds) / 36e5 * CAL_HOUR_PX, h = Math.max(20, (it.en - it.s) / 36e5 * CAL_HOUR_PX - 2);
       const short = it.en - it.s <= 45 * 6e4;
       return `<button type="button" class="cg-ev c-${it.o.e.color || 0}${short ? " short" : ""}" data-occ="${esc(occKey(it.o))}" data-top="${top}" data-h="${h}" data-col="${it.col}" data-n="${it.n}">
-        <b>${esc(it.o.e.title || T("Без названия", "(No title)"))}</b><span>${esc(cTimeLabel(it.o.s) + " – " + cTimeLabel(it.o.en))}${it.o.e.meet ? " · 🎥" : ""}</span></button>`;
+        <b>${esc(it.o.e.title || T("Без названия", "(No title)"))}</b><span>${esc(cTimeLabel(it.o.s) + " – " + cTimeLabel(it.o.en))}${it.o.e.meet ? " · " + T("видео", "video") : ""}</span></button>`;
     }).join("");
     const nowLine = cSameDay(d, today) ? `<span class="cg-now" data-top="${(today - ds) / 36e5 * CAL_HOUR_PX}"></span>` : "";
     return `<div class="cg-col${cSameDay(d, today) ? " today" : ""}" data-cal-col="${cYmd(d)}">${evHtml}${nowLine}</div>`;
@@ -205,8 +216,8 @@ function calOpenPop(e, occ) {
     <div class="cp-top"><span class="cp-grip"></span><button type="button" class="cp-x" data-cp-close aria-label="${T("Закрыть", "Close")}">✕</button></div>
     <input class="cp-title" id="cp-title" maxlength="200" placeholder="${T("Добавьте название", "Add title")}" value="${esc(e.title || "")}">
     ${occ && !isNew && (e.repeat || "none") !== "none" ? `<p class="cp-note">${T("Повторяющееся событие: изменения применятся ко всем повторам.", "Recurring event: changes apply to all occurrences.")}</p>` : ""}
-    ${e.meet && !isNew ? `<button type="button" class="cp-join" data-cp-join>🎥 ${T("Подключиться к встрече", "Join meeting")}</button>` : ""}
-    <div class="cp-row"><span class="cp-ic">🕘</span><div class="cp-f">
+    ${e.meet && !isNew ? `<button type="button" class="cp-join" data-cp-join>${ci("video")} ${T("Подключиться к встрече", "Join meeting")}</button>` : ""}
+    <div class="cp-row"><span class="cp-ic">${ci("clock")}</span><div class="cp-f">
       <div class="cp-when">
         <input type="date" id="cp-sd" class="field" value="${cYmd(S)}">
         <input type="time" id="cp-st" class="field cp-t" step="900" value="${cHm(S)}">
@@ -218,15 +229,15 @@ function calOpenPop(e, occ) {
         <select id="cp-rep" class="field slim">${reps.map(([v, l]) => opt(v, l, e.repeat || "none")).join("")}</select></div>
       <div class="cp-sub cp-until${(e.repeat || "none") === "none" ? " hidden" : ""}"><label for="cp-until">${T("Повторять до (необязательно)", "Repeat until (optional)")}</label><input type="date" id="cp-until" class="field" value="${esc(e.until || "")}"></div>
     </div></div>
-    <div class="cp-row"><span class="cp-ic">👥</span><div class="cp-f"><input id="cp-guests" class="field" placeholder="${T("Добавьте гостей (email через запятую)", "Add guests (comma-separated emails)")}" value="${esc(e.guests || "")}" autocomplete="off"></div></div>
-    <div class="cp-row"><span class="cp-ic">🎥</span><div class="cp-f">
+    <div class="cp-row"><span class="cp-ic">${ci("users")}</span><div class="cp-f"><input id="cp-guests" class="field" placeholder="${T("Добавьте гостей (email через запятую)", "Add guests (comma-separated emails)")}" value="${esc(e.guests || "")}" autocomplete="off"></div></div>
+    <div class="cp-row"><span class="cp-ic">${ci("video")}</span><div class="cp-f">
       <input id="cp-meet" class="field" inputmode="url" placeholder="${T("Ссылка на видеовстречу (Meet, Zoom, Telegram…)", "Video call link (Meet, Zoom, Telegram…)")}" value="${esc(e.meet || "")}" autocomplete="off">
       <div class="cp-btns"><button type="button" class="ghost cp-small" data-cp-jitsi>${T("Создать ссылку Jitsi Meet", "Create a Jitsi Meet link")}</button><button type="button" class="ghost cp-small" data-cp-meet-open>${T("Открыть", "Open")}</button><button type="button" class="ghost cp-small" data-cp-meet-copy>${T("Скопировать", "Copy")}</button></div>
     </div></div>
-    <div class="cp-row"><span class="cp-ic">📍</span><div class="cp-f"><input id="cp-loc" class="field" placeholder="${T("Добавьте место", "Add location")}" value="${esc(e.location || "")}" autocomplete="off"></div></div>
-    <div class="cp-row"><span class="cp-ic">≡</span><div class="cp-f"><textarea id="cp-note" class="field" rows="3" placeholder="${T("Добавьте описание", "Add description")}">${esc(e.note || "")}</textarea></div></div>
-    <div class="cp-row"><span class="cp-ic">🔔</span><div class="cp-f"><select id="cp-rem" class="field slim">${rems.map(([v, l]) => opt(v, l, e.remind ?? -1)).join("")}</select></div></div>
-    <div class="cp-row"><span class="cp-ic">🎨</span><div class="cp-f cp-colors">${colors}</div></div>
+    <div class="cp-row"><span class="cp-ic">${ci("pin")}</span><div class="cp-f"><input id="cp-loc" class="field" placeholder="${T("Добавьте место", "Add location")}" value="${esc(e.location || "")}" autocomplete="off"></div></div>
+    <div class="cp-row"><span class="cp-ic">${ci("text")}</span><div class="cp-f"><textarea id="cp-note" class="field" rows="3" placeholder="${T("Добавьте описание", "Add description")}">${esc(e.note || "")}</textarea></div></div>
+    <div class="cp-row"><span class="cp-ic">${ci("bell")}</span><div class="cp-f"><select id="cp-rem" class="field slim">${rems.map(([v, l]) => opt(v, l, e.remind ?? -1)).join("")}</select></div></div>
+    <div class="cp-row"><span class="cp-ic">${ci("palette")}</span><div class="cp-f cp-colors">${colors}</div></div>
     <div class="err" id="cp-err"></div>
     <div class="cp-actions">${isNew ? "" : `<button type="button" class="danger cp-del" data-cp-del>${T("Удалить", "Delete")}</button>`}<span></span>
       <button type="button" class="ghost" data-cp-close>${T("Отмена", "Cancel")}</button><button type="button" class="cp-save" data-cp-save>${T("Сохранить", "Save")}</button></div>
@@ -321,7 +332,7 @@ function calRemindTick() {
       calFired.add(key);
       const body = evTimeText(o) + (o.e.location ? " · " + o.e.location : "");
       try { if ("Notification" in window && Notification.permission === "granted") new Notification(o.e.title || "SHUT", { body, tag: key }); } catch {}
-      toast("🔔 " + (o.e.title || "") + " — " + body);
+      toast((o.e.title || "") + " — " + body);
     }
   });
 }

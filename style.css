@@ -2011,3 +2011,17 @@ body{ -webkit-tap-highlight-color:transparent; }
   .cal-pop{ width:100%; max-height:92vh; border-radius:26px 26px 0 0; padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
 }
 @media (max-width:600px){ .cp-dash{ display:none !important; } .cp-when input[type=date]{ flex:1 1 55%; } .cp-when .cp-t{ flex:1 1 35%; } }
+
+/* Календарь: тёмная тонкая прокрутка в стиле сайта */
+.cg-body, .cal-pop{ scrollbar-width:thin; scrollbar-color:#3E3E46 transparent; }
+.cg-body::-webkit-scrollbar, .cal-pop::-webkit-scrollbar{ width:8px; }
+.cg-body::-webkit-scrollbar-track, .cal-pop::-webkit-scrollbar-track{ background:transparent; }
+.cg-body::-webkit-scrollbar-thumb, .cal-pop::-webkit-scrollbar-thumb{ background:#3E3E46; border-radius:4px; border:2px solid #1A1A1D; }
+.cg-body::-webkit-scrollbar-thumb:hover{ background:#55555E; }
+.cg-body::-webkit-scrollbar-button, .cal-pop::-webkit-scrollbar-button{ display:none; height:0; }
+@media (hover:hover){ .cg-headrow, .cg-adrow{ padding-right:10px; } }
+/* Линейные иконки окна события */
+.cp-ic{ display:flex; align-items:center; justify-content:center; height:40px; opacity:1; }
+.ci{ width:20px; height:20px; fill:none; stroke:#9A9AA2; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto; }
+.cp-join{ display:flex; align-items:center; justify-content:center; gap:8px; }
+.cp-join .ci{ stroke:#111; }
