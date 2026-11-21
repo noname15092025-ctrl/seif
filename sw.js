@@ -1,7 +1,7 @@
 "use strict";
 // Офлайн-режим: файлы приложения кешируются. Сначала сеть (чтобы получать обновления), при отсутствии сети — кеш.
-const CACHE = "vault-v100";
-const FILES = ["./", "index.html", "s.html", "style.css", "app.js", "loyalty.js", "calendar.js", "vendor/zxing.min.js", "argon2.js", "argon2-worker.js", "wordlist.js",
+const CACHE = "vault-v102";
+const FILES = ["./", "index.html", "s.html", "style.css", "app.js", "loyalty.js", "calendar.js", "datepicker.js", "date-ico.svg", "vendor/zxing.min.js", "argon2.js", "argon2-worker.js", "wordlist.js",
   "manifest.webmanifest", "shield.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => {

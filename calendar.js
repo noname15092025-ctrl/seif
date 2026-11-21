@@ -216,7 +216,7 @@ function calOpenPop(e, occ) {
     <div class="cp-top"><span class="cp-grip"></span><button type="button" class="cp-x" data-cp-close aria-label="${T("Закрыть", "Close")}">✕</button></div>
     <input class="cp-title" id="cp-title" maxlength="200" placeholder="${T("Добавьте название", "Add title")}" value="${esc(e.title || "")}">
     ${occ && !isNew && (e.repeat || "none") !== "none" ? `<p class="cp-note">${T("Повторяющееся событие: изменения применятся ко всем повторам.", "Recurring event: changes apply to all occurrences.")}</p>` : ""}
-    ${e.meet && !isNew ? `<button type="button" class="cp-join" data-cp-join>${ci("video")} ${T("Подключиться к встрече", "Join meeting")}</button>` : ""}
+    ${e.meet && !isNew ? `<a class="cp-join" data-cp-join href="${esc(e.meet)}" target="_blank" rel="noopener noreferrer">${ci("video")} ${T("Подключиться к встрече", "Join meeting")}</a>` : ""}
     <div class="cp-row"><span class="cp-ic">${ci("clock")}</span><div class="cp-f">
       <div class="cp-when">
         <input type="date" id="cp-sd" class="field" value="${cYmd(S)}">
@@ -232,7 +232,7 @@ function calOpenPop(e, occ) {
     <div class="cp-row"><span class="cp-ic">${ci("users")}</span><div class="cp-f"><input id="cp-guests" class="field" placeholder="${T("Добавьте гостей (email через запятую)", "Add guests (comma-separated emails)")}" value="${esc(e.guests || "")}" autocomplete="off"></div></div>
     <div class="cp-row"><span class="cp-ic">${ci("video")}</span><div class="cp-f">
       <input id="cp-meet" class="field" inputmode="url" placeholder="${T("Ссылка на видеовстречу (Meet, Zoom, Telegram…)", "Video call link (Meet, Zoom, Telegram…)")}" value="${esc(e.meet || "")}" autocomplete="off">
-      <div class="cp-btns"><button type="button" class="ghost cp-small" data-cp-jitsi>${T("Создать ссылку Jitsi Meet", "Create a Jitsi Meet link")}</button><button type="button" class="ghost cp-small" data-cp-meet-open>${T("Открыть", "Open")}</button><button type="button" class="ghost cp-small" data-cp-meet-copy>${T("Скопировать", "Copy")}</button></div>
+      <div class="cp-btns"><button type="button" class="ghost cp-small" data-cp-jitsi>${T("Создать ссылку Jitsi Meet", "Create a Jitsi Meet link")}</button><a class="ghost cp-small cp-link-btn" data-cp-meet-open href="${esc(e.meet || "")}" target="_blank" rel="noopener noreferrer">${T("Открыть", "Open")}</a><button type="button" class="ghost cp-small" data-cp-meet-copy>${T("Скопировать", "Copy")}</button></div>
     </div></div>
     <div class="cp-row"><span class="cp-ic">${ci("pin")}</span><div class="cp-f"><input id="cp-loc" class="field" placeholder="${T("Добавьте место", "Add location")}" value="${esc(e.location || "")}" autocomplete="off"></div></div>
     <div class="cp-row"><span class="cp-ic">${ci("text")}</span><div class="cp-f"><textarea id="cp-note" class="field" rows="3" placeholder="${T("Добавьте описание", "Add description")}">${esc(e.note || "")}</textarea></div></div>
@@ -261,6 +261,7 @@ function calOpenPop(e, occ) {
   const onKey = ev => { if (ev.key === "Escape") close(); if (ev.key === "Enter" && ev.target.id === "cp-title") save(); };
   document.addEventListener("keydown", onKey);
   const meetUrl = () => safeUrl(g("cp-meet").value);
+  g("cp-meet").addEventListener("input", () => { const a = ov.querySelector("[data-cp-meet-open]"); if (a) a.href = meetUrl() || ""; });
   const save = async () => {
     const title = g("cp-title").value.trim(), ad = g("cp-ad").checked;
     let st = ad ? g("cp-sd").value : g("cp-sd").value + "T" + g("cp-st").value, enS = ad ? g("cp-ed").value : g("cp-ed").value + "T" + g("cp-et").value;
@@ -283,7 +284,8 @@ function calOpenPop(e, occ) {
     const c = ev.target.closest("[data-cp-color]"); if (c) { color = +c.dataset.cpColor; ov.querySelectorAll(".cp-color").forEach(x => x.classList.toggle("on", x === c)); return; }
     if (ev.target.closest("[data-cp-save]")) return save();
     if (ev.target.closest("[data-cp-jitsi]")) { const id = "SHUT-" + [...rand(9)].map(b => "abcdefghjkmnpqrstuvwxyz23456789"[b % 31]).join(""); g("cp-meet").value = "https://meet.jit.si/" + id; return; }
-    if (ev.target.closest("[data-cp-meet-open]") || ev.target.closest("[data-cp-join]")) { const u = ev.target.closest("[data-cp-join]") ? e.meet : meetUrl(); if (u) window.open(u, "_blank", "noopener,noreferrer"); else toast(T("Сначала вставьте ссылку", "Paste a link first")); return; }
+    const mo = ev.target.closest("[data-cp-meet-open]"); if (mo) { const u = meetUrl(); if (!u) { ev.preventDefault(); toast(T("Сначала вставьте ссылку", "Paste a link first")); } else mo.href = u; return; }
+    if (ev.target.closest("[data-cp-join]")) return; // обычная ссылка — браузер откроет сам
     if (ev.target.closest("[data-cp-meet-copy]")) { const u = meetUrl(); if (u) { try { await navigator.clipboard.writeText(u); toast(T("Ссылка скопирована", "Link copied")); } catch {} } return; }
     if (ev.target.closest("[data-cp-del]")) {
       if (!(await confirmBox(T("Удалить событие «", "Delete event “") + (e.title || "") + T("»?", "”?") + ((e.repeat || "none") !== "none" ? T(" Удалятся все повторы.", " All occurrences will be deleted.") : ""), T("Удалить", "Delete"), true))) return;

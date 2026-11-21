@@ -2051,3 +2051,35 @@ body{ -webkit-tap-highlight-color:transparent; }
 .dash-cat-n{ overflow-wrap:normal !important; word-break:normal !important; hyphens:manual; font-size:15px !important; }
 .dash-cat-top{ right:44px !important; }
 @media (max-width:600px){ .dash-cat-n{ font-size:13.5px !important; } .dash-cat-top{ right:40px !important; left:12px !important; } }
+
+/* ======================================================================
+   SHUT · Единый выбор даты
+   ====================================================================== */
+input[type=date], input[type=time]{ color-scheme:dark; }
+@media (pointer:fine){
+  input:is([type=date], #dp-hi){ cursor:pointer; background-image:url("date-ico.svg") !important; background-repeat:no-repeat !important; background-position:right 12px center !important; background-size:18px 18px !important; padding-right:40px !important; }
+  input[type=date]::-webkit-calendar-picker-indicator{ display:none; }
+  input:is([type=date], #dp-hi).task-date{ background-image:none !important; }
+}
+.dp-pop{ position:fixed; z-index:200; width:288px; padding:12px; border-radius:20px; background:#242428; border:1px solid #34343B; box-shadow:0 24px 70px rgba(0,0,0,.6); color:#ECECEE; font-family:var(--d-font, inherit); animation:rise .18s cubic-bezier(.2,.7,.2,1) both; user-select:none; }
+.dp-top{ display:flex; align-items:center; justify-content:space-between; padding:2px 2px 8px; }
+.dp-title{ font-size:15px; font-weight:600; }
+.dp-nav{ width:32px; height:32px; min-width:32px; padding:0; border-radius:16px; border:0 !important; background:transparent !important; color:#D7D7DC !important; font-size:20px; line-height:1; box-shadow:none !important; }
+.dp-nav:hover{ background:rgba(255,255,255,.08) !important; transform:none; filter:none; }
+.dp-wds, .dp-days{ display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+.dp-wds span{ text-align:center; font-size:11px; color:#7A7A82; padding:4px 0; text-transform:capitalize; }
+.dp-d{ height:34px; min-width:0; padding:0; border-radius:17px; border:0 !important; background:transparent !important; color:#E2E2E6 !important; font-size:13px; font-weight:500; box-shadow:none !important; }
+.dp-d:hover:not(:disabled){ background:rgba(255,255,255,.09) !important; transform:none; filter:none; }
+.dp-d.out{ color:#55555C !important; }
+.dp-d.today{ box-shadow:inset 0 0 0 1.5px var(--lime) !important; color:#fff !important; }
+.dp-d.sel{ background:var(--lime) !important; color:#111 !important; font-weight:700; box-shadow:none !important; }
+.dp-d:disabled{ opacity:.3; cursor:default; }
+.dp-foot{ display:flex; justify-content:space-between; padding:8px 4px 0; margin-top:6px; border-top:1px solid #34343B; }
+.dp-link{ height:30px; padding:0 8px; border:0 !important; background:transparent !important; color:var(--lime) !important; font-size:13px; font-weight:600; box-shadow:none !important; }
+.dp-link:hover{ background:rgba(200,226,122,.1) !important; transform:none; filter:none; }
+
+/* Кнопки встречи — настоящие ссылки (браузер не блокирует переход) */
+a.cp-join{ text-decoration:none; box-sizing:border-box; }
+a.cp-join:hover{ filter:brightness(1.05); color:#111 !important; }
+a.cp-link-btn{ display:inline-flex; align-items:center; justify-content:center; text-decoration:none; border-radius:999px; border:1px solid rgba(255,255,255,.22); color:#ECECEE !important; font-weight:600; background:transparent; }
+a.cp-link-btn:hover{ background:rgba(255,255,255,.08); color:#fff !important; }

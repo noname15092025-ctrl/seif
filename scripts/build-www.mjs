@@ -16,6 +16,8 @@ const INCLUDE = [
   "app.js",
   "loyalty.js",
   "calendar.js",
+  "datepicker.js",
+  "date-ico.svg",
   "vendor",
   "style.css",
   "sw.js",
