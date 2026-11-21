@@ -192,6 +192,7 @@ async function persist() {
   s.vault = await seal(vaultKey, enc.encode(JSON.stringify(entries)));
   store.set(s);
   if (typeof schedulePush === "function") schedulePush();
+  if (typeof calScheduleNative === "function") calScheduleNative(); // iOS: перепланировать уведомления о событиях
 }
 async function setupDevice(key, pw, vaultBox, name) {
   const id = await vaultId(key);
@@ -262,11 +263,12 @@ function gotoUnlock(noAuto) {
   if (!store.all().length) return landing();
   renderProfiles(); $("unlock-err").textContent = ""; show("unlock");
   // В iOS-приложении с включённым Face ID сразу спрашиваем лицо, клавиатуру не открываем
+  if (typeof pkUpdateBtn === "function") pkUpdateBtn();
   updateBioBtn(noAuto !== true).then(asked => { if (!asked && !(NATIVE && noAuto === true)) setTimeout(() => $("unlock-pw").focus(), 50); });
 }
 $("profiles").onclick = e => {
   const b = e.target.closest("[data-pid]"); if (!b) return;
-  currentId = b.dataset.pid; renderProfiles(); $("unlock-err").textContent = ""; updateBioBtn(false); $("unlock-pw").focus();
+  currentId = b.dataset.pid; renderProfiles(); $("unlock-err").textContent = ""; updateBioBtn(false); if (typeof pkUpdateBtn === "function") pkUpdateBtn(); $("unlock-pw").focus();
 };
 $("b-signin").onclick = gotoUnlock;
 $("b-new3") && ($("b-new3").onclick = () => $("b-new").click());
@@ -752,6 +754,7 @@ async function makeShareLink(x, expMs) {
   const kb = rand(32);
   const sk = await C.importKey("raw", kb, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
   const payload = { t: x.title, ty: x.type, login: x.login || "", url: x.url || "", pass: x.pass || "", totp: x.totp || "", note: x.note || "", f: x.f || null, custom: x.custom || null, exp: expMs ? Date.now() + expMs : 0 };
+  if (x.type === "event") payload.ev = { allDay: !!x.allDay, start: x.start, end: x.end, repeat: x.repeat || "none", until: x.until || "", meet: x.meet || "", location: x.location || "" };
   const box = await seal(sk, enc.encode(JSON.stringify(payload)));
   const data = btoa(JSON.stringify({ k: b64(kb), iv: box.iv, ct: box.ct })).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   return new URL("s.html", location.href).href + "#" + data;
@@ -763,6 +766,9 @@ async function shareFlow(x) {
   try { await navigator.clipboard.writeText(link); toast(T("Ссылка скопирована", "Link copied")); } catch {}
   await alertBox(T("Ссылка скопирована. Любой, у кого есть ссылка, увидит эту запись до истечения срока. Отправьте её по защищённому каналу.", "Link copied. Anyone with the link can view this entry until it expires. Send it over a secure channel.") + "\n\n" + link);
 }
+// Открыть внешнюю ссылку в новой вкладке. Не через window.open: глобальная функция расшифровки// open() в этом файле перекрывает window.open, поэтому используем обычную ссылку.function openExternal(u) { const a = document.createElement("a"); a.href = u; a.target = "_blank"; a.rel = "noopener noreferrer"; document.body.appendChild(a); a.click(); a.remove(); }
+// open() в этом файле — функция расшифровки, она перекрывает window.open, поэтому используем обычную ссылку.
+function openExternal(u) { const a = document.createElement("a"); a.href = u; a.target = "_blank"; a.rel = "noopener noreferrer"; document.body.appendChild(a); a.click(); a.remove(); }
 function safeUrl(u) {
   u = (u || "").trim(); if (!u) return "";
   if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = "https://" + u;
@@ -945,7 +951,7 @@ function render() {
   if (!list.length && filter !== "t:loyalty") { listEl.innerHTML = empty; if ($("form-card").classList.contains("hidden")) renderDetail(); return; }
   if (filter === "t:loyalty") { // «Кошелёк»: карты магазинов плитками в фирменных цветах
     listEl.classList.remove("tiles-mode");
-    listEl.innerHTML = `<div class="lc-grid">${list.map(x => `<a class="lc-tile${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}" data-brand="${esc(x.title)}"><span class="lc-name">${esc(x.title)}</span><span class="lc-num">${esc(((x.f || {}).num || "").slice(-4))}</span></a>`).join("")}<button class="lc-tile lc-new" data-act-new><span class="lc-plus">+</span>${T("Добавить карту", "Add card")}</button></div>`;
+    listEl.innerHTML = `<div class="lc-grid">${list.slice().sort((a, b) => (b.used || 0) - (a.used || 0) || a.title.localeCompare(b.title)).map(x => `<a class="lc-tile${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}" data-brand="${esc(x.title)}"><span class="lc-name">${esc(x.title)}</span><span class="lc-num">${esc(((x.f || {}).num || "").slice(-4))}</span></a>`).join("")}<button class="lc-tile lc-new" data-act-new><span class="lc-plus">+</span>${T("Добавить карту", "Add card")}</button></div>`;
     paintBrands(listEl);
     if ($("form-card").classList.contains("hidden")) renderDetail();
     return;
@@ -997,6 +1003,7 @@ $("list").onclick = async e => {
   if (view === "home") {
     const rm = e.target.closest("[data-recentmode]"); if (rm) { recentMode = rm.dataset.recentmode; try { localStorage.setItem("vault.recentmode", recentMode); } catch {} renderHome(); return; }
     if (e.target.closest("[data-cats-more]")) { catsExpanded = !catsExpanded; renderHome(); return; }
+    const ho = e.target.closest("[data-home-occ]"); if (ho) { const f = calFindOcc(ho.dataset.homeOcc); if (f) { setView("calendar"); calDate = cDayStart(f.s); if (calView === "month") calView = "week"; renderCalendar(); calOpenPop(f.e, f); } return; }
     const dv = e.target.closest("[data-view]"); if (dv) { setView(dv.dataset.view); return; }
     const df = e.target.closest("[data-filter]"); if (df) { view = "vault"; filter = df.dataset.filter; setViewChrome("vault"); renderNav(); render(); scrollTo(0, 0); return; }
     const op = e.target.closest("[data-open]"); if (op) {
@@ -1031,6 +1038,7 @@ $("list").onclick = async e => {
   if (e.target.closest("[data-copy-pass]")) { const xp = entries.find(y => y.id === r.dataset.id); if (xp && xp.pass) { copySecret(xp.pass); markUsed(xp); } return; }
   if (e.target.closest("[data-fav]")) { const xf = entries.find(y => y.id === r.dataset.id); if (xf) { xf.fav = !xf.fav; xf.updated = Date.now(); await persist(); renderNav(); render(); } return; }
   selectedId = r.dataset.id; clearForm(); showDetail();
+  { const xs = entries.find(y => y.id === selectedId); if (xs && xs.type === "loyalty") markUsed(xs); } // карту открыли — значит, пользуются
   $("list").querySelectorAll(".rrow, .tile, .lc-tile").forEach(x => x.classList.toggle("active", x.dataset.id === selectedId));
   $("v-vault").classList.add("show-detail"); $("detail").scrollTop = 0;
 };
@@ -1149,7 +1157,7 @@ $("detail-view").onclick = async e => {
   }
   if (act === "copy-number") await copySecret(x.number.replace(/\s/g, ""));
   if (act === "copy-totp") { const r = await totpCode(parseTotp(x.totp)); await copySecret(r.code); markUsed(x); }
-  if (act === "open") { const u = safeUrl(x.url); if (u) { window.open(u, "_blank", "noopener,noreferrer"); markUsed(x); } }
+  if (act === "open") { const u = safeUrl(x.url); if (u) { openExternal(u); markUsed(x); } }
   if (act === "fav") { x.fav = !x.fav; await persist(); renderNav(); render(); }
   if (act === "edit") startEdit(x);
   if (act === "lc-full") { showBarcodeFull(x); markUsed(x); return; }
@@ -1164,6 +1172,7 @@ function openVaultView() {
   $("vault-name").textContent = s.name || T("Профиль", "Profile");
   $("vault-avatar").textContent = initial(s.name);
   view = "home"; setViewChrome("home");
+  if (typeof calScheduleNative === "function") calScheduleNative();
   clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("note-editor").classList.add("hidden"); $("v-vault").classList.remove("show-detail");
   if (purgeTrash()) persist();
   renderNav(); render(); show("vault"); resetIdle();
@@ -1236,7 +1245,7 @@ function renderHome() {
   const recentTiles = recent.length ? recent.map(x => { const sg = strengthTag(x); return `<a class="tile" data-open="${esc(x.id)}"><span class="tile-glow${sg.cls === "weak" ? " warn" : ""}"></span><span class="tile-top"><span class="tile-ava">${esc(initial(x.title))}</span><span class="tile-type">${esc(tLabel(x))}</span></span><span class="tile-mid"><span class="tile-n">${esc(x.title)}</span><span class="tile-u">${esc(subline(x))}</span></span><span class="tile-bot">${sg.label ? `<span class="pill-str ${sg.cls}">${sg.label}</span>` : "<span></span>"}<span class="tile-d">${esc(relTime(Math.max(x.used || 0, x.updated)))}</span></span></a>`; }).join("") : `<div class="dash-empty">${T("Пока пусто", "Nothing yet")}</div>`;
   const recentBlock = `<div class="dash-recent-head"><h2 class="dash-h2">${T("Недавние", "Recent")}</h2><div class="rec-toggle sm"><button class="rec-seg${recentMode === "list" ? " on" : ""}" data-recentmode="list">${T("Список", "List")}</button><button class="rec-seg${recentMode === "tiles" ? " on" : ""}" data-recentmode="tiles">${T("Плитка", "Tiles")}</button></div></div>` + (recentMode === "tiles" ? `<div class="rec-tiles-grid">${recentTiles}</div>` : `<div class="dash-recent">${recentHtml}</div>`);
   const stat = (k, v, cls) => `<div class="dash-stat"><span class="dash-stat-k">${k}</span><span class="dash-stat-v${cls ? " " + cls : ""}">${v}</span></div>`;
-  $("list").innerHTML = `
+  $("list").innerHTML = backupBannerHtml() + `
     <section class="dash-hero">
       <div class="dash-hero-l"><span class="dash-date">${esc(dateStr)}</span><h1 class="dash-greet">${esc(greet())}${name ? ", " + esc(name) : ""}</h1></div>
       <div class="dash-cards">
@@ -1246,7 +1255,7 @@ function renderHome() {
     </section>
     ${catsHead}
     <div class="dash-cats">${catHtml}</div>
-    ${recentBlock}`;
+    ${homeUpcomingHtml()}${recentBlock}`;
 }
 
 /* ---- Markdown (безопасный: экранируем, затем расставляем свои теги) ---- */
@@ -1433,7 +1442,7 @@ function startRenameTask(row, x) {
 }
 
 /* ---------------- Настройки: смена пароля, имя ---------------- */
-$("b-settings").onclick = () => { $("rename").value = store.get().name || ""; $("cp-err").textContent = ""; show("settings"); refreshBioSetting(); };
+$("b-settings").onclick = () => { $("rename").value = store.get().name || ""; $("cp-err").textContent = ""; show("settings"); refreshBioSetting(); if (typeof pkRefreshSetting === "function") pkRefreshSetting(); };
 $("b-switch").onclick = () => lock();
 $("b-cp").onclick = async e => {
   const s = store.get(), oldPw = $("cp-old").value, p1 = $("cp-new1").value, p2 = $("cp-new2").value;
@@ -1529,6 +1538,7 @@ const fileSafe = s => (s || "profile").replace(/[^\p{L}\p{N}_-]+/gu, "_");
 $("b-export").onclick = () => {
   const s = store.get();
   download(new Blob([JSON.stringify({ v: 1, id: s.id, vault: s.vault }, null, 1)], { type: "application/json" }), "vault-backup-" + new Date().toISOString().slice(0, 10) + ".json");
+  try { localStorage.setItem("vault.backup." + s.id, String(Date.now())); localStorage.removeItem("vault.backup.snooze." + s.id); } catch {}
 };
 
 /* ---------------- Excel: выгрузка ---------------- */
@@ -1575,12 +1585,16 @@ const EX_COLS = () => [
   ["note", T("Заметки", "Notes"), 40, x => x.note], ["card", T("Данные карты", "Card details"), 28, x => [x.number, x.exp, x.cvv && "CVV " + x.cvv].filter(Boolean).join(" · ")],
   ["totp", T("Ключ 2FA", "2FA key"), 22, x => x.totp], ["extra", T("Доп. поля", "Extra fields"), 40, x => (EXTRA[x.type] || []).filter(f => (x.f || {})[f.k]).map(f => exLabel(f) + ": " + x.f[f.k]).join("\n")],
   ["custom", T("Свои поля", "Custom fields"), 40, x => (x.custom || []).map(c => c.k + ": " + c.v).join("\n")],
+  ["event", T("Событие", "Event"), 40, x => x.type !== "event" ? "" : [evWhenText(x),
+    x.repeat && x.repeat !== "none" ? T("Повтор: ", "Repeats: ") + x.repeat + (x.until ? T(" до ", " until ") + x.until : "") : "",
+    x.meet && T("Встреча: ", "Call: ") + x.meet, x.location && T("Место: ", "Location: ") + x.location, x.guests && T("Гости: ", "Guests: ") + x.guests].filter(Boolean).join("\n")],
   ["dates", T("Даты", "Dates"), 22, x => T("Добавлено ", "Added ") + new Date(x.created).toLocaleDateString() + (x.updated !== x.created ? "\n" + T("Изменено ", "Changed ") + new Date(x.updated).toLocaleDateString() : "")]
 ];
-let exSel = new Set(), exTypes = new Set(), exCats = new Set(), exCols = new Set(["type", "title", "login", "pass", "url", "category", "note", "card", "extra", "custom"]);
-function exPool() { return pwEntries().filter(x => (!exTypes.size || exTypes.has(x.type)) && (!exCats.size || exCats.has(x.category || "\u0000"))); }
+let exSel = new Set(), exTypes = new Set(), exCats = new Set(), exCols = new Set(["type", "title", "login", "pass", "url", "category", "note", "card", "extra", "custom", "event"]);
+const exAll = () => pwEntries().concat(typeof eventsList === "function" ? eventsList() : []);
+function exPool() { return exAll().filter(x => (!exTypes.size || exTypes.has(x.type)) && (!exCats.size || exCats.has(x.category || "\u0000"))); }
 function renderExport() {
-  const L = pwEntries(), types = [...new Set(L.map(x => x.type))], cats = [...new Set(L.map(x => x.category || "\u0000"))];
+  const L = exAll(), types = [...new Set(L.map(x => x.type))], cats = [...new Set(L.map(x => x.category || "\u0000"))];
   const chip = (group, v, label, count, on) => `<button type="button" class="chip-t${on ? " on" : ""}" data-g="${group}" data-v="${esc(v)}">${esc(label)}${count !== undefined ? ` <span>${count}</span>` : ""}</button>`;
   $("ex-types").innerHTML = chip("t", "*", T("Все типы", "All types"), undefined, !exTypes.size) + types.map(t => chip("t", t, TYPE_NAME(t), L.filter(x => x.type === t).length, exTypes.has(t))).join("");
   $("ex-cats").innerHTML = cats.length > 1 || cats[0] !== "\u0000" ? chip("c", "*", T("Все категории", "All categories"), undefined, !exCats.size) +
@@ -1732,7 +1746,7 @@ function lock() {
 }
 $("b-logout").onclick = lock;
 $("b-wipe").onclick = async () => {
-  if (await confirmBox(T("Удалить профиль «", "Delete profile “") + (store.get().name || "") + T("» с этого устройства? Восстановить можно будет только по секретной фразе и резервной копии.", "” from this device? It can only be restored with the secret phrase and a backup."), T("Удалить", "Delete"), true)) { bioForget(currentId); store.remove(currentId); currentId = null; lock(); }
+  if (await confirmBox(T("Удалить профиль «", "Delete profile “") + (store.get().name || "") + T("» с этого устройства? Восстановить можно будет только по секретной фразе и резервной копии.", "” from this device? It can only be restored with the secret phrase and a backup."), T("Удалить", "Delete"), true)) { bioForget(currentId); if (typeof calCancelNative === "function") calCancelNative(); store.remove(currentId); currentId = null; lock(); }
 };
 let idle, hiddenTimer;
 function resetIdle() { clearTimeout(idle); if (vaultKey && LOCK_IDLE_MS > 0) idle = setTimeout(lock, LOCK_IDLE_MS); }
@@ -1821,6 +1835,22 @@ if ($("gp-presets")) $("gp-presets").onclick = e => {
   $("gp-presets").querySelectorAll(".chip").forEach(c => c.classList.toggle("active", c === b));
   if (p === "max") set("chars", 24); else if (p === "words") set("words", 24); else if (p === "pin") set("pin", 6); else if (p === "pron") set("pron", 14);
 };
+
+/* ---------------- Напоминание о резервной копии ---------------- */
+function backupBannerHtml() {
+  const s = store.get(); if (!s) return "";
+  let last = 0, snooze = 0; try { last = +localStorage.getItem("vault.backup." + s.id) || 0; snooze = +localStorage.getItem("vault.backup.snooze." + s.id) || 0; } catch {}
+  const now = Date.now();
+  if (snooze > now || live().length < 3) return "";
+  if (last && now - last < 30 * 864e5) return "";
+  const ago = last ? T("Последняя копия — ", "Last backup — ") + Math.floor((now - last) / 864e5) + T(" дн. назад.", " days ago.") : T("Вы ещё ни разу не скачивали резервную копию.", "You haven't downloaded a backup yet.");
+  return `<div class="bk-banner"><span class="bk-ic">${typeof ci === "function" ? ci("download") : ""}</span><span class="bk-t"><b>${T("Сохраните резервную копию", "Save a backup")}</b><small>${ago} ${T("Файл зашифрован — открыть его можно только вашей фразой.", "The file is encrypted — only your phrase can open it.")}</small></span>
+    <button type="button" class="bk-now" data-backup-now>${T("Скачать", "Download")}</button><button type="button" class="bk-later" data-backup-later>${T("Позже", "Later")}</button></div>`;
+}
+$("list").addEventListener("click", e => {
+  if (e.target.closest("[data-backup-now]")) { $("b-export").click(); renderHome(); toast(T("Резервная копия скачана", "Backup downloaded")); }
+  else if (e.target.closest("[data-backup-later]")) { try { localStorage.setItem("vault.backup.snooze." + store.get().id, String(Date.now() + 7 * 864e5)); } catch {} renderHome(); }
+});
 
 /* ---------------- iOS-приложение (Capacitor): Face ID / Touch ID, статус-бар ----------------
    Ключ сейфа (не мастер-пароль!) кладётся в Keychain iPhone с доступом только по биометрии

@@ -87,11 +87,47 @@
     addEventListener("resize", close);
     document.addEventListener("scroll", onScroll, true);
   }
+  /* ---------- время: список с шагом 15 минут ---------- */
+  const tmin = s => { const m = /^(\d{2}):(\d{2})/.exec(s || ""); return m ? +m[1] * 60 + +m[2] : null; };
+  const tstr = m => pad(Math.floor(m / 60) % 24) + ":" + pad(m % 60);
+  const durText = d => { const h = Math.floor(d / 60), m = d % 60; return [h ? h + L(" ч", " h") : "", m ? m + L(" мин", " min") : ""].filter(Boolean).join(" "); };
+  function openTime(el) {
+    if (el.disabled || el.readOnly) return;
+    if (pop && input === el) return close();
+    close();
+    input = el;
+    const from = el.dataset.durFrom ? tmin(document.getElementById(el.dataset.durFrom)?.value) : null;
+    const cur = tmin(el.value);
+    const slots = []; for (let m = 0; m < 1440; m += 15) slots.push(m);
+    if (cur != null && !slots.includes(cur)) { slots.push(cur); slots.sort((a, b) => a - b); }
+    pop = document.createElement("div"); pop.className = "dp-pop tp-pop"; pop.setAttribute("role", "listbox");
+    pop.innerHTML = `<div class="tp-list">${slots.map(m => {
+      const d = from != null ? m - from : null;
+      const lbl = new Date(2000, 0, 1, Math.floor(m / 60), m % 60).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit" });
+      return `<button type="button" class="tp-i${m === cur ? " sel" : ""}" data-tp="${tstr(m)}">${lbl}${d != null && d > 0 ? `<small>${durText(d)}</small>` : ""}</button>`;
+    }).join("")}</div>`;
+    pop.addEventListener("mousedown", e => e.preventDefault());
+    pop.addEventListener("click", e => { const b = e.target.closest("[data-tp]"); if (b) set(b.dataset.tp); });
+    document.body.appendChild(pop); place();
+    const list = pop.querySelector(".tp-list"), sel = pop.querySelector(".tp-i.sel") || pop.querySelector(`[data-tp="${tstr(Math.round((from ?? 540) / 15) * 15)}"]`);
+    if (sel) list.scrollTop = sel.offsetTop - list.clientHeight / 2 + sel.offsetHeight / 2;
+    document.addEventListener("mousedown", outside, true);
+    document.addEventListener("keydown", onKey, true);
+    addEventListener("resize", close);
+    document.addEventListener("scroll", onScroll, true);
+  }
+
   const isDate = el => el && el.tagName === "INPUT" && el.type === "date";
-  // Клик по полю даты (на устройствах с мышью) — наш календарь вместо системного
-  document.addEventListener("click", e => { const el = e.target; if (isDate(el) && fine()) { e.preventDefault(); open(el); } }, true);
-  document.addEventListener("keydown", e => { const el = e.target; if (isDate(el) && fine() && (e.key === "Enter" || (e.altKey && e.key === "ArrowDown") || e.key === " ")) { e.preventDefault(); open(el); } }, true);
-  // Код, который сам открывает выбор даты (кнопка срока у задачи), тоже получает наш календарь
+  const isTime = el => el && el.tagName === "INPUT" && el.type === "time";
+  const openAny = el => isDate(el) ? open(el) : openTime(el);
+  // Мышь: клик по полю открывает наше окно; дату/время по-прежнему можно напечатать
+  document.addEventListener("click", e => { const el = e.target; if ((isDate(el) || isTime(el)) && fine()) { e.preventDefault(); openAny(el); } }, true);
+  document.addEventListener("keydown", e => { const el = e.target; if ((isDate(el) || isTime(el)) && (e.key === "Enter" || (e.altKey && e.key === "ArrowDown"))) { e.preventDefault(); openAny(el); } }, true);
+  // Палец: не даём открыться системному колесу — показываем своё окно снизу экрана
+  let tStart = null;
+  document.addEventListener("touchstart", e => { const t = e.touches[0]; tStart = t ? [t.clientX, t.clientY] : null; }, { capture: true, passive: true });
+  document.addEventListener("touchend", e => { const el = e.target; if (!(isDate(el) || isTime(el))) return; const t = e.changedTouches[0]; if (tStart && t && Math.hypot(t.clientX - tStart[0], t.clientY - tStart[1]) > 10) return; e.preventDefault(); openAny(el); }, { capture: true, passive: false });
+  // Код, который сам открывает выбор (кнопка срока у задачи), тоже получает наше окно
   const native = HTMLInputElement.prototype.showPicker;
-  HTMLInputElement.prototype.showPicker = function () { if (this.type === "date" && fine()) return open(this); return native && native.call(this); };
+  HTMLInputElement.prototype.showPicker = function () { if (isDate(this) || isTime(this)) return openAny(this); return native && native.call(this); };
 })();

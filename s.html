@@ -28,6 +28,8 @@
   button:hover{ background:#3A3A40; }
   .msg{ text-align:center; color:var(--muted); padding:60px 20px; font-size:16px; line-height:1.6; }
   .foot{ text-align:center; color:var(--muted); font-size:12px; margin-top:18px; }
+.bc{background:#fff;border-radius:16px;padding:18px 16px 10px;margin:14px 0}.bc-svg{width:100%;height:96px;display:block;fill:#000}.bc-n{text-align:center;color:#111;font:600 17px ui-monospace,Menlo,monospace;letter-spacing:2px;margin-top:6px}
+.join{display:block;text-align:center;margin:14px 0 6px;padding:13px;border-radius:14px;background:#C8E27A;color:#111;font-weight:700;text-decoration:none}
 </style>
 </head>
 <body>
@@ -42,7 +44,21 @@ const dec = new TextDecoder(), root = $("root");
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
 function unb64(s){ const b=atob(s); const u=new Uint8Array(b.length); for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i); return u; }
 function fromUrl64(s){ s=s.replace(/-/g,"+").replace(/_/g,"/"); while(s.length%4)s+="="; return s; }
-const TYPE={login:"Пароль",note:"Заметка",card:"Карта",wifi:"Wi-Fi",doc:"Документ",crypto:"Криптокошелёк",key:"Ключ",bank:"Счёт",contact:"Контакт",custom:"Своё"};
+const TYPE={login:"Пароль",note:"Заметка",card:"Карта",wifi:"Wi-Fi",doc:"Документ",crypto:"Криптокошелёк",key:"Ключ",bank:"Счёт",contact:"Контакт",custom:"Своё",loyalty:"Скидочная карта",event:"Событие"};
+const FLABEL={kind:"Вид документа",fio:"ФИО",number:"Серия и номер",issuer:"Кем выдан",issued:"Дата выдачи",expires:"Действует до",network:"Сеть",address:"Адрес",seed:"Сид-фраза",wpass:"Пароль кошелька",product:"Программа или сервис",key:"Ключ",email:"Email",holder:"Получатель",account:"Номер счёта",bik:"БИК",corr:"Корр. счёт",inn:"ИНН",relation:"Кем приходится",phone:"Телефон"};
+const REP={daily:"Каждый день",weekdays:"По будням",weekly:"Каждую неделю",monthly:"Каждый месяц",yearly:"Каждый год"};
+/* Штрихкод скидочной карты (EAN-13 / EAN-8 / Code 128) — копия логики из loyalty.js, страница работает отдельно */
+const C128=["212222","222122","222221","121223","121322","131222","122213","122312","132212","221213","221312","231212","112232","122132","122231","113222","123122","123221","223211","221132","221231","213212","223112","312131","311222","321122","321221","312212","322112","322211","212123","212321","232121","111323","131123","131321","112313","132113","132311","211313","231113","231311","112133","112331","132131","113123","113321","133121","313121","211331","231131","213113","213311","213131","311123","311321","331121","312113","312311","332111","314111","221411","431111","111224","111422","121124","121421","141122","141221","112214","112412","122114","122411","142112","142211","241211","221114","413111","241112","134111","111242","121142","121241","114212","124112","124211","411212","421112","421211","212141","214121","412121","111143","111341","131141","114113","114311","411113","411311","113141","114131","311141","411131","211412","211214","211232","2331112"];
+const EL=["0001101","0011001","0010011","0111101","0100011","0110001","0101111","0111011","0110111","0001011"],EG=["0100111","0110011","0011011","0100001","0011101","0111001","0000101","0010001","0001001","0010111"],ER=["1110010","1100110","1101100","1000010","1011100","1001110","1010000","1000100","1001000","1110100"],EP=["LLLLLL","LLGLGG","LLGGLG","LLGGGL","LGLLGG","LGGLLG","LGGGLL","LGLGLG","LGLGGL","LGGLGL"];
+function eanOk(d){ if(!/^\d{8}$|^\d{13}$/.test(d))return false; const n=d.split("").map(Number),c=n.pop(); const s=n.reverse().reduce((a,v,i)=>a+v*(i%2?1:3),0); return (10-s%10)%10===c; }
+function barcodeSvg(num,fmt){ const d=String(num||"").replace(/\s/g,""); let b="";
+  if(fmt==="qr") return "";
+  if(eanOk(d)&&d.length===13&&fmt!=="code128"){ const p=EP[+d[0]]; b="101"; for(let i=1;i<=6;i++)b+=(p[i-1]==="L"?EL:EG)[+d[i]]; b+="01010"; for(let i=7;i<=12;i++)b+=ER[+d[i]]; b+="101"; }
+  else if(eanOk(d)&&d.length===8&&fmt!=="code128"){ b="101"; for(let i=0;i<4;i++)b+=EL[+d[i]]; b+="01010"; for(let i=4;i<8;i++)b+=ER[+d[i]]; b+="101"; }
+  else { const c=[]; if(/^\d+$/.test(d)&&d.length%2===0&&d.length>=4){ c.push(105); for(let i=0;i<d.length;i+=2)c.push(+d.slice(i,i+2)); } else { c.push(104); for(const ch of d){ const v=ch.charCodeAt(0)-32; if(v<0||v>94)return ""; c.push(v);} }
+    let s=c[0]; for(let i=1;i<c.length;i++)s+=c[i]*i; c.push(s%103,106); c.forEach(x=>[...C128[x]].forEach((w,i)=>b+=(i%2?"0":"1").repeat(+w))); }
+  const q=10,W=b.length+q*2; let r="",i=0; while(i<b.length){ if(b[i]==="1"){ let j=i; while(b[j]==="1")j++; r+='<rect x="'+(i+q)+'" y="0" width="'+(j-i)+'" height="60"/>'; i=j; } else i++; }
+  return '<svg viewBox="0 0 '+W+' 60" preserveAspectRatio="none" class="bc-svg">'+r+'</svg>'; }
 function msg(t){ root.innerHTML = '<div class="msg">'+esc(t)+'</div>'; }
 function row(k,v,opts){ opts=opts||{};
   const vid='v'+Math.random().toString(36).slice(2);
@@ -68,7 +84,20 @@ async function main(){
     if(p.url) h += row("Сайт", p.url, {link:true});
     if(p.pass) h += row(p.ty==="card"?"PIN":"Пароль", p.pass, {secret:true, mono:true});
     if(p.totp) h += row("Ключ 2FA", p.totp, {secret:true, mono:true});
-    if(p.f) for(const k in p.f){ if(p.f[k]) h += row(k, p.f[k]); }
+    if(p.ty==="loyalty" && p.f && p.f.num){
+      const svg = barcodeSvg(p.f.num, p.f.fmt);
+      if(svg) h += '<div class="bc">'+svg+'<div class="bc-n">'+esc(p.f.num)+'</div></div>';
+      h += row("Номер карты", p.f.num, {mono:true});
+      if(p.f.holder) h += row("Владелец", p.f.holder);
+    } else if(p.f) for(const k in p.f){ if(p.f[k]) h += row(FLABEL[k]||k, p.f[k]); }
+    if(p.ev){
+      const e=p.ev, d=s=>{ const m=/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(s||""); return m?new Date(+m[1],+m[2]-1,+m[3],+(m[4]||0),+(m[5]||0)):null; };
+      const S=d(e.start), E=d(e.end), fd=x=>x.toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long",year:"numeric"}), ft=x=>x.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
+      if(S) h += row("Когда", e.allDay ? fd(S)+(E&&+E!==+S?" – "+fd(E):"")+", весь день" : fd(S)+", "+ft(S)+(E?" – "+(E.toDateString()===S.toDateString()?"":fd(E)+", ")+ft(E):""));
+      if(e.repeat && e.repeat!=="none") h += row("Повтор", (REP[e.repeat]||e.repeat)+(e.until?" до "+e.until:""));
+      if(e.location) h += row("Место", e.location);
+      if(e.meet) h += '<a class="join" href="'+esc(e.meet)+'" target="_blank" rel="noopener noreferrer">Подключиться к встрече</a>' + row("Ссылка на встречу", e.meet, {link:true});
+    }
     if(p.custom) p.custom.forEach(c => { if(c.k||c.v) h += row(c.k||"Поле", c.v, {secret:!!c.s}); });
     if(p.note) h += row("Заметки", p.note);
     h += '</div>';

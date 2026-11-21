@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>SHUT — автотесты</title>
+<style>
+  body{ margin:0; padding:24px; background:#0E0E10; color:#ECECEE; font:14px/1.5 system-ui, sans-serif; }
+  h1{ font-size:22px; margin:0 0 4px; } p.sub{ color:#8A8A90; margin:0 0 18px; }
+  .sum{ padding:12px 16px; border-radius:12px; margin:0 0 16px; font-weight:700; }
+  .sum.ok{ background:#1E2410; color:#C8E27A; } .sum.bad{ background:#2A1214; color:#FF8A8F; }
+  .t{ padding:6px 10px; border-radius:8px; margin:2px 0; font-family:ui-monospace, Menlo, monospace; font-size:12.5px; white-space:pre-wrap; }
+  .t.ok{ color:#9FBF5A; } .t.bad{ background:#2A1214; color:#FF8A8F; }
+  h2{ font-size:15px; margin:18px 0 6px; color:#C9C9CF; }
+</style>
+</head>
+<body>
+<h1>SHUT — автотесты</h1>
+<p class="sub">Проверяют логику без входа в сейф: штрихкоды (с распознаванием через ZXing), повторы событий, правки «только это / последующие / все», импорт и экспорт .ics. Откройте эту страницу после правок — всё должно быть зелёным.</p>
+<div id="sum" class="sum">Выполняю…</div>
+<div id="out"></div>
+<input id="search" type="hidden" value="">
+<script>
+// Минимальное окружение вместо app.js
+var lang = "ru";
+const T = (ru) => ru;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let entries = [];
+const live = () => entries.filter(x => !x.deletedAt);
+const tasksList = () => live().filter(x => x.type === "task");
+const rand = n => crypto.getRandomValues(new Uint8Array(n));
+const b64 = u8 => btoa(String.fromCharCode(...u8));
+const safeUrl = u => { u = (u || "").trim(); if (!u) return ""; if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = "https://" + u; try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : ""; } catch { return ""; } };
+let vaultKey = null;
+</script>
+<script src="loyalty.js"></script>
+<script src="calendar.js"></script>
+<script src="vendor/zxing.min.js"></script>
+<script>
+(async () => {
+  const out = $("out"); let pass = 0, fail = 0;
+  const section = name => out.insertAdjacentHTML("beforeend", "<h2>" + esc(name) + "</h2>");
+  const ok = (name, cond, extra) => { cond ? pass++ : fail++; out.insertAdjacentHTML("beforeend", `<div class="t ${cond ? "ok" : "bad"}">${cond ? "✓" : "✗"} ${esc(name)}${!cond && extra !== undefined ? "\n   получено: " + esc(JSON.stringify(extra)) : ""}</div>`); };
+  const eq = (name, got, want) => ok(name, JSON.stringify(got) === JSON.stringify(want), got);
+
+  /* ---------- Штрихкоды ---------- */
+  section("Штрихкоды скидочных карт");
+  eq("EAN-13: верная контрольная цифра", eanValid("4810000123458"), true);
+  eq("EAN-13: неверная контрольная цифра", eanValid("4810000123457"), false);
+  eq("Формат: 13 цифр с верной суммой → EAN-13", barcodeFormat("4810000123458"), "ean13");
+  eq("Формат: 8 цифр с верной суммой → EAN-8", barcodeFormat("96385074"), "ean8");
+  eq("Формат: произвольный номер → Code 128", barcodeFormat("FP-12345"), "code128");
+  eq("Формат: сканер сказал QR → QR", barcodeFormat("123", "qr_code"), "qr");
+  const reader = new ZXing.MultiFormatReader();
+  const decode = async (num) => {
+    let svg = barcodeSvg(num).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" width="900" height="200" ');
+    const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+    const img = new Image(); img.src = url; await img.decode();
+    const cv = document.createElement("canvas"); cv.width = 1000; cv.height = 260; const c = cv.getContext("2d");
+    c.fillStyle = "#fff"; c.fillRect(0, 0, 1000, 260); c.drawImage(img, 50, 30, 900, 200); URL.revokeObjectURL(url);
+    try { return reader.decode(new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(new ZXing.HTMLCanvasElementLuminanceSource(cv)))).getText(); } catch { return null; }
+  };
+  for (const n of ["4810000123458", "4601234567893", "96385074", "123456789012", "1234567", "FP-12345", "ABCxyz-0099"])
+    eq("Нарисованный штрихкод распознаётся: " + n, await decode(n), n);
+
+  /* ---------- Повторы ---------- */
+  section("Повторы событий");
+  const occDays = (e, from, to) => evOccurrences(e, new Date(from), new Date(to)).map(o => cYmd(o.s));
+  const base = { type: "event", allDay: false, start: "2026-11-16T10:00", end: "2026-11-16T11:00" };
+  eq("Каждый день, неделя", occDays({ ...base, repeat: "daily" }, "2026-11-16", "2026-11-23").length, 7);
+  eq("По будням: без субботы и воскресенья", occDays({ ...base, repeat: "weekdays" }, "2026-11-16", "2026-11-23"), ["2026-11-16", "2026-11-17", "2026-11-18", "2026-11-19", "2026-11-20"]);
+  eq("Каждую неделю", occDays({ ...base, repeat: "weekly" }, "2026-11-01", "2026-12-15"), ["2026-11-16", "2026-11-23", "2026-11-30", "2026-12-07", "2026-12-14"]);
+  eq("Каждый месяц 31-го: месяцы без 31-го пропускаются", occDays({ ...base, start: "2026-01-31T10:00", end: "2026-01-31T11:00", repeat: "monthly" }, "2026-01-01", "2026-06-01"), ["2026-01-31", "2026-03-31", "2026-05-31"]);
+  eq("Каждый год 29 февраля: только високосные", occDays({ ...base, start: "2024-02-29T10:00", end: "2024-02-29T11:00", repeat: "yearly" }, "2024-01-01", "2033-01-01"), ["2024-02-29", "2028-02-29", "2032-02-29"]);
+  eq("Повторять до (включительно)", occDays({ ...base, repeat: "daily", until: "2026-11-18" }, "2026-11-16", "2026-11-30"), ["2026-11-16", "2026-11-17", "2026-11-18"]);
+  eq("Исключённые дни не показываются", occDays({ ...base, repeat: "daily", ex: ["2026-11-17"] }, "2026-11-16", "2026-11-19"), ["2026-11-16", "2026-11-18"]);
+  eq("Весь день, несколько дней: попадает в каждый день", evOccurrences({ type: "event", allDay: true, start: "2026-12-01", end: "2026-12-03", repeat: "none" }, new Date("2026-12-02T00:00"), new Date("2026-12-03T00:00")).length, 1);
+  eq("Далёкое будущее считается быстро (без перебора с начала)", occDays({ ...base, repeat: "daily" }, "2036-01-01", "2036-01-03"), ["2036-01-01", "2036-01-02"]);
+
+  /* ---------- Только это / последующие / все ---------- */
+  section("Изменение повторяющегося события");
+  const mk = () => { entries = []; const e = calMakeEvent({ ...base, title: "Стендап", repeat: "daily", until: "", ex: [] }); entries.push(e); return e; };
+  const view = () => occInRangeAll(new Date("2026-11-16T00:00"), new Date("2026-11-23T00:00")).map(o => cYmd(o.s) + " " + cHm(o.s)).sort();
+  let s = mk();
+  calApplyEdit(s, { ...base, title: "Стендап", start: "2026-11-18T15:00", end: "2026-11-18T16:00", repeat: "daily", until: "" }, new Date("2026-11-18T10:00"), new Date("2026-11-16T10:00"), "one");
+  eq("«Только это»: 18-е перенесено на 15:00, остальные на месте", view(), ["2026-11-16 10:00", "2026-11-17 10:00", "2026-11-18 15:00", "2026-11-19 10:00", "2026-11-20 10:00", "2026-11-21 10:00", "2026-11-22 10:00"]);
+  s = mk();
+  calApplyEdit(s, { ...base, title: "Стендап", start: "2026-11-20T12:00", end: "2026-11-20T13:00", repeat: "daily", until: "" }, new Date("2026-11-20T10:00"), new Date("2026-11-16T10:00"), "next");
+  eq("«Это и последующие»: с 20-го — 12:00", view(), ["2026-11-16 10:00", "2026-11-17 10:00", "2026-11-18 10:00", "2026-11-19 10:00", "2026-11-20 12:00", "2026-11-21 12:00", "2026-11-22 12:00"]);
+  s = mk();
+  calApplyEdit(s, { ...base, title: "Стендап", start: "2026-11-19T09:00", end: "2026-11-19T10:00", repeat: "daily", until: "" }, new Date("2026-11-19T10:00"), new Date("2026-11-16T10:00"), "all");
+  eq("«Все события»: вся серия сдвинута на 9:00", view()[0] + " … " + view()[6], "2026-11-16 09:00 … 2026-11-22 09:00");
+  s = mk(); calApplyDelete(s, new Date("2026-11-17T10:00"), new Date("2026-11-16T10:00"), "one");
+  eq("Удалить только 17-е", view().length, 6);
+  s = mk(); calApplyDelete(s, new Date("2026-11-19T10:00"), new Date("2026-11-16T10:00"), "next");
+  eq("Удалить 19-е и последующие", view(), ["2026-11-16 10:00", "2026-11-17 10:00", "2026-11-18 10:00"]);
+
+  /* ---------- .ics ---------- */
+  section("Импорт и экспорт .ics");
+  eq("UNTIL берётся датой без сдвига пояса", icsRepeat("FREQ=DAILY;UNTIL=20261231T235959Z").until, "2026-12-31");
+  eq("По будням из Google (BYDAY=MO..FR)", icsRepeat("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR").repeat, "weekdays");
+  eq("«Каждые 2 недели» помечается как неподдерживаемый", !!icsRepeat("FREQ=WEEKLY;INTERVAL=2").unsupported, true);
+  const ics = ["BEGIN:VCALENDAR", "BEGIN:VEVENT", "UID:a@x", "DTSTART;VALUE=DATE:20261201", "DTEND;VALUE=DATE:20261203", "SUMMARY:Отпуск\\, море", "DESCRIPTION:Строка 1\\nhttps://meet.google.com/abc-defg-hij", "LOCATION:Минск",
+    "ATTENDEE;CN=A:mailto:a@example.com", "BEGIN:VALARM", "TRIGGER:-PT30M", "END:VALARM", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  const p = icsParse(ics)[0];
+  eq("Разбор: название с экранированием", p.title, "Отпуск, море");
+  eq("Разбор: весь день", p.start.allDay, true);
+  eq("Разбор: гость", p.attendees, ["a@example.com"]);
+  eq("Разбор: напоминание за 30 минут", p.remind, 30);
+  ok("Разбор: длинные строки склеиваются", icsParse("BEGIN:VEVENT\r\nSUMMARY:Очень длинн\r\n ое название\r\nDTSTART:20261201T100000\r\nEND:VEVENT")[0].title === "Очень длинное название");
+  // экспорт → разбор → те же данные
+  entries = [calMakeEvent({ ...base, title: "Встреча; важно", repeat: "weekdays", until: "2026-12-31", ex: ["2026-11-18"], meet: "https://meet.jit.si/SHUT-x", location: "Офис, 5", guests: "a@b.c", note: "Повестка\nпункт 2", remind: 10, color: 1 })];
+  let blob = null; window.download = b => { blob = b; }; window.toast = () => {};
+  calExportIcs();
+  const back = icsParse(await blob.text())[0];
+  eq("Экспорт → импорт: название", back.title, "Встреча; важно");
+  eq("Экспорт → импорт: повтор по будням до 31.12", icsRepeat(back.rrule), { repeat: "weekdays", until: "2026-12-31", count: 0 });
+  eq("Экспорт → импорт: исключение 18-го", back.exdates, ["2026-11-18"]);
+  eq("Экспорт → импорт: место", back.location, "Офис, 5");
+  eq("Экспорт → импорт: ссылка на встречу", back.url, "https://meet.jit.si/SHUT-x");
+  eq("Экспорт → импорт: напоминание", back.remind, 10);
+  ok("Экспорт: строки не длиннее 75 символов", (await blob.text()).split("\r\n").every(l => l.length <= 75));
+
+  const s2 = $("sum"); s2.className = "sum " + (fail ? "bad" : "ok");
+  s2.textContent = fail ? `Провалено: ${fail} из ${pass + fail}` : `Все тесты пройдены: ${pass}`;
+  document.title = (fail ? "✗ " : "✓ ") + document.title;
+})().catch(e => { $("sum").className = "sum bad"; $("sum").textContent = "Ошибка при запуске тестов: " + e.message; });
+</script>
+</body>
+</html>
