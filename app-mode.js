@@ -42,9 +42,32 @@
     window.scrollTo(0, 0);
   };
 
+  // Крупный заголовок раздела (как в приложениях iOS / Android) и кнопка поиска вместо постоянного поля
+  const top = vv.querySelector(".list-top");
+  const title = document.createElement("h1"); title.className = "app-title";
+  top.after(title);
+  const sBtn = document.createElement("button");
+  sBtn.type = "button"; sBtn.className = "ib app-search-btn"; sBtn.setAttribute("aria-label", T("Поиск", "Search"));
+  sBtn.innerHTML = ico('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>');
+  top.appendChild(sBtn);
+  sBtn.onclick = () => {
+    tap();
+    if (view === "home") { qaOpen(); return; } // на главной — поиск по всему сейфу
+    const on = !vv.classList.contains("app-search-on");
+    vv.classList.toggle("app-search-on", on);
+    if (on) setTimeout(() => $("search").focus(), 30);
+    else if ($("search").value) { $("search").value = ""; render(); }
+  };
+  const NAMES = { home: "", vault: T("Сейф", "Vault"), tasks: T("Задачи", "Tasks"), calendar: T("Календарь", "Calendar"), notes: T("Заметки", "Notes") };
+  const setTitle = v => { title.textContent = NAMES[v] || ""; title.classList.toggle("hidden", !NAMES[v]); };
+
   // подсветка активной вкладки при любом переключении раздела (в том числе из меню и виджета)
   const origChrome = setViewChrome;
-  setViewChrome = function (v) { origChrome(v); sync(v); };
+  setViewChrome = function (v) {
+    origChrome(v); sync(v); setTitle(v);
+    if (!$("search").value) vv.classList.remove("app-search-on");
+  };
+  setTitle(typeof view !== "undefined" ? view : "home");
   sync(typeof view !== "undefined" ? view : "home");
 
   // отклик на нажатие для кнопок верхней панели
