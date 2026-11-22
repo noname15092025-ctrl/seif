@@ -2106,7 +2106,7 @@ body.cal-dragging{ user-select:none; cursor:grabbing; }
 .home-up-t b{ font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .home-up-t small{ font-size:12.5px; color:#9A9AA2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .home-up-i .ci{ opacity:.6; }
-@media (max-width:600px){ .home-up{ grid-template-columns:1fr; } }
+@media (max-width:600px){ .home-up{ grid-template-columns:minmax(0,1fr); } }
 
 /* Напоминание о резервной копии */
 .bk-banner{ display:flex; align-items:center; gap:14px; margin:0 0 14px; padding:14px 16px; border-radius:22px; background:#1E2410; border:1px solid rgba(200,226,122,.25); color:#ECECEE; }
@@ -2351,3 +2351,7 @@ html{ -webkit-tap-highlight-color:transparent; } button, a, [role=button], label
 .app .side{ scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.12) transparent; }
 /* шрифты: ровное сглаживание в Safari/Firefox на macOS */
 body{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+/* Длинные названия не должны раздвигать страницу шире экрана (иначе iPhone уменьшает весь сайт) */
+.home-up-i, .rrow, .dash-recent-head, .task-row, .note-row{ min-width:0; }
+html, body{ overflow-x:hidden; }
+@supports (overflow:clip){ html, body{ overflow-x:clip; } }
