@@ -24,6 +24,7 @@ const INCLUDE = [
   "notes-plus.js",
   "devlink.js",
   "date-ico.svg",
+  "check-ico.svg",
   "time-ico.svg",
   "vendor",
   "style.css",

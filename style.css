@@ -2358,3 +2358,8 @@ html, body{ overflow-x:hidden; }
 /* Поле названия события: скруглённое, как остальные поля */
 .cp-title{ padding:10px 14px !important; border:1px solid #34343B !important; border-radius:14px !important; background:#1C1C1F !important; }
 .cp-title:focus{ border-color:var(--lime) !important; outline:none !important; box-shadow:0 0 0 3px rgba(200,226,122,.15) !important; }
+/* Чекбоксы в приложении: скруглённые, в стиле сайта */
+.app input[type=checkbox], .cal-pop input[type=checkbox]{ -webkit-appearance:none; appearance:none; flex:none; width:20px; height:20px; margin:0 10px 0 0; border-radius:6px;
+  border:1.5px solid #4A4A52; background:#1C1C1F center/14px 14px no-repeat; cursor:pointer; vertical-align:middle; transition:background-color .15s, border-color .15s; }
+.app input[type=checkbox]:checked, .cal-pop input[type=checkbox]:checked{ background-color:var(--lime); border-color:var(--lime); background-image:url("check-ico.svg"); }
+.app input[type=checkbox]:focus-visible, .cal-pop input[type=checkbox]:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(200,226,122,.25); }
