@@ -2,10 +2,10 @@
   "name": "shut-keychain",
   "version": "1.0.0",
   "private": true,
-  "description": "SHUT: ключ сейфа в iOS Keychain за Face ID / Touch ID (локальный Capacitor-плагин)",
+  "description": "SHUT: ключ сейфа в iOS Keychain / Android Keystore за биометрией (локальный Capacitor-плагин)",
   "main": "index.js",
   "license": "MIT",
-  "files": ["index.js", "ios/", "ShutKeychain.podspec"],
-  "capacitor": { "ios": { "src": "ios" } },
+  "files": ["index.js", "ios/", "android/", "ShutKeychain.podspec"],
+  "capacitor": { "ios": { "src": "ios" }, "android": { "src": "android" } },
   "peerDependencies": { "@capacitor/core": "^6.0.0" }
 }

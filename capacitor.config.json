@@ -3,13 +3,19 @@
   "appName": "SHUT",
   "webDir": "www",
   "server": {
-    "iosScheme": "capacitor"
+    "iosScheme": "capacitor",
+    "androidScheme": "https"
   },
   "ios": {
     "contentInset": "never",
     "backgroundColor": "#121212",
     "scrollEnabled": true,
     "limitsNavigationsToAppBoundDomains": false
+  },
+  "android": {
+    "backgroundColor": "#121212",
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
   },
   "plugins": {
     "SplashScreen": {
@@ -21,6 +27,10 @@
     "StatusBar": {
       "style": "DARK",
       "overlaysWebView": true
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_shut",
+      "iconColor": "#C8E27A"
     }
   }
 }

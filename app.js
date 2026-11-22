@@ -1879,13 +1879,32 @@ function capPlugin(name) {
 }
 function nativeStatusBar() {
   if (!isNative()) return;
-  const sb = capPlugin("StatusBar"); if (sb) sb.setStyle({ style: theme === "dark" ? "DARK" : "LIGHT" }).catch(() => {});
+  const sb = capPlugin("StatusBar"); if (!sb) return;
+  sb.setStyle({ style: theme === "dark" ? "DARK" : "LIGHT" }).catch(() => {});
+  // Android: страница не залезает под статус-бар (у WebView там нет safe-area отступов)
+  let android = false; try { android = window.Capacitor.getPlatform() === "android"; } catch {}
+  if (android) { sb.setOverlaysWebView({ overlay: false }).catch(() => {}); sb.setBackgroundColor({ color: theme === "dark" ? "#121212" : "#F2F1EC" }).catch(() => {}); }
 }
 const NATIVE = isNative();
+const IS_ANDROID = (() => { try { return NATIVE && window.Capacitor.getPlatform() === "android"; } catch { return false; } })();
+// Название места хранения ключа для текстов: iPhone Keychain или Android Keystore
+const DEVICE_STORE = () => IS_ANDROID ? T("защищённом хранилище телефона (Android Keystore)", "the phone's secure Android Keystore") : T("защищённом хранилище iPhone (Keychain)", "the iPhone Keychain");
+// Android: системная кнопка «Назад» закрывает открытое окно, иначе сворачивает приложение
+if (IS_ANDROID) {
+  const AppP = capPlugin("App");
+  if (AppP) AppP.addListener("backButton", () => {
+    const ov = [...document.querySelectorAll(".cal-pop-ov, .qa-ov, .modal:not(.hidden), #modal:not(.hidden)")].pop();
+    if (ov) { ov.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); if (document.body.contains(ov) && ov.classList.contains("cal-pop-ov")) ov.click(); return; }
+    const vv = $("v-vault");
+    if (vv && vv.classList.contains("show-detail")) { vv.classList.remove("show-detail"); return; }
+    if (vv && vv.classList.contains("nav-open")) { vv.classList.remove("nav-open"); return; }
+    AppP.minimizeApp().catch(() => {});
+  });
+}
 const KC = NATIVE ? capPlugin("ShutKeychain") : null;
 const BIO_NO = "vault.bio.no."; // + id профиля: пользователь отказался от предложения
 let bioType = "faceId";
-const bioName = () => bioType === "touchId" ? "Touch ID" : "Face ID";
+const bioName = () => bioType === "touchId" ? "Touch ID" : bioType === "biometric" ? T("биометрии", "biometrics") : "Face ID";
 async function bioStatus(id) {
   if (!KC) return { available: false, has: false };
   try { const r = await KC.status({ id: id || "" }); if (r.type && r.type !== "none") bioType = r.type; return r; }
@@ -1897,10 +1916,10 @@ async function bioOffer(raw, id) {
   const st = await bioStatus(id); if (!st.available || st.has) return;
   let no = false; try { no = localStorage.getItem(BIO_NO + id) === "1"; } catch {}
   if (no) return;
-  const ok = await confirmBox(T("Открывать сейф по ", "Unlock the vault with ") + bioName() + T("? Ключ сейфа сохранится в защищённом хранилище iPhone (Keychain) и откроется только вашим лицом или пальцем. Мастер-пароль не сохраняется.", "? The vault key is kept in the iPhone Keychain and opens only with your face or finger. The master password is never stored."), T("Включить", "Turn on"));
+  const ok = await confirmBox(T("Открывать сейф по ", "Unlock the vault with ") + bioName() + T("? Ключ сейфа сохранится в ", "? The vault key is kept in ") + DEVICE_STORE() + T(" и откроется только вашим лицом или пальцем. Мастер-пароль не сохраняется.", " and opens only with your face or finger. The master password is never stored."), T("Включить", "Turn on"));
   if (!ok) { try { localStorage.setItem(BIO_NO + id, "1"); } catch {} return; }
-  try { await KC.save({ id, key: b64(raw) }); toast(bioName() + T(" включён", " is on")); }
-  catch (e) { alertBox(T("Не удалось включить ", "Could not turn on ") + bioName() + ": " + (e && e.code === "nopasscode" ? T("на iPhone не задан код-пароль.", "no passcode is set on this iPhone.") : (e && e.message) || "")); }
+  try { await KC.save({ id, key: b64(raw) }); toast(T("Вход по ", "Sign-in with ") + bioName() + T(" включён", " is on")); }
+  catch (e) { if (e && e.code === "cancel") return; alertBox(T("Не удалось включить ", "Could not turn on ") + bioName() + ": " + (e && e.code === "nopasscode" ? (IS_ANDROID ? T("на телефоне не настроены блокировка экрана или отпечаток.", "no screen lock or fingerprint is set up on this phone.") : T("на iPhone не задан код-пароль.", "no passcode is set on this iPhone.")) : (e && e.message) || "")); }
 }
 function bioForget(id) { if (KC && id) KC.remove({ id }).catch(() => {}); }
 // Кнопка «Войти по Face ID» на экране входа. auto=true — сразу запросить лицо. Возвращает true, если запросили.
@@ -1923,7 +1942,7 @@ async function bioUnlock() {
   } catch (e) {
     bioBusy = false;
     if (e && e.code === "notfound") { // биометрию на телефоне меняли — запись Keychain стала недействительной
-      $("unlock-err").textContent = bioName() + T(" сброшен: войдите по паролю, и его можно будет включить снова.", " was reset: sign in with your password to turn it on again.");
+      $("unlock-err").textContent = T("Вход по ", "Sign-in with ") + bioName() + T(" сброшен: войдите по паролю, и его можно будет включить снова.", " was reset: sign in with your password to turn it on again.");
       try { localStorage.removeItem(BIO_NO + s.id); } catch {}
       updateBioBtn(false);
     }
@@ -1963,7 +1982,7 @@ async function refreshBioSetting() {
   $("set-bio").checked = !!st.has;
 }
 if ($("set-bio")) $("set-bio").onchange = async e => {
-  if (!e.target.checked) { bioForget(currentId); try { localStorage.setItem(BIO_NO + currentId, "1"); } catch {} toast(bioName() + T(" выключен", " is off")); return; }
+  if (!e.target.checked) { bioForget(currentId); try { localStorage.setItem(BIO_NO + currentId, "1"); } catch {} toast(T("Вход по ", "Sign-in with ") + bioName() + T(" выключен", " is off")); return; }
   e.target.checked = false; // ключ не извлекается из памяти — включаем при следующем входе по паролю
   try { localStorage.removeItem(BIO_NO + currentId); } catch {}
   alertBox(T("Заблокируйте сейф и войдите по мастер-паролю — приложение предложит включить ", "Lock the vault and sign in with your master password — the app will offer to turn on ") + bioName() + ".");

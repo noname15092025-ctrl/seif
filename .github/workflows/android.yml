@@ -1,0 +1,92 @@
+# Сборка Android-приложения SHUT (APK) на серверах GitHub — без Android Studio на своём компьютере.
+# Запускается при каждом пуше в main и вручную (Actions → Android APK → Run workflow).
+# Готовый файл: страница Releases репозитория → «SHUT для Android» → SHUT.apk
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["**.md", "sync-worker*.js", "tests.html"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Зависимости
+        run: npm install --no-audit --no-fund
+
+      - name: Android-проект из сайта
+        env:
+          SHUT_VERSION_CODE: ${{ github.run_number }}
+        run: |
+          npm run build:www
+          npx cap add android
+          npm run android:assets
+          npx cap sync android
+          node scripts/android-patch.mjs
+
+      - name: Ключ подписи (из секретов репозитория)
+        id: sign
+        env:
+          KS_B64: ${{ secrets.SHUT_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/shut.p12"
+            echo "on=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Секрет SHUT_KEYSTORE_B64 не задан — собираю отладочный APK. Его нельзя ставить поверх прошлой версии."
+            echo "on=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Сборка APK
+        env:
+          SHUT_KEYSTORE: ${{ steps.sign.outputs.on == '1' && format('{0}/shut.p12', runner.temp) || '' }}
+          SHUT_KEYSTORE_PASSWORD: ${{ secrets.SHUT_KEYSTORE_PASSWORD }}
+          SHUT_KEY_ALIAS: ${{ secrets.SHUT_KEY_ALIAS }}
+        run: |
+          cd android
+          chmod +x gradlew
+          if [ "${{ steps.sign.outputs.on }}" = "1" ]; then
+            ./gradlew assembleRelease --no-daemon
+            cp app/build/outputs/apk/release/app-release.apk ../SHUT.apk
+          else
+            ./gradlew assembleDebug --no-daemon
+            cp app/build/outputs/apk/debug/app-debug.apk ../SHUT.apk
+          fi
+          rm -f "$RUNNER_TEMP/shut.p12"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SHUT-android
+          path: SHUT.apk
+
+      - name: Выложить в Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES="Сборка ${{ github.run_number }} от $(date -u +'%Y-%m-%d %H:%M') UTC. Скачайте SHUT.apk на Android-телефоне и установите (разрешите установку из этого источника)."
+          if gh release view android-latest >/dev/null 2>&1; then
+            gh release upload android-latest SHUT.apk --clobber
+            gh release edit android-latest --notes "$NOTES"
+          else
+            gh release create android-latest SHUT.apk --title "SHUT для Android" --notes "$NOTES" --latest=false
+          fi

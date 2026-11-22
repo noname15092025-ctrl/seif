@@ -7,3 +7,8 @@ ios/App/build/
 # ios/ целиком генерируется командой `npm run ios:setup`
 /ios/
 .DS_Store
+# android/ целиком генерируется командой `npm run android:setup` (и в GitHub Actions)
+/android/
+*.apk
+*.p12
+*.jks
