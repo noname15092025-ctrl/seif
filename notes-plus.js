@@ -276,7 +276,8 @@ $("list").addEventListener("keydown", async e => {
 function qaDescribe(p) {
   if (!p.title) return T("Напишите, что добавить", "Type what to add");
   const d = p.date ? p.date.toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { weekday: "short", day: "numeric", month: "short" }) : "";
-  const rep = { daily: T("каждый день", "daily"), weekdays: T("по будням", "weekdays"), weekly: T("каждую неделю", "weekly"), monthly: T("каждый месяц", "monthly"), yearly: T("каждый год", "yearly") }[p.repeat];
+  const rep = (p.every || 1) > 1 ? T("каждые ", "every ") + p.every + " " + { daily: T("дн.", "days"), weekly: T("нед.", "weeks"), monthly: T("мес.", "months"), yearly: T("г.", "years") }[p.repeat]
+    : { daily: T("каждый день", "daily"), weekdays: T("по будням", "weekdays"), weekly: T("каждую неделю", "weekly"), monthly: T("каждый месяц", "monthly"), yearly: T("каждый год", "yearly") }[p.repeat];
   if (p.kind === "note") return T("Заметка: ", "Note: ") + p.title;
   if (p.kind === "task") return T("Задача: ", "Task: ") + p.title + (d ? T(" · срок ", " · due ") + d : "");
   const t = p.time ? cPad(p.time[0]) + ":" + cPad(p.time[1]) : T("весь день", "all day");
@@ -289,7 +290,7 @@ async function qaCreate(p) {
   if (p.kind === "task") { const t = { type: "task", id: b64(rand(9)), title: p.title, done: false, priority: 0, due: p.date ? cYmd(p.date) : "", created: now, updated: now }; entries.push(t); await persist(); renderNav(); return t; }
   const allDay = !p.time, s = new Date(p.date); if (p.time) s.setHours(p.time[0], p.time[1], 0, 0);
   const e = new Date(s.getTime() + (p.dur || 60) * 6e4);
-  const ev = calMakeEvent({ title: p.title, allDay, start: cFmt(s, allDay), end: allDay ? cYmd(s) : cFmt(e, false), repeat: p.repeat, until: "", meet: "", location: "", guests: "", note: "", remind: p.remind != null ? p.remind : allDay ? -1 : 10, color: 0 });
+  const ev = calMakeEvent({ title: p.title, allDay, start: cFmt(s, allDay), end: allDay ? cYmd(s) : cFmt(e, false), repeat: p.repeat, every: p.every || 1, until: "", meet: "", location: "", guests: "", note: "", remind: p.remind != null ? p.remind : allDay ? -1 : 10, color: 0 });
   entries.push(ev); await persist(); renderNav(); if (typeof calScheduleNative === "function") calScheduleNative(); return ev;
 }
 function qaOpenEntry(x) {
@@ -340,10 +341,10 @@ function qaOpen(prefill) {
     const cmds = QA_CMDS().filter(c => !qq || c[0].toLowerCase().includes(qq)).map(c => ({ k: "cmd", c }));
     let found = [];
     if (!cmdMode && qq) {
-      found = live().filter(x => [x.title, x.login, x.url, x.body, x.note, x.folder, x.location, (x.f || {}).num, ...(x.subs || []).map(s => s.t)].filter(Boolean).join(" ").toLowerCase().includes(qq))
+      found = live().filter(x => x.type !== "calsub").filter(x => [x.title, x.login, x.url, x.body, x.note, x.folder, x.location, (x.f || {}).num, ...(x.subs || []).map(s => s.t)].filter(Boolean).join(" ").toLowerCase().includes(qq))
         .sort((a, b) => ((b.title || "").toLowerCase().startsWith(qq) ? 1 : 0) - ((a.title || "").toLowerCase().startsWith(qq) ? 1 : 0) || (b.used || b.updated || 0) - (a.used || a.updated || 0)).slice(0, 30).map(x => ({ k: "entry", x }));
     } else if (!cmdMode) {
-      found = live().filter(x => x.type !== "task" || !x.done).sort((a, b) => Math.max(b.used || 0, b.updated || 0) - Math.max(a.used || 0, a.updated || 0)).slice(0, 6).map(x => ({ k: "entry", x }));
+      found = live().filter(x => x.type !== "calsub").filter(x => x.type !== "task" || !x.done).sort((a, b) => Math.max(b.used || 0, b.updated || 0) - Math.max(a.used || 0, a.updated || 0)).slice(0, 6).map(x => ({ k: "entry", x }));
     }
     items = cmdMode ? cmds : found.concat(qq ? cmds.slice(0, 4) : []);
     sel = Math.min(sel, Math.max(0, items.length - 1));

@@ -59,8 +59,9 @@ function evOccurrences(e, from, to) {
   if (rep === "none") { push(S); return out; }
   const until = e.until ? cAddDays(cParse(e.until), 1) : null;
   const stop = until && until < to ? until : to;
+  const N = Math.max(1, Math.min(99, Math.floor(+e.every || 1))); // «каждые N»
   if (rep === "daily" || rep === "weekly") {
-    const step = rep === "daily" ? 1 : 7;
+    const step = (rep === "daily" ? 1 : 7) * N;
     let k = Math.max(0, Math.floor((from - S - dur) / (step * 864e5)) - 1);
     for (let i = 0; i < 1000; i++, k++) { const s = cAddDays(S, k * step); if (s >= stop) break; push(s); }
   } else if (rep === "weekdays") {
@@ -68,7 +69,7 @@ function evOccurrences(e, from, to) {
     if (from - S > 864e5 * 8) s = cAddDays(S, Math.floor((from - S) / 864e5) - 7);
     for (let i = 0; i < 1000 && s < stop; i++, s = cAddDays(s, 1)) { const wd = s.getDay(); if (wd !== 0 && wd !== 6 && s >= S) push(s); }
   } else if (rep === "monthly" || rep === "yearly") {
-    for (let k = 0; k < 2400; k++) {
+    for (let k = 0; k < 2400; k += N) {
       const s = new Date(S); if (rep === "monthly") s.setMonth(S.getMonth() + k, 1); else s.setFullYear(S.getFullYear() + k, S.getMonth(), 1);
       const dim = new Date(s.getFullYear(), s.getMonth() + 1, 0).getDate(); if (S.getDate() > dim) continue; // нет такого числа в этом месяце
       s.setDate(S.getDate()); if (s >= stop) break; push(s);
@@ -79,7 +80,7 @@ function evOccurrences(e, from, to) {
 function occInRange(from, to) {
   const q = ($("search").value || "").trim().toLowerCase();
   const all = [];
-  eventsList().forEach(e => { if (q && ![e.title, e.location, e.note].join(" ").toLowerCase().includes(q)) return; all.push(...evOccurrences(e, from, to)); });
+  calAllEvents().forEach(e => { if (q && ![e.title, e.location, e.note].join(" ").toLowerCase().includes(q)) return; all.push(...evOccurrences(e, from, to)); });
   return all.sort((a, b) => a.s - b.s || (b.en - b.s) - (a.en - a.s));
 }
 const occKey = o => o.e.id + "|" + o.s.getTime();
@@ -113,7 +114,7 @@ function renderCalendar() {
       <h1 class="cal-title">${esc(title)}</h1>
       <div class="cal-segs">${seg("day", "День", "Day")}${seg("week", "Неделя", "Week")}${seg("month", "Месяц", "Month")}</div>
     </div>
-    <div class="cal-wrap"><aside class="cal-side">${calMiniHtml()}${calUpcomingHtml()}<div class="cal-io"><label class="cal-io-b">${ci("upload")}${T("Импорт .ics", "Import .ics")}<input type="file" accept=".ics,text/calendar" hidden data-cal-import></label><button type="button" class="cal-io-b" data-cal-export>${ci("download")}${T("Экспорт .ics", "Export .ics")}</button></div><p class="cal-io-hint">${T("Из Google Календаря: Настройки → Импорт и экспорт → Экспорт, распакуйте архив и выберите файл .ics.", "From Google Calendar: Settings → Import &amp; export → Export, unzip and pick the .ics file.")}</p></aside><div class="cal-main">${grid}</div></div>
+    <div class="cal-wrap"><aside class="cal-side">${calMiniHtml()}${calUpcomingHtml()}${calSubsHtml()}<div class="cal-io"><label class="cal-io-b">${ci("upload")}${T("Импорт .ics", "Import .ics")}<input type="file" accept=".ics,text/calendar" hidden data-cal-import></label><button type="button" class="cal-io-b" data-cal-export>${ci("download")}${T("Экспорт .ics", "Export .ics")}</button></div><p class="cal-io-hint">${T("Из Google Календаря: Настройки → Импорт и экспорт → Экспорт, распакуйте архив и выберите файл .ics.", "From Google Calendar: Settings → Import &amp; export → Export, unzip and pick the .ics file.")}</p></aside><div class="cal-main">${grid}</div></div>
   </div>`;
   calLayout();
   const nb = $("cg-body"); if (nb && keepScroll != null) nb.scrollTop = keepScroll; // перерисовка не сбрасывает прокрутку
@@ -209,6 +210,7 @@ function calNew(start, allDay) {
   calOpenPop({ id: null, title: "", allDay: !!allDay, start: allDay ? cYmd(s) : cYmd(s) + "T" + cHm(s), end: allDay ? cYmd(s) : cYmd(en) + "T" + cHm(en), repeat: "none", color: 0, remind: allDay ? -1 : 10 });
 }
 function calOpenPop(e, occ) {
+  if (e.readonly) return calShowReadonly(e, occ);
   const isNew = !e.id;
   const recurring = !isNew && (e.repeat || "none") !== "none";
   let [S, E] = evBounds(e);
@@ -238,6 +240,7 @@ function calOpenPop(e, occ) {
       </div>
       <div class="cp-sub"><label class="chk"><input type="checkbox" id="cp-ad"${e.allDay ? " checked" : ""}> ${T("Весь день", "All day")}</label>
         <select id="cp-rep" class="field slim">${reps.map(([v, l]) => opt(v, l, e.repeat || "none")).join("")}</select></div>
+      <div class="cp-sub cp-every${["daily", "weekly", "monthly", "yearly"].includes(e.repeat || "none") ? "" : " hidden"}"><label for="cp-every">${T("Интервал: каждые", "Every")}</label><input type="number" id="cp-every" class="field cp-n" min="1" max="99" value="${Math.max(1, +e.every || 1)}"><span id="cp-every-u"></span></div>
       <div class="cp-sub cp-until${(e.repeat || "none") === "none" ? " hidden" : ""}"><label for="cp-until">${T("Повторять до (необязательно)", "Repeat until (optional)")}</label><input type="date" id="cp-until" class="field" value="${esc(e.until || "")}"></div>
     </div></div>
     <div class="cp-row"><span class="cp-ic">${ci("users")}</span><div class="cp-f"><input id="cp-guests" class="field" placeholder="${T("Добавьте гостей (email через запятую)", "Add guests (comma-separated emails)")}" value="${esc(e.guests || "")}" autocomplete="off"></div></div>
@@ -247,7 +250,8 @@ function calOpenPop(e, occ) {
     </div></div>
     <div class="cp-row"><span class="cp-ic">${ci("pin")}</span><div class="cp-f"><input id="cp-loc" class="field" placeholder="${T("Добавьте место", "Add location")}" value="${esc(e.location || "")}" autocomplete="off"></div></div>
     <div class="cp-row"><span class="cp-ic">${ci("text")}</span><div class="cp-f"><textarea id="cp-note" class="field" rows="3" placeholder="${T("Добавьте описание", "Add description")}">${esc(e.note || "")}</textarea></div></div>
-    <div class="cp-row"><span class="cp-ic">${ci("bell")}</span><div class="cp-f"><select id="cp-rem" class="field slim">${rems.map(([v, l]) => opt(v, l, e.remind ?? -1)).join("")}</select></div></div>
+    <div class="cp-row"><span class="cp-ic">${ci("bell")}</span><div class="cp-f"><div id="cp-rems">${(evReminds(e).length ? evReminds(e) : isNew ? [] : []).map(v => `<div class="cp-rem-r"><select class="field slim cp-rem">${rems.slice(1).map(([vv, l]) => opt(vv, l, v)).join("")}</select><button type="button" class="ib cp-rem-x" data-rem-del aria-label="×">✕</button></div>`).join("")}</div>
+      <button type="button" class="ghost cp-small" data-rem-add>${T("+ Напоминание", "+ Reminder")}</button></div></div>
     <div class="cp-row"><span class="cp-ic">${ci("palette")}</span><div class="cp-f cp-colors">${colors}</div></div>
     <div class="err" id="cp-err"></div>
     <div class="cp-actions">${isNew ? "" : `<button type="button" class="danger cp-del" data-cp-del>${T("Удалить", "Delete")}</button>`}<span></span>
@@ -259,7 +263,13 @@ function calOpenPop(e, occ) {
   const syncAd = () => { const ad = g("cp-ad").checked; ov.querySelectorAll(".cp-t, .cp-dash").forEach(x => x.classList.toggle("hidden", ad)); };
   syncAd();
   g("cp-ad").onchange = syncAd;
-  g("cp-rep").onchange = () => ov.querySelector(".cp-until").classList.toggle("hidden", g("cp-rep").value === "none");
+  const everyUnit = () => { const n = Math.max(1, +g("cp-every").value || 1), r = g("cp-rep").value;
+    const f = (one, few, many) => T(n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? few : many, "");
+    g("cp-every-u").textContent = r === "daily" ? f("день", "дня", "дней") || (n > 1 ? "days" : "day") : r === "weekly" ? f("неделю", "недели", "недель") || (n > 1 ? "weeks" : "week") : r === "monthly" ? f("месяц", "месяца", "месяцев") || (n > 1 ? "months" : "month") : f("год", "года", "лет") || (n > 1 ? "years" : "year"); };
+  g("cp-rep").onchange = () => { const r = g("cp-rep").value; ov.querySelector(".cp-until").classList.toggle("hidden", r === "none"); ov.querySelector(".cp-every").classList.toggle("hidden", !["daily", "weekly", "monthly", "yearly"].includes(r)); everyUnit(); };
+  g("cp-every").oninput = everyUnit; everyUnit();
+  const remRow = v => `<div class="cp-rem-r"><select class="field slim cp-rem">${rems.slice(1).map(([vv, l]) => opt(vv, l, v)).join("")}</select><button type="button" class="ib cp-rem-x" data-rem-del aria-label="×">✕</button></div>`;
+  if (isNew && e.remind != null && e.remind >= 0 && !g("cp-rems").children.length) g("cp-rems").innerHTML = remRow(e.remind);
   // сдвиг конца вместе с началом
   let prevStart = cParse(g("cp-sd").value + "T" + g("cp-st").value);
   const shiftEnd = () => {
@@ -280,9 +290,11 @@ function calOpenPop(e, occ) {
     if (!sD) { g("cp-err").textContent = T("Укажите дату", "Enter a date"); return; }
     if (!eD || (ad ? eD < sD : eD <= sD)) { if (ad) enS = st; else { const x = new Date(sD.getTime() + 36e5); enS = cYmd(x) + "T" + cHm(x); } }
     const mv = g("cp-meet").value.trim(); if (mv && !meetUrl()) { g("cp-err").textContent = T("Некорректная ссылка на встречу", "Invalid meeting link"); return; }
-    const rem = +g("cp-rem").value;
-    const data = { title: title || T("Без названия", "(No title)"), allDay: ad, start: st, end: enS, repeat: g("cp-rep").value, until: g("cp-rep").value !== "none" ? g("cp-until").value : "",
-      meet: mv ? meetUrl() : "", location: g("cp-loc").value.trim(), guests: g("cp-guests").value.trim(), note: g("cp-note").value, remind: rem, color };
+    const reminds = [...new Set([...ov.querySelectorAll(".cp-rem")].map(s => +s.value))].sort((a, b) => a - b).slice(0, 5);
+    const rem = reminds.length ? reminds[0] : -1;
+    const rp = g("cp-rep").value, every = ["daily", "weekly", "monthly", "yearly"].includes(rp) ? Math.max(1, Math.min(99, Math.floor(+g("cp-every").value || 1))) : 1;
+    const data = { title: title || T("Без названия", "(No title)"), allDay: ad, start: st, end: enS, repeat: rp, every, until: rp !== "none" ? g("cp-until").value : "",
+      meet: mv ? meetUrl() : "", location: g("cp-loc").value.trim(), guests: g("cp-guests").value.trim(), note: g("cp-note").value, remind: rem, reminds, color };
     if (isNew) entries.push(calMakeEvent(data));
     else {
       const scope = recurring ? await calScope(false) : "all"; if (!scope) return;
@@ -297,6 +309,8 @@ function calOpenPop(e, occ) {
     if (ev.target === ov || ev.target.closest("[data-cp-close]")) return close();
     const c = ev.target.closest("[data-cp-color]"); if (c) { color = +c.dataset.cpColor; ov.querySelectorAll(".cp-color").forEach(x => x.classList.toggle("on", x === c)); return; }
     if (ev.target.closest("[data-cp-save]")) return save();
+    if (ev.target.closest("[data-rem-add]")) { const box = g("cp-rems"); if (box.children.length >= 5) { toast(T("Не больше 5 напоминаний", "Up to 5 reminders")); return; } const used = [...box.querySelectorAll(".cp-rem")].map(s => +s.value); const next = [10, 60, 1440, 30, 5, 0].find(v => !used.includes(v)) ?? 10; box.insertAdjacentHTML("beforeend", remRow(next)); return; }
+    const rd = ev.target.closest("[data-rem-del]"); if (rd) { rd.closest(".cp-rem-r").remove(); return; }
     if (ev.target.closest("[data-cp-jitsi]")) { const id = "SHUT-" + [...rand(9)].map(b => "abcdefghjkmnpqrstuvwxyz23456789"[b % 31]).join(""); g("cp-meet").value = "https://meet.jit.si/" + id; return; }
     const mo = ev.target.closest("[data-cp-meet-open]"); if (mo) { const u = meetUrl(); if (!u) { ev.preventDefault(); toast(T("Сначала вставьте ссылку", "Paste a link first")); } else mo.href = u; return; }
     if (ev.target.closest("[data-cp-join]")) return; // обычная ссылка — браузер откроет сам
@@ -351,7 +365,7 @@ function calApplyDelete(x, occS, S0, scope) {
 
 /* ---------- клики по календарю ---------- */
 function calFindOcc(key) {
-  const [id, ts] = key.split("|"); const e = entries.find(x => x.id === id); if (!e) return null;
+  const [id, ts] = key.split("|"); const e = entries.find(x => x.id === id) || calSubEventById(id); if (!e) return null;
   const [S, E] = evBounds(e), s = new Date(+ts); return { e, s, en: new Date(s.getTime() + (E - S)) };
 }
 function calClick(ev) {
@@ -360,6 +374,7 @@ function calClick(ev) {
   const o = t.closest("[data-occ]"); if (o) { const f = calFindOcc(o.dataset.occ); if (f) calOpenPop(f.e, f); return true; }
   const v = t.closest("[data-cal-view]"); if (v) { calView = v.dataset.calView; try { localStorage.setItem("vault.calview", calView); } catch {} calMini = null; renderCalendar(); return true; }
   const tk = t.closest("[data-cal-task]"); if (tk) { const x = entries.find(y => y.id === tk.dataset.calTask); if (x) { x.done = !x.done; x.updated = Date.now(); persist(); renderNav(); renderCalendar(); toast(x.done ? T("Задача выполнена", "Task done") : T("Задача снова активна", "Task reopened")); } return true; }
+  if (calSubsClick(t)) return true;
   if (t.closest("[data-cal-export]")) { calExportIcs(); return true; }
   if (t.closest("[data-cal-today]")) { calDate = cDayStart(new Date()); calMini = null; calScrolled = false; renderCalendar(); return true; }
   const st = t.closest("[data-cal-step]"); if (st) {
@@ -383,19 +398,18 @@ function calClick(ev) {
 function calRemindTick() {
   if (typeof vaultKey === "undefined" || !vaultKey) return;
   const now = Date.now();
-  occInRangeAll(new Date(now - 864e5), new Date(now + 2 * 864e5)).forEach(o => {
-    const r = o.e.remind; if (r == null || r < 0) return;
-    const at = (o.e.allDay ? new Date(o.s.getTime() + 9 * 36e5) : o.s).getTime() - (o.e.allDay ? 0 : r * 6e4);
+  occInRangeAll(new Date(now - 864e5), new Date(now + 3 * 864e5)).forEach(o => evReminds(o.e).forEach(r => {
+    const at = evRemindAt(o, r).getTime();
     const key = occKey(o) + "|" + r;
     if (at <= now && at > now - 2 * 6e4 && !calFired.has(key)) {
       calFired.add(key);
-      const body = evTimeText(o) + (o.e.location ? " · " + o.e.location : "");
-      try { if ("Notification" in window && Notification.permission === "granted") new Notification(o.e.title || "SHUT", { body, tag: key }); } catch {}
-      toast((o.e.title || "") + " — " + body);
+      const n = calNotifText(o, r);
+      try { if ("Notification" in window && Notification.permission === "granted") new Notification(n.title, { body: n.body, tag: key }); } catch {}
+      toast(n.title + " — " + n.body);
     }
-  });
+  }));
 }
-function occInRangeAll(from, to) { const all = []; eventsList().forEach(e => all.push(...evOccurrences(e, from, to))); return all; }
+function occInRangeAll(from, to) { const all = []; calAllEvents().forEach(e => all.push(...evOccurrences(e, from, to))); return all; }
 setInterval(calRemindTick, 30000);
 
 // Количество событий сегодня — для счётчика в меню
@@ -405,7 +419,7 @@ function calTodayCount() { const d = cDayStart(new Date()); return occInRangeAll
 let calDragged = false;
 function calDragStart(ev) {
   if (ev.button !== 0 || ev.pointerType !== "mouse") return; // на телефоне палец прокручивает сетку
-  const el = ev.currentTarget, f = calFindOcc(el.dataset.occ); if (!f) return;
+  const el = ev.currentTarget, f = calFindOcc(el.dataset.occ); if (!f || f.e.readonly) return; // события из подписок только для чтения
   const resize = !!ev.target.closest("[data-rs]");
   const cols = [...document.querySelectorAll(".cg-col")], col0 = cols.indexOf(el.parentElement);
   const colW = el.parentElement.getBoundingClientRect().width;
@@ -444,7 +458,7 @@ function calDragStart(ev) {
     const ns = resize ? f.s : new Date(cAddDays(f.s, dDay).getTime() + dMin * 6e4);
     const ne = resize ? new Date(f.en.getTime() + dMin * 6e4) : new Date(ns.getTime() + (f.en - f.s));
     const data = { title: x.title, allDay: false, start: cFmt(ns, false), end: cFmt(ne, false), repeat: x.repeat || "none", until: x.until || "",
-      meet: x.meet || "", location: x.location || "", guests: x.guests || "", note: x.note || "", remind: x.remind ?? -1, color: x.color || 0 };
+      meet: x.meet || "", location: x.location || "", guests: x.guests || "", note: x.note || "", remind: x.remind ?? -1, reminds: evReminds(x), every: x.every || 1, color: x.color || 0 };
     const recurring = (x.repeat || "none") !== "none";
     const scope = recurring ? await calScope(false) : "all";
     if (!scope) return renderCalendar();
@@ -479,14 +493,14 @@ function calExportIcs() {
     else { L.push("DTSTART:" + icsDT(cFmt(S, false), false), "DTEND:" + icsDT(cFmt(E, false), false)); }
     L.push("SUMMARY:" + icsEsc(e.title));
     const rep = ICS_FREQ[e.repeat || "none"];
-    if (rep) L.push("RRULE:" + rep + (e.until ? ";UNTIL=" + e.until.replace(/-/g, "") + (e.allDay ? "" : "T235959") : ""));
+    if (rep) L.push("RRULE:" + rep + ((+e.every || 1) > 1 && e.repeat !== "weekdays" ? ";INTERVAL=" + Math.floor(+e.every) : "") + (e.until ? ";UNTIL=" + e.until.replace(/-/g, "") + (e.allDay ? "" : "T235959") : ""));
     (e.ex || []).forEach(d => L.push(e.allDay ? "EXDATE;VALUE=DATE:" + d.replace(/-/g, "") : "EXDATE:" + d.replace(/-/g, "") + "T" + cHm(S).replace(":", "") + "00"));
     if (e.location) L.push("LOCATION:" + icsEsc(e.location));
     const desc = [e.note, e.meet && T("Видеовстреча: ", "Video call: ") + e.meet].filter(Boolean).join("\n\n");
     if (desc) L.push("DESCRIPTION:" + icsEsc(desc));
     if (e.meet) L.push("URL:" + e.meet);
     (e.guests || "").split(/[,;\s]+/).filter(g => /@/.test(g)).forEach(g => L.push("ATTENDEE:mailto:" + g));
-    if (e.remind != null && e.remind >= 0) L.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsEsc(e.title), "TRIGGER:-PT" + (e.remind || 0) + "M", "END:VALARM");
+    evReminds(e).forEach(r => L.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsEsc(e.title), "TRIGGER:-PT" + r + "M", "END:VALARM"));
     L.push("END:VEVENT");
   });
   L.push("END:VCALENDAR");
@@ -510,7 +524,7 @@ function icsParse(text) {
     if (raw === "BEGIN:VALARM") { inAlarm = true; continue; } if (raw === "END:VALARM") { inAlarm = false; continue; }
     const i = raw.indexOf(":"); if (i < 0) continue;
     const head = raw.slice(0, i), val = raw.slice(i + 1), [name, ...pp] = head.split(";"), params = pp.join(";"), N = name.toUpperCase();
-    if (inAlarm) { if (N === "TRIGGER" && cur.remind == null) { const m = /^-?P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?/.exec(val); if (m) cur.remind = (+(m[1] || 0)) * 1440 + (+(m[2] || 0)) * 60 + (+(m[3] || 0)); } continue; }
+    if (inAlarm) { if (N === "TRIGGER") { const m = /^-?P(?:(\d+)W)?(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?/.exec(val); if (m) { const v = (+(m[1] || 0)) * 10080 + (+(m[2] || 0)) * 1440 + (+(m[3] || 0)) * 60 + (+(m[4] || 0)); (cur.reminds = cur.reminds || []).push(v); if (cur.remind == null) cur.remind = v; } } continue; }
     if (N === "UID") cur.uid = val.trim();
     else if (N === "SUMMARY") cur.title = icsUnesc(val);
     else if (N === "DESCRIPTION") cur.note = icsUnesc(val);
@@ -531,50 +545,59 @@ function icsParse(text) {
 function icsRepeat(rr) {
   if (!rr) return { repeat: "none" };
   const p = Object.fromEntries(rr.split(";").map(kv => kv.split("=")).map(([k, v]) => [k.toUpperCase(), v]));
-  if (p.INTERVAL && p.INTERVAL !== "1") return { repeat: "none", unsupported: true };
+  const every = Math.max(1, Math.min(99, parseInt(p.INTERVAL || "1", 10) || 1));
   let repeat = { DAILY: "daily", WEEKLY: "weekly", MONTHLY: "monthly", YEARLY: "yearly" }[p.FREQ] || "none";
-  if (repeat === "weekly" && p.BYDAY) { const days = p.BYDAY.split(",").sort().join(","); if (days === "FR,MO,TH,TU,WE") repeat = "weekdays"; else if (p.BYDAY.includes(",")) return { repeat: "none", unsupported: true }; }
+  if (repeat === "weekly" && p.BYDAY) { const days = p.BYDAY.split(",").sort().join(","); if (days === "FR,MO,TH,TU,WE" && every === 1) repeat = "weekdays"; else if (p.BYDAY.includes(",")) return { repeat: "none", unsupported: true }; }
+  if (repeat === "monthly" && (p.BYDAY || p.BYSETPOS)) return { repeat: "none", unsupported: true }; // «каждый 2-й вторник» пока не поддерживается
   let until = ""; if (p.UNTIL && /^[0-9]{8}/.test(p.UNTIL)) until = p.UNTIL.slice(0, 4) + "-" + p.UNTIL.slice(4, 6) + "-" + p.UNTIL.slice(6, 8); // дата из UNTIL как есть, без сдвига пояса
-  return { repeat, until, count: p.COUNT ? +p.COUNT : 0 };
+  return every > 1 ? { repeat, every, until, count: p.COUNT ? +p.COUNT : 0 } : { repeat, until, count: p.COUNT ? +p.COUNT : 0 };
 }
-async function calImportIcs(file) {
-  let text; try { text = await file.text(); } catch { toast(T("Не удалось прочитать файл", "Could not read the file")); return; }
-  if (!/BEGIN:VCALENDAR/.test(text)) { alertBox(T("Это не файл календаря .ics", "This is not an .ics calendar file")); return; }
-  const raw = icsParse(text), known = new Set(eventsList().map(e => e.uid).filter(Boolean));
-  const masters = new Map(); let added = 0, skipped = 0, simplified = 0;
+// Разобранные VEVENT → данные событий SHUT (общая часть импорта и подписок)
+// skipUid(uid) → true, если серию надо пропустить (уже есть в календаре)
+function icsBuild(raw, skipUid) {
+  let simplified = 0, skipped = 0;
   const conv = r => {
     if (!r.start) return null;
     const allDay = r.start.allDay, S = r.start.d;
     let E = r.end ? r.end.d : r.dur ? new Date(S.getTime() + r.dur) : allDay ? cAddDays(S, 1) : new Date(S.getTime() + 36e5);
     if (allDay) E = cAddDays(E, -1); // в .ics конец дня — исключительно
+    if (E < S) E = new Date(S);
     const rep = icsRepeat(r.rrule); if (rep.unsupported) simplified++;
     let until = rep.until || "";
     if (!until && rep.count && rep.repeat !== "none") { // COUNT → дата окончания
-      const tmp = { allDay, start: cFmt(S, allDay), end: cFmt(allDay ? S : E, allDay), repeat: rep.repeat };
+      const tmp = { allDay, start: cFmt(S, allDay), end: cFmt(allDay ? S : E, allDay), repeat: rep.repeat, every: rep.every || 1 };
       const occ = evOccurrences(tmp, S, cAddDays(S, 3700)).slice(0, rep.count); if (occ.length) until = cYmd(occ[occ.length - 1].s);
     }
     const text = [r.note, r.location, r.url].join(" ");
     const meet = r.conf || (/(https:\/\/(?:meet\.google\.com|[\w.-]*zoom\.us|teams\.microsoft\.com|meet\.jit\.si|t\.me)\/[^\s"<>]+)/i.exec(text) || [])[1] || "";
-    return { title: r.title || T("Без названия", "(No title)"), allDay, start: cFmt(S, allDay), end: cFmt(allDay ? E : E, allDay), repeat: rep.repeat, until,
-      ex: r.exdates, meet: safeUrl(meet) || "", location: r.location || "", guests: r.attendees.join(", "), note: r.note || "",
-      remind: r.remind != null ? r.remind : -1, color: 1, uid: r.uid || "" };
+    return { title: r.title || T("Без названия", "(No title)"), allDay, start: cFmt(S, allDay), end: cFmt(E, allDay), repeat: rep.repeat, every: rep.every || 1, until,
+      ex: r.exdates.slice(), meet: safeUrl(meet) || "", location: r.location || "", guests: r.attendees.join(", "), note: r.note || "",
+      remind: r.remind != null ? r.remind : -1, reminds: [...new Set(r.reminds || [])].slice(0, 5), color: 1, uid: r.uid || "" };
   };
+  const events = [], masters = new Map();
   raw.filter(r => !r.recId).forEach(r => {
     if (r.cancelled) return;
-    if (r.uid && known.has(r.uid)) { skipped++; return; }
-    const d = conv(r); if (!d) return;
-    const ev = calMakeEvent(d); entries.push(ev); added++; if (r.uid) masters.set(r.uid, ev);
+    if (r.uid && skipUid && skipUid(r.uid)) { skipped++; return; }
+    const d = conv(r); if (!d) return; events.push(d); if (r.uid) masters.set(r.uid, d);
   });
   // изменённые отдельные повторы (RECURRENCE-ID): исключаем из серии и добавляем отдельным событием
   raw.filter(r => r.recId).forEach(r => {
     const m = masters.get(r.uid); if (!m) return;
     m.ex = [...new Set([...(m.ex || []), cYmd(r.recId.d)])];
     if (r.cancelled) return;
-    const d = conv(r); if (d) { entries.push(calMakeEvent({ ...d, repeat: "none", until: "", uid: "" })); added++; }
+    const d = conv(r); if (d) events.push({ ...d, repeat: "none", until: "", uid: "" });
   });
+  return { events, simplified, skipped };
+}
+async function calImportIcs(file) {
+  let text; try { text = await file.text(); } catch { toast(T("Не удалось прочитать файл", "Could not read the file")); return; }
+  if (!/BEGIN:VCALENDAR/.test(text)) { alertBox(T("Это не файл календаря .ics", "This is not an .ics calendar file")); return; }
+  const known = new Set(eventsList().map(e => e.uid).filter(Boolean));
+  const b = icsBuild(icsParse(text), uid => known.has(uid));
+  b.events.forEach(d => entries.push(calMakeEvent(d)));
   await persist(); renderNav(); render();
-  alertBox(T("Импортировано событий: ", "Events imported: ") + added + (skipped ? T(". Уже были в календаре: ", ". Already in calendar: ") + skipped : "") +
-    (simplified ? T(". Сложных повторов (например, «каждые 2 недели»): ", ". Complex repeats (e.g. every 2 weeks): ") + simplified + T(" — добавлены только первым событием, проверьте их", " — added as the first event only, please check them") : "") + ".");
+  alertBox(T("Импортировано событий: ", "Events imported: ") + b.events.length + (b.skipped ? T(". Уже были в календаре: ", ". Already in calendar: ") + b.skipped : "") +
+    (b.simplified ? T(". Сложных повторов (например, «каждый 2-й вторник месяца»): ", ". Complex repeats (e.g. 2nd Tuesday of the month): ") + b.simplified + T(" — добавлены только первым событием, проверьте их", " — added as the first event only, please check them") : "") + ".");
 }
 
 document.addEventListener("change", e => { const f = e.target.closest && e.target.closest("[data-cal-import]"); if (f && f.files[0]) { calImportIcs(f.files[0]); f.value = ""; } });
@@ -606,13 +629,13 @@ function calScheduleNative() {
       if (perm.display !== "granted") { const r = await LN.requestPermissions(); if (r.display !== "granted") return; }
       const pend = await LN.getPending(); if (pend.notifications && pend.notifications.length) await LN.cancel({ notifications: pend.notifications.map(n => ({ id: n.id })) });
       const now = Date.now(), list = [];
-      occInRangeAll(new Date(now), new Date(now + 14 * 864e5)).forEach(o => {
-        const r = o.e.remind; if (r == null || r < 0) return;
-        const at = o.e.allDay ? new Date(o.s.getTime() + 9 * 36e5) : new Date(o.s.getTime() - r * 6e4);
-        if (at.getTime() <= now + 5000) return;
-        let h = 0; for (const ch of occKey(o)) h = (h * 31 + ch.charCodeAt(0)) | 0;
-        list.push({ id: Math.abs(h) % 2147483000 + 1, title: o.e.title || "SHUT", body: evTimeText(o) + (o.e.location ? " · " + o.e.location : ""), schedule: { at, allowWhileIdle: true } });
-      });
+      occInRangeAll(new Date(now), new Date(now + 15 * 864e5)).forEach(o => evReminds(o.e).forEach(r => {
+        const at = evRemindAt(o, r);
+        if (at.getTime() <= now + 5000 || at.getTime() > now + 14 * 864e5) return;
+        let h = 0; for (const ch of occKey(o) + "|" + r) h = (h * 31 + ch.charCodeAt(0)) | 0;
+        const n = calNotifText(o, r);
+        list.push({ id: Math.abs(h) % 2147483000 + 1, title: n.title, body: n.body, schedule: { at, allowWhileIdle: true } });
+      }));
       list.sort((a, b) => a.schedule.at - b.schedule.at);
       if (list.length) await LN.schedule({ notifications: list.slice(0, 60) }); // iOS хранит до 64 запланированных
     } catch {}
@@ -627,7 +650,7 @@ const QA_MON = ["янв", "фев", "мар", "апр", "мая|май", "июн
 const QA_MON_EN = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 function qaParse(input, now) {
   now = now || new Date();
-  let s = " " + input.trim() + " ", kind = "", date = null, time = null, dur = null, remind = null, repeat = "none";
+  let s = " " + input.trim() + " ", kind = "", date = null, time = null, dur = null, remind = null, repeat = "none", every = 1;
   const cut = re => { const m = re.exec(s); if (m) s = s.slice(0, m.index) + " " + s.slice(m.index + m[0].length); return m; };
   let m;
   if ((m = cut(/^\s*(заметка|заметку|note)[:\s]/i))) kind = "note";
@@ -637,7 +660,12 @@ function qaParse(input, now) {
     if ((m = cut(/\s(напомнить|напоминание|remind(?:\s+me)?)\s+(?:за\s+|in\s+)?(\d+)?\s*(мин[а-яё]*|min[a-z]*|m|час[а-яё]*|ч|hours?|h|д(?:ень|ня|ней)|days?|d)(?:\s+до)?(?=\s)/i))) {
       const n = +(m[2] || 1), u = m[3].toLowerCase(); remind = /^(час|ч|h)/.test(u) ? n * 60 : /^(д|d)/.test(u) ? n * 1440 : n;
     }
-    if ((m = cut(/\s(каждый день|ежедневно|daily|every day)(?=\s)/i))) repeat = "daily";
+    const NUMW = { "два": 2, "две": 2, "три": 3, "четыре": 4, "пять": 5, "шесть": 6, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6 };
+    if ((m = cut(/\s(?:каждые|каждых|every)\s+(\d{1,2}|два|две|три|четыре|пять|шесть|two|three|four|five|six)\s+(дн[а-яё]*|сут[а-яё]*|days?|недел[а-яё]*|weeks?|месяц[а-яё]*|months?|год[а-яё]*|лет|years?)(?=\s)/i))) {
+      every = +m[1] || NUMW[m[1].toLowerCase()] || 1; const u = m[2].toLowerCase();
+      repeat = /^(дн|сут|day)/.test(u) ? "daily" : /^(недел|week)/.test(u) ? "weekly" : /^(месяц|month)/.test(u) ? "monthly" : "yearly";
+    }
+    else if ((m = cut(/\s(каждый день|ежедневно|daily|every day)(?=\s)/i))) repeat = "daily";
     else if ((m = cut(/\s(по будням|в будни|weekdays|every weekday)(?=\s)/i))) repeat = "weekdays";
     else if ((m = cut(/\s(каждую неделю|еженедельно|weekly|every week)(?=\s)/i))) repeat = "weekly";
     else if ((m = cut(/\s(каждый месяц|ежемесячно|monthly|every month)(?=\s)/i))) repeat = "monthly";
@@ -667,5 +695,146 @@ function qaParse(input, now) {
   const title = s.replace(/\s+/g, " ").trim().replace(/^[,.:;\-–—]+|[,.:;\-–—]+$/g, "").trim();
   if (!kind) kind = time || repeat !== "none" ? "event" : "task";
   if (kind === "event" && !date) { date = new Date(now); date.setHours(0, 0, 0, 0); if (time && (time[0] * 60 + time[1]) <= now.getHours() * 60 + now.getMinutes() && repeat === "none") date = cAddDays(date, 1); }
-  return { kind, title, date, time, dur, remind, repeat };
+  return every > 1 ? { kind, title, date, time, dur, remind, repeat, every } : { kind, title, date, time, dur, remind, repeat };
+}
+
+/* ---------- напоминания: до 5 на событие, скрытие названий ---------- */
+// Список «за сколько минут» (старые события хранили одно значение в remind)
+function evReminds(e) { if (e.readonly) return []; const a = Array.isArray(e.reminds) ? e.reminds : (e.remind != null && e.remind >= 0 ? [e.remind] : []); return [...new Set(a.filter(v => v >= 0))].slice(0, 5); }
+// Когда сработает: для «весь день» — в 9:00 дня события минус смещение (за 1 день → 9:00 накануне)
+function evRemindAt(o, r) { return o.e.allDay ? new Date(o.s.getTime() + 9 * 36e5 - (r >= 1440 ? r : 0) * 6e4) : new Date(o.s.getTime() - r * 6e4); }
+const calHideTitles = () => { try { return localStorage.getItem("vault.notif.hide") === "1"; } catch { return false; } };
+function calNotifText(o, r) {
+  const lead = r === 0 ? T("Сейчас", "Now") : r < 60 ? T("Через ", "In ") + r + T(" мин", " min") : r < 1440 ? T("Через ", "In ") + Math.round(r / 60) + T(" ч", " h") : T("Завтра", "Tomorrow");
+  if (calHideTitles()) return { title: T("SHUT — напоминание", "SHUT — reminder"), body: lead + " · " + evTimeText(o) };
+  return { title: o.e.title || "SHUT", body: lead + " · " + evTimeText(o) + (o.e.location ? " · " + o.e.location : "") };
+}
+// Настройки: «Скрывать названия событий в уведомлениях»
+(() => { const cb = document.getElementById("set-notif-hide"); if (!cb) return; cb.checked = calHideTitles();
+  cb.onchange = () => { try { localStorage.setItem("vault.notif.hide", cb.checked ? "1" : "0"); } catch {} if (typeof calScheduleNative === "function") calScheduleNative(); }; })();
+
+/* ======================================================================
+   Подписки на календари по ссылке (Google «Секретный адрес в формате iCal», iCloud, Outlook, webcal://)
+   Список подписок хранится в сейфе (запись типа "calsub", шифруется и синхронизируется).
+   Сами события загружаются через воркер синхронизации (/ics) — только для чтения, без напоминаний,
+   хранятся в памяти и обновляются при открытии календаря и раз в час.
+   ====================================================================== */
+const calSubsList = () => live().filter(x => x.type === "calsub");
+const calSubCache = new Map(); // id подписки → { at, events, err, loading }
+const CAL_SUB_TTL = 36e5;
+function calAllEvents() {
+  const out = eventsList().slice();
+  calSubsList().forEach(s => { if (s.hidden) return; const c = calSubCache.get(s.id); if (c && c.events) out.push(...c.events); });
+  return out;
+}
+function calSubEventById(id) { for (const c of calSubCache.values()) { const e = (c.events || []).find(x => x.id === id); if (e) return e; } return null; }
+async function calSubFetch(sub) {
+  const s = store.get(); if (!s || !s.syncId || !s.syncAuth) throw new Error(T("для подписок нужна синхронизация — войдите в сейф заново", "subscriptions need sync — sign in again"));
+  let lastErr = "";
+  for (const base of syncUrls()) {
+    try {
+      const r = await fetch(base + "/ics?id=" + encodeURIComponent(s.syncId) + "&u=" + encodeURIComponent(sub.url), { headers: { Authorization: "Bearer " + s.syncAuth }, cache: "no-store", referrerPolicy: "no-referrer" });
+      const text = await r.text();
+      if (r.ok && /BEGIN:VCALENDAR/.test(text.slice(0, 4000))) return text;
+      lastErr = r.status === 403 ? T("сервер не подтвердил доступ", "access denied") : r.status === 415 ? T("по ссылке не календарь", "the link is not a calendar") : r.status === 502 ? T("календарь по ссылке недоступен", "the calendar is unreachable")
+        : r.ok ? T("сервер синхронизации ещё не умеет подписки — его нужно обновить", "the sync server does not support subscriptions yet — it needs an update") : "HTTP " + r.status;
+    } catch { lastErr = T("нет соединения", "no connection"); }
+  }
+  throw new Error(lastErr);
+}
+async function calSubRefresh(sub, force) {
+  const c = calSubCache.get(sub.id) || {}; if (c.loading || (!force && c.at && Date.now() - c.at < CAL_SUB_TTL)) return false;
+  c.loading = true; calSubCache.set(sub.id, c);
+  try {
+    const b = icsBuild(icsParse(await calSubFetch(sub)));
+    c.events = b.events.map((d, i) => ({ ...d, type: "event", id: "sub~" + sub.id + "~" + i, readonly: true, sub: sub.id, subTitle: sub.title, color: sub.color || 1, reminds: [], remind: -1 }));
+    c.err = ""; c.at = Date.now();
+  } catch (e) { c.err = e.message || String(e); c.at = Date.now(); }
+  c.loading = false; return true;
+}
+async function calSubsRefreshAll(force) {
+  const subs = calSubsList().filter(s => !s.hidden); if (!subs.length) return;
+  const changed = await Promise.all(subs.map(s => calSubRefresh(s, force)));
+  if (changed.some(Boolean) && view === "calendar") renderCalendar();
+}
+setInterval(() => { if (typeof vaultKey !== "undefined" && vaultKey) calSubsRefreshAll(false); }, 10 * 6e4);
+function calSubsHtml() {
+  const subs = calSubsList(); setTimeout(() => calSubsRefreshAll(false), 0);
+  return `<div class="cal-up cal-subs"><p class="cal-up-h">${T("Календари по ссылке", "Subscribed calendars")}</p>
+    ${subs.map(s => { const c = calSubCache.get(s.id) || {}; const st = c.loading ? T("обновляю…", "updating…") : c.err ? "⚠ " + c.err : c.events ? (c.events.length + T(" соб.", " events")) : "";
+      return `<div class="cs-row${s.hidden ? " off" : ""}"><button type="button" class="cs-vis c-${s.color || 1}" data-sub-vis="${esc(s.id)}" title="${s.hidden ? T("Показать", "Show") : T("Скрыть", "Hide")}"></button>
+        <span class="cs-t"><b>${esc(s.title)}</b><small class="${c.err ? "err-t" : ""}">${esc(st)}</small></span>
+        <button type="button" class="ib cs-b" data-sub-ref="${esc(s.id)}" title="${T("Обновить", "Refresh")}">⟳</button><button type="button" class="ib cs-b" data-sub-del="${esc(s.id)}" title="${T("Отписаться", "Unsubscribe")}">✕</button></div>`; }).join("")}
+    <button type="button" class="cal-io-b cs-add" data-sub-add>${ci("upload")}${T("Подписаться по ссылке", "Subscribe by link")}</button></div>`;
+}
+function calSubsClick(t) {
+  if (t.closest("[data-sub-add]")) { calSubAddDialog(); return true; }
+  const vis = t.closest("[data-sub-vis]"); if (vis) { const s = entries.find(x => x.id === vis.dataset.subVis); if (s) { s.hidden = !s.hidden; s.updated = Date.now(); persist(); renderCalendar(); } return true; }
+  const ref = t.closest("[data-sub-ref]"); if (ref) { const s = entries.find(x => x.id === ref.dataset.subRef); if (s) { calSubRefresh(s, true).then(() => renderCalendar()); renderCalendar(); } return true; }
+  const del = t.closest("[data-sub-del]"); if (del) {
+    const s = entries.find(x => x.id === del.dataset.subDel); if (!s) return true;
+    confirmBox(T("Отписаться от календаря «", "Unsubscribe from “") + s.title + T("»? Его события пропадут из SHUT (в самом календаре ничего не изменится).", "”? Its events will disappear from SHUT (nothing changes in the calendar itself)."), T("Отписаться", "Unsubscribe"), true)
+      .then(async ok => { if (!ok) return; s.deletedAt = Date.now(); calSubCache.delete(s.id); await persist(); renderCalendar(); });
+    return true;
+  }
+  return false;
+}
+function calSubAddDialog() {
+  const ov = document.createElement("div"); ov.className = "cal-pop-ov";
+  const colors = Array.from({ length: CAL_COLORS }, (_, i) => `<button type="button" class="cp-color c-${i}${i === 5 ? " on" : ""}" data-cp-color="${i}" aria-label="${i + 1}"></button>`).join("");
+  ov.innerHTML = `<div class="cal-pop cs-pop" role="dialog" aria-modal="true">
+    <div class="cp-top"><b class="nh-h">${T("Подписаться на календарь", "Subscribe to a calendar")}</b><button type="button" class="cp-x" data-cs-close aria-label="${T("Закрыть", "Close")}">✕</button></div>
+    <label for="cs-url">${T("Ссылка на календарь (.ics или webcal://)", "Calendar link (.ics or webcal://)")}</label>
+    <input id="cs-url" class="field" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics">
+    <label for="cs-title">${T("Название", "Name")}</label><input id="cs-title" class="field" maxlength="60" placeholder="${T("Например: Рабочий", "For example: Work")}">
+    <div class="cp-colors">${colors}</div>
+    <details class="cs-help"><summary>${T("Где взять ссылку", "Where to get the link")}</summary>
+      <p><b>Google</b>: ${T("Настройки → слева выберите календарь → «Интеграция календаря» → «Секретный адрес в формате iCal».", "Settings → pick the calendar → “Integrate calendar” → “Secret address in iCal format”.")}</p>
+      <p><b>iCloud</b>: ${T("Календарь → «Поделиться» → «Публичный календарь» → скопировать ссылку.", "Calendar → Share → Public Calendar → copy link.")}</p>
+      <p><b>Outlook</b>: ${T("Параметры → Календарь → Общие календари → «Опубликовать календарь» → ссылка ICS.", "Settings → Calendar → Shared calendars → Publish a calendar → ICS link.")}</p></details>
+    <p class="cs-note">${T("Календарь загружается через сервер синхронизации SHUT: он видит ссылку и события этого календаря в момент загрузки, но ничего не хранит. Сама ссылка хранится в вашем сейфе зашифрованной. События подписок — только для чтения, без напоминаний; обновляются раз в час.", "The calendar is fetched via the SHUT sync server: it sees the link and the events of that calendar while fetching, but stores nothing. The link itself is kept encrypted in your vault. Subscribed events are read-only, without reminders; refreshed hourly.")}</p>
+    <div class="err" id="cs-err"></div>
+    <div class="cp-actions"><span></span><button type="button" class="ghost" data-cs-close>${T("Отмена", "Cancel")}</button><button type="button" class="cp-save" data-cs-ok>${T("Подписаться", "Subscribe")}</button></div></div>`;
+  document.body.appendChild(ov);
+  let color = 5; const g = id => ov.querySelector("#" + id);
+  setTimeout(() => g("cs-url").focus(), 30);
+  ov.onclick = async e => {
+    if (e.target === ov || e.target.closest("[data-cs-close]")) return ov.remove();
+    const c = e.target.closest("[data-cp-color]"); if (c) { color = +c.dataset.cpColor; ov.querySelectorAll(".cp-color").forEach(x => x.classList.toggle("on", x === c)); return; }
+    const okb = e.target.closest("[data-cs-ok]"); if (!okb) return;
+    const url = g("cs-url").value.trim().replace(/^webcal:\/\//i, "https://");
+    if (!/^https?:\/\/\S+\.\S+/i.test(url)) { g("cs-err").textContent = T("Вставьте ссылку, начинающуюся с https:// или webcal://", "Paste a link starting with https:// or webcal://"); return; }
+    if (calSubsList().some(s => s.url === url)) { g("cs-err").textContent = T("Вы уже подписаны на этот календарь", "You are already subscribed to this calendar"); return; }
+    const title = g("cs-title").value.trim() || (/google\.com/.test(url) ? "Google" : /icloud\.com/.test(url) ? "iCloud" : /outlook|office/.test(url) ? "Outlook" : T("Календарь", "Calendar"));
+    busy(okb, true, T("Проверяю…", "Checking…"));
+    const now = Date.now(), sub = { type: "calsub", id: b64(rand(9)), title, url, color, created: now, updated: now };
+    await calSubRefresh(sub, true);
+    const c2 = calSubCache.get(sub.id);
+    if (c2.err) { busy(okb, false, ""); g("cs-err").textContent = T("Не получилось: ", "Failed: ") + c2.err; calSubCache.delete(sub.id); return; }
+    entries.push(sub); await persist(); ov.remove(); renderCalendar(); toast(T("Подписка добавлена: ", "Subscribed: ") + c2.events.length + T(" соб.", " events"));
+  };
+}
+// Просмотр события из подписки (только чтение)
+function calShowReadonly(e, occ) {
+  const o = occ && occ.s ? { e, s: occ.s, en: occ.en || evBounds(e)[1] } : { e, s: evBounds(e)[0], en: evBounds(e)[1] };
+  const ov = document.createElement("div"); ov.className = "cal-pop-ov";
+  const day = o.s.toLocaleDateString(cLoc(), { weekday: "long", day: "numeric", month: "long" });
+  ov.innerHTML = `<div class="cal-pop ro-pop" role="dialog" aria-modal="true">
+    <div class="cp-top"><span class="cs-badge c-${e.color || 1}">${esc(e.subTitle || T("Подписка", "Subscription"))}</span><button type="button" class="cp-x" data-ro-close aria-label="${T("Закрыть", "Close")}">✕</button></div>
+    <h2 class="ro-title">${esc(e.title)}</h2>
+    <p class="ro-when">${ci("clock")}<span>${esc(day)}, ${esc(evTimeText(o))}</span></p>
+    ${e.location ? `<p class="ro-when">${ci("pin")}<span>${esc(e.location)}</span></p>` : ""}
+    ${e.meet ? `<a class="cp-join" href="${esc(e.meet)}" target="_blank" rel="noopener noreferrer">${ci("video")} ${T("Подключиться к встрече", "Join meeting")}</a>` : ""}
+    ${e.note ? `<div class="ro-note">${esc(e.note).replace(/\n/g, "<br>")}</div>` : ""}
+    <p class="cs-note">${T("Событие из подписки — изменить его можно только в исходном календаре.", "Subscribed event — edit it in the original calendar.")}</p>
+    <div class="cp-actions"><span></span><button type="button" class="ghost" data-ro-copy>${T("Скопировать в мой календарь", "Copy to my calendar")}</button><button type="button" class="cp-save" data-ro-close>${T("Закрыть", "Close")}</button></div></div>`;
+  document.body.appendChild(ov);
+  ov.onclick = async ev => {
+    if (ev.target === ov || ev.target.closest("[data-ro-close]")) return ov.remove();
+    if (ev.target.closest("[data-ro-copy]")) {
+      const { id, readonly, sub, subTitle, type, ...d } = e;
+      entries.push(calMakeEvent({ ...d, repeat: "none", until: "", ex: [], start: cFmt(o.s, e.allDay), end: cFmt(e.allDay ? cAddDays(o.en, -1) : o.en, e.allDay), uid: "", color: 0 }));
+      await persist(); ov.remove(); renderCalendar(); toast(T("Скопировано в ваш календарь", "Copied to your calendar"));
+    }
+  };
 }

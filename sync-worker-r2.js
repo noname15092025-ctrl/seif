@@ -15,6 +15,23 @@ async function sha256hex(s) {
   const b = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)));
   return [...b].map(x => x.toString(16).padStart(2, "0")).join("");
 }
+// Подписка на календари (Google, iCloud, Outlook…): эти сервисы не разрешают браузеру
+// скачивать календарь напрямую, поэтому SHUT просит этот воркер забрать .ics по ссылке.
+// Доступно только владельцу сейфа (тот же токен, что и для синхронизации). Ничего не сохраняется.
+const ICS_MAX = 3 * 1024 * 1024;
+async function icsProxy(url) {
+  const raw = (url.searchParams.get("u") || "").trim().replace(/^webcal:\/\//i, "https://");
+  let t; try { t = new URL(raw); } catch { return new Response("bad url", { status: 400, headers: CORS }); }
+  if (t.protocol !== "https:" && t.protocol !== "http:") return new Response("bad url", { status: 400, headers: CORS });
+  let r; try { r = await fetch(t.toString(), { headers: { "User-Agent": "SHUT-calendar/1.0", Accept: "text/calendar,*/*" }, redirect: "follow" }); }
+  catch { return new Response("upstream error", { status: 502, headers: CORS }); }
+  if (!r.ok) return new Response("upstream " + r.status, { status: 502, headers: CORS });
+  if ((+r.headers.get("content-length") || 0) > ICS_MAX) return new Response("too large", { status: 413, headers: CORS });
+  const text = await r.text();
+  if (text.length > ICS_MAX) return new Response("too large", { status: 413, headers: CORS });
+  if (!/BEGIN:VCALENDAR/.test(text.slice(0, 4000))) return new Response("not a calendar", { status: 415, headers: CORS });
+  return new Response(text, { headers: { ...CORS, "Content-Type": "text/calendar; charset=utf-8", "Cache-Control": "no-store" } });
+}
 export default {
   async fetch(req, env) {
     if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
@@ -25,6 +42,11 @@ export default {
     const authHash = await sha256hex(auth);
     const key = "v/" + id;
     try {
+      if (url.pathname === "/ics" && req.method === "GET") {
+        const o = await env.BUCKET.get(key); const acc = o ? JSON.parse(await o.text()) : null;
+        if (!acc || acc.a !== authHash) return new Response("forbidden", { status: 403, headers: CORS });
+        return await icsProxy(url);
+      }
       if (req.method === "GET") {
         const obj = await env.BUCKET.get(key);
         if (!obj) return new Response("{}", { status: 404, headers: { ...CORS, "Content-Type": "application/json" } });

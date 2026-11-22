@@ -13,18 +13,21 @@
 <meta name="theme-color" content="#0A0A0A">
 <title>SHUT — хранилище</title>
 <link rel="icon" href="shield.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=119">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=121">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="style.css?v=119">
+<link rel="stylesheet" href="style.css?v=121">
 <script src="wordlist.js" defer></script>
 <script src="argon2.js" defer></script>
-<script src="md.js?v=119" defer></script>
-<script src="loyalty.js?v=119" defer></script>
-<script src="calendar.js?v=119" defer></script>
-<script src="datepicker.js?v=119" defer></script>
-<script src="app.js?v=119" defer></script>
-<script src="passkey.js?v=119" defer></script>
-<script src="notes-plus.js?v=119" defer></script>
+<script src="md.js?v=121" defer></script>
+<script src="merge.js?v=121" defer></script>
+<script src="qr.js?v=121" defer></script>
+<script src="loyalty.js?v=121" defer></script>
+<script src="calendar.js?v=121" defer></script>
+<script src="datepicker.js?v=121" defer></script>
+<script src="app.js?v=121" defer></script>
+<script src="passkey.js?v=121" defer></script>
+<script src="notes-plus.js?v=121" defer></script>
+<script src="devlink.js?v=121" defer></script>
 </head>
 <body>
 <svg width="0" height="0" class="sprite" aria-hidden="true">
@@ -66,6 +69,7 @@
       <div class="hero-btns rise d3">
         <button class="pill big dark-btn" id="b-new" data-en="Create vault free">Создать сейф бесплатно</button>
         <button class="pill big outline" id="b-restore" data-en="Sign in with phrase">Войти по фразе</button>
+        <button class="pill big outline" data-dl-start data-en="Sign in with QR code">Войти по QR-коду</button>
       </div>
     </div>
     <div class="hero-art rise d2" aria-hidden="true">
@@ -154,6 +158,7 @@
       <button type="button" class="wide pill ghost hidden bio-btn" id="b-pk" data-en="Sign in with a passkey">Войти с ключом доступа</button>
       <div class="p-links">
         <a id="b-forgot" data-en="Restore with phrase">Восстановить по фразе</a>
+        <a data-dl-start data-en="Sign in with QR code">Войти по QR-коду</a>
         <a id="b-new2" data-en="+ New profile">+ Новый профиль</a>
       </div>
     </div>
@@ -390,6 +395,7 @@
       <div id="pk-on" class="hidden"><p class="pk-state" data-en="Passkey sign-in is on for this device.">✓ Вход по ключу доступа включён на этом устройстве.</p><button class="ghost" id="b-pk-off" data-en="Turn off">Выключить</button></div>
       <div class="err" id="pk-err"></div></div>
     <label class="chk mt12 hidden" id="bio-row"><input type="checkbox" id="set-bio"> <span id="bio-label">Вход по Face ID</span></label>
+    <label class="chk mt12"><input type="checkbox" id="set-notif-hide"> <span data-en="Hide event titles in notifications">Скрывать названия событий в уведомлениях</span></label>
     <label class="chk mt12"><input type="checkbox" id="set-stay"> <span data-en="Stay unlocked after page refresh">Оставаться в сейфе после обновления страницы</span></label>
     <p class="muted small" data-en="Closing the tab always locks the vault. The master password is still required then.">Закрытие вкладки всегда блокирует сейф — тогда мастер-пароль нужен заново.</p>
     <div class="btn-row"><button class="ghost" data-install hidden data-en="Install as app">Установить как приложение</button></div>
@@ -399,6 +405,10 @@
     <textarea id="sync-url" class="field mono" rows="3" placeholder="https://vault.ваш-аккаунт.workers.dev&#10;https://vault-backup.другой-аккаунт.workers.dev" autocomplete="off" spellcheck="false"></textarea>
     <div class="btn-row"><button class="ghost" id="b-sync-save" data-en="Save">Сохранить</button><button class="ghost" id="b-sync-now" data-en="Sync now">Синхронизировать сейчас</button></div>
     <div class="muted small" id="sync-status"></div>
+    <h3 data-en="Link another device">Подключить другое устройство</h3>
+    <p class="muted small" data-en="Show a QR code to sign in on a new phone or computer without typing the 12 words. Confirm with your master password.">Покажите QR-код, чтобы войти на новом телефоне или компьютере без ввода 12 слов. Подтвердите мастер-паролем.</p>
+    <div class="input-row"><input type="password" id="dl-pw" class="field" autocomplete="current-password" data-en-ph="Master password" placeholder="Мастер-пароль"><button class="ghost" id="b-dl-show" data-en="Show QR code">Показать QR-код</button></div>
+    <div class="err" id="dl-err"></div>
     <h3 class="danger-h" data-en="Danger zone">Опасная зона</h3>
     <button class="danger" id="b-wipe" data-en="Delete profile from this device">Удалить профиль с устройства</button>
   </div>

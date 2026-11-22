@@ -606,7 +606,7 @@ function expiryOf(x) {
 const EXPIRE_SOON_MS = 90 * 864e5;
 const expiringSoon = x => { const d = expiryOf(x); return d && d - Date.now() < EXPIRE_SOON_MS; };
 const live = () => entries.filter(x => !x.deletedAt);
-const pwEntries = () => live().filter(x => x.type !== "page" && x.type !== "task" && x.type !== "event");
+const pwEntries = () => live().filter(x => x.type !== "page" && x.type !== "task" && x.type !== "event" && x.type !== "calsub");
 const notesList = () => live().filter(x => x.type === "page");
 const tasksList = () => live().filter(x => x.type === "task");
 const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
@@ -653,13 +653,40 @@ async function syncPull(s) {
   if (!best) return { ok: true, empty: true };
   if (typeof best.v === "number" && typeof s.syncV === "number" && best.v <= s.syncV) return { ok: true, same: true };
   const fresh = JSON.parse(dec.decode(await open(vaultKey, best.vault))).map(migrateEntry);
-  entries = fresh; s.syncV = best.v; s.vault = best.vault; if (best.name) s.name = best.name; store.set(s);
+  // Слияние по записям (merge.js): локальные правки, сделанные без сети, больше не теряются
+  const lastSync = s.syncAt || s.syncV || 0;
+  const m = mergeEntries(entries, fresh, lastSync);
+  entries = m.entries; s.syncV = best.v; s.syncAt = Date.now(); if (best.name) s.name = best.name;
+  if (m.needPush) { s.vault = await seal(vaultKey, enc.encode(JSON.stringify(entries))); store.set(s); schedulePush(); }
+  else { s.vault = best.vault; store.set(s); }
   try { renderNav(); render(); } catch {}
-  return { ok: true, pulled: true };
+  if (m.conflicts.length) syncConflictsDialog(m.conflicts);
+  return { ok: true, pulled: true, merged: m.needPush, conflicts: m.conflicts.length };
+}
+// Одну и ту же запись изменили на двух устройствах — спрашиваем, что оставить
+async function syncConflictsDialog(conflicts) {
+  const when = x => new Date(Math.max(+x.updated || 0, +x.deletedAt || 0)).toLocaleString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  const ov = document.createElement("div"); ov.className = "cal-pop-ov";
+  const choice = {}; conflicts.forEach(c => choice[c.id] = c.picked);
+  ov.innerHTML = `<div class="cal-pop sc-pop" role="dialog" aria-modal="true">
+    <div class="cp-top"><b class="nh-h">${T("Изменения на двух устройствах", "Changes on two devices")}</b></div>
+    <p class="sc-sub">${T("Эти записи меняли и здесь, и на другом устройстве с прошлой синхронизации. Выберите, что оставить. Пока вы не выбрали, сохранена более свежая версия.", "These entries were changed both here and on another device since the last sync. Choose what to keep. Until you do, the newer version is kept.")}</p>
+    ${conflicts.map(c => `<div class="sc-item" data-sc="${esc(c.id)}"><b>${esc(c.local.title || c.remote.title || T("Без названия", "Untitled"))}</b><small>${esc(TYPE_NAME(c.local.type))}${c.local.deletedAt && !c.remote.deletedAt ? T(" · здесь удалена", " · deleted here") : !c.local.deletedAt && c.remote.deletedAt ? T(" · удалена на другом устройстве", " · deleted on the other device") : ""}</small>
+      <div class="sc-opts"><button type="button" class="sc-o${choice[c.id] === "local" ? " on" : ""}" data-sco="local">${T("Эта", "This one")}<i>${esc(when(c.local))}</i></button><button type="button" class="sc-o${choice[c.id] === "remote" ? " on" : ""}" data-sco="remote">${T("С другого устройства", "From other device")}<i>${esc(when(c.remote))}</i></button><button type="button" class="sc-o" data-sco="both">${T("Обе", "Both")}<i>${T("копия рядом", "copy alongside")}</i></button></div></div>`).join("")}
+    <div class="cp-actions"><span></span><button type="button" class="cp-save" data-sc-ok>${T("Готово", "Done")}</button></div></div>`;
+  document.body.appendChild(ov);
+  ov.onclick = async e => {
+    const o = e.target.closest("[data-sco]");
+    if (o) { const it = o.closest("[data-sc]"); choice[it.dataset.sc] = o.dataset.sco; it.querySelectorAll(".sc-o").forEach(b => b.classList.toggle("on", b === o)); return; }
+    if (e.target.closest("[data-sc-ok]")) {
+      entries = mergeResolve(entries, conflicts, choice, T(" (копия)", " (copy)"), () => b64(rand(9)));
+      ov.remove(); await persist(); renderNav(); render(); toast(T("Сохранено", "Saved"));
+    }
+  };
 }
 async function syncPush(s) {
   const urls = syncUrls(); if (!urls.length || !s.syncId) return;
-  const v = Date.now(); s.syncV = v; store.set(s);
+  const v = Date.now(); s.syncV = v; s.syncAt = v; store.set(s);
   const body = JSON.stringify({ v, vault: s.vault, name: s.name });
   let lastErr = null, ok = false;
   for (const url of urls) {

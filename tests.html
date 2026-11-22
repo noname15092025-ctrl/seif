@@ -36,6 +36,8 @@ const safeUrl = u => { u = (u || "").trim(); if (!u) return ""; if (!/^[a-z][a-z
 let vaultKey = null;
 </script>
 <script src="md.js"></script>
+<script src="merge.js"></script>
+<script src="qr.js"></script>
 <script src="loyalty.js"></script>
 <script src="calendar.js"></script>
 <script src="vendor/zxing.min.js"></script>
@@ -78,6 +80,15 @@ let vaultKey = null;
   eq("Повторять до (включительно)", occDays({ ...base, repeat: "daily", until: "2026-11-18" }, "2026-11-16", "2026-11-30"), ["2026-11-16", "2026-11-17", "2026-11-18"]);
   eq("Исключённые дни не показываются", occDays({ ...base, repeat: "daily", ex: ["2026-11-17"] }, "2026-11-16", "2026-11-19"), ["2026-11-16", "2026-11-18"]);
   eq("Весь день, несколько дней: попадает в каждый день", evOccurrences({ type: "event", allDay: true, start: "2026-12-01", end: "2026-12-03", repeat: "none" }, new Date("2026-12-02T00:00"), new Date("2026-12-03T00:00")).length, 1);
+  eq("Каждые 2 недели", occDays({ ...base, repeat: "weekly", every: 2 }, "2026-11-01", "2026-12-31"), ["2026-11-16", "2026-11-30", "2026-12-14", "2026-12-28"]);
+  eq("Каждые 3 дня", occDays({ ...base, repeat: "daily", every: 3 }, "2026-11-16", "2026-11-26"), ["2026-11-16", "2026-11-19", "2026-11-22", "2026-11-25"]);
+  eq("Каждые 2 месяца", occDays({ ...base, repeat: "monthly", every: 2 }, "2026-11-01", "2027-06-01"), ["2026-11-16", "2027-01-16", "2027-03-16", "2027-05-16"]);
+  eq("Каждые 2 недели, далёкое будущее — без сдвига фазы", occDays({ ...base, repeat: "weekly", every: 2 }, "2030-01-01", "2030-01-29").length, 2);
+  section("Напоминания");
+  eq("Старое событие с одним напоминанием", evReminds({ remind: 10 }), [10]);
+  eq("Несколько напоминаний, без повторов, не больше 5", evReminds({ reminds: [10, 60, 10, 1440, 0, 5, 30] }), [10, 60, 1440, 0, 5]);
+  eq("Без напоминаний", evReminds({ remind: -1 }), []);
+  eq("Весь день: «за 1 день» — в 9:00 накануне", cYmd(evRemindAt({ e: { allDay: true }, s: new Date(2026, 11, 2) }, 1440)) + " " + cHm(evRemindAt({ e: { allDay: true }, s: new Date(2026, 11, 2) }, 1440)), "2026-12-01 09:00");
   eq("Далёкое будущее считается быстро (без перебора с начала)", occDays({ ...base, repeat: "daily" }, "2036-01-01", "2036-01-03"), ["2036-01-01", "2036-01-02"]);
 
   /* ---------- Только это / последующие / все ---------- */
@@ -102,7 +113,8 @@ let vaultKey = null;
   section("Импорт и экспорт .ics");
   eq("UNTIL берётся датой без сдвига пояса", icsRepeat("FREQ=DAILY;UNTIL=20261231T235959Z").until, "2026-12-31");
   eq("По будням из Google (BYDAY=MO..FR)", icsRepeat("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR").repeat, "weekdays");
-  eq("«Каждые 2 недели» помечается как неподдерживаемый", !!icsRepeat("FREQ=WEEKLY;INTERVAL=2").unsupported, true);
+  eq("«Каждые 2 недели» из .ics (INTERVAL=2)", icsRepeat("FREQ=WEEKLY;INTERVAL=2"), { repeat: "weekly", every: 2, until: "", count: 0 });
+  eq("«Каждый 2-й вторник месяца» пока помечается как неподдерживаемый", !!icsRepeat("FREQ=MONTHLY;BYDAY=2TU").unsupported, true);
   const ics = ["BEGIN:VCALENDAR", "BEGIN:VEVENT", "UID:a@x", "DTSTART;VALUE=DATE:20261201", "DTEND;VALUE=DATE:20261203", "SUMMARY:Отпуск\\, море", "DESCRIPTION:Строка 1\\nhttps://meet.google.com/abc-defg-hij", "LOCATION:Минск",
     "ATTENDEE;CN=A:mailto:a@example.com", "BEGIN:VALARM", "TRIGGER:-PT30M", "END:VALARM", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
   const p = icsParse(ics)[0];
@@ -168,7 +180,45 @@ let vaultKey = null;
   eq("Время уже прошло сегодня — переносится на завтра", P("Созвон 21:00"), ["event", "Созвон", "2026-11-22", "21:0", null, null, "none"]);
   eq("«на 90 минут», «напомнить за 2 часа»", P("Врач завтра 9:30 на 90 минут напомнить за 2 часа"), ["event", "Врач", "2026-11-22", "9:30", 90, 120, "none"]);
   ok("По будням: первое событие — понедельник, суббота пропускается", (() => { const p = qaParse("Планёрка по будням 10:00", now); const ev = { allDay: false, start: cFmt(new Date(p.date.getFullYear(), p.date.getMonth(), p.date.getDate(), 10, 0), false), end: cFmt(new Date(p.date.getFullYear(), p.date.getMonth(), p.date.getDate(), 11, 0), false), repeat: "weekdays" }; return cYmd(evOccurrences(ev, now, cAddDays(now, 7))[0].s) === "2026-11-23"; })());
+  ok("«каждые 2 недели»", (() => { const p = qaParse("Уборка каждые 2 недели сб 10:00", now); return p.repeat === "weekly" && p.every === 2 && p.title === "Уборка"; })());
+  ok("«каждые три дня»", (() => { const p = qaParse("Полив цветов каждые три дня в 9", now); return p.repeat === "daily" && p.every === 3 && p.title === "Полив цветов"; })());
   eq("English: dentist fri 3pm remind 1 hour", P("Dentist fri 3pm remind 1 hour"), ["event", "Dentist", "2026-11-27", "15:0", null, 60, "none"]);
+
+  /* ---------- QR-код ---------- */
+  section("QR-код подключения устройства");
+  const qrDecode = async text => {
+    const svg = qrSvg(text, 600).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ');
+    const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+    const img = new Image(); img.src = url; await img.decode();
+    const cv = document.createElement("canvas"); cv.width = 640; cv.height = 640; const c = cv.getContext("2d");
+    c.fillStyle = "#fff"; c.fillRect(0, 0, 640, 640); c.drawImage(img, 20, 20, 600, 600); URL.revokeObjectURL(url);
+    try { const h = new Map(); h.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.QR_CODE]); const rd = new ZXing.MultiFormatReader(); rd.setHints(h);
+      return rd.decode(new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(new ZXing.HTMLCanvasElementLuminanceSource(cv)))).getText(); } catch (e) { return "ERR " + e; }
+  };
+  for (const t of ["SHUT", "Привет, мир!", "SHUT1:" + "A".repeat(102), "x".repeat(60), "SHUT1:" + btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(76)))).replace(/=+$/, "")])
+    eq("QR распознаётся (" + t.length + " симв., версия " + qrEncode(t).version + ")", await qrDecode(t), t);
+  ok("Слишком длинные данные — понятная ошибка", (() => { try { qrEncode("x".repeat(500)); return false; } catch (e) { return /длинные/.test(e.message); } })());
+
+  /* ---------- Синхронизация: слияние ---------- */
+  section("Синхронизация: слияние по записям");
+  const E = (id, t, u, extra) => ({ id, title: t, type: "login", created: 100, updated: u, ...extra });
+  const SYNC = 1000; // момент прошлой синхронизации
+  let r1 = mergeEntries([E("a", "A", 500), E("b", "B-здесь", 1500)], [E("a", "A", 500), E("b", "B", 500)], SYNC);
+  eq("Правка только здесь сохраняется", r1.entries.map(x => x.title), ["A", "B-здесь"]); eq("…и её нужно отправить", r1.needPush, true);
+  r1 = mergeEntries([E("a", "A", 500)], [E("a", "A-там", 1500)], SYNC);
+  eq("Правка только на другом устройстве приходит", r1.entries.map(x => x.title), ["A-там"]); eq("…отправлять нечего", r1.needPush, false);
+  r1 = mergeEntries([E("a", "A", 500), E("n", "Новая здесь", 1600, { created: 1600 })], [E("a", "A", 500), E("m", "Новая там", 1700, { created: 1700 })], SYNC);
+  eq("Новые записи с обеих сторон сохраняются", r1.entries.map(x => x.title).sort(), ["A", "Новая здесь", "Новая там"]);
+  r1 = mergeEntries([E("a", "Здесь", 1600)], [E("a", "Там", 1800)], SYNC);
+  eq("Изменили на обоих — конфликт, пока побеждает свежая", [r1.conflicts.length, r1.entries[0].title, r1.conflicts[0].picked], [1, "Там", "remote"]);
+  eq("Конфликт: выбрать «Эта»", mergeResolve(r1.entries, r1.conflicts, { a: "local" }, " (копия)", () => "x").map(x => x.title), ["Здесь"]);
+  eq("Конфликт: «Обе» — копия рядом", mergeResolve(r1.entries, r1.conflicts, { a: "both" }, " (копия)", () => "x").map(x => x.title), ["Там", "Здесь (копия)"]);
+  r1 = mergeEntries([E("a", "A", 500, { deletedAt: 1500 })], [E("a", "A", 500)], SYNC);
+  eq("Удаление здесь доходит до облака", [!!r1.entries[0].deletedAt, r1.needPush], [true, true]);
+  r1 = mergeEntries([E("a", "A", 500, { used: 2000 })], [E("a", "A", 500, { used: 900 })], SYNC);
+  eq("Только «когда использовали» — не конфликт", r1.conflicts.length, 0);
+  r1 = mergeEntries([E("a", "Здесь", 1600)], [E("a", "Там", 1800)], 0);
+  eq("Первая синхронизация (нет отметки) — без вопросов, свежая побеждает", [r1.conflicts.length, r1.entries[0].title], [0, "Там"]);
 
   const s2 = $("sum"); s2.className = "sum " + (fail ? "bad" : "ok");
   s2.textContent = fail ? `Провалено: ${fail} из ${pass + fail}` : `Все тесты пройдены: ${pass}`;
