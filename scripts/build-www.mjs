@@ -23,6 +23,7 @@ const INCLUDE = [
   "passkey.js",
   "notes-plus.js",
   "devlink.js",
+  "app-mode.js",
   "date-ico.svg",
   "check-ico.svg",
   "time-ico.svg",
