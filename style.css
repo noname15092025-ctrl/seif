@@ -2331,3 +2331,23 @@ body.cal-dragging{ user-select:none; cursor:grabbing; }
 
 /* длинные ссылки в окнах переносятся, а не вылезают за рамку */
 #modal-text{ overflow-wrap:anywhere; word-break:break-word; }
+
+/* ===== Кроссбраузерность (Safari/iPhone, Firefox, Android) ===== */
+/* iPhone/Android: высота экрана без учёта прыгающей адресной строки */
+@supports (height:100dvh){
+  body, .center-page, .center-page.split{ min-height:100dvh; }
+  .app{ min-height:100dvh; }
+  .cal-pop{ max-height:calc(100dvh - 40px); }
+  @media (min-width:981px){ .app .side{ height:calc(100dvh - 28px); } }
+}
+/* iPhone приближает страницу, если шрифт поля меньше 16px — на сенсорных экранах держим 16px */
+@media (pointer:coarse){ input:not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea{ font-size:16px !important; } }
+/* Safari до сих пор требует префикс для запрета выделения */
+body.cal-dragging{ -webkit-user-select:none; }
+.md .md-spoiler{ -webkit-user-select:none; } .md .md-spoiler.open{ -webkit-user-select:text; }
+/* убрать серую вспышку при нажатии на iOS/Android и задержку двойного тапа */
+html{ -webkit-tap-highlight-color:transparent; } button, a, [role=button], label, .ib{ touch-action:manipulation; }
+/* Firefox: тонкие тёмные полосы прокрутки, как в Chrome/Safari */
+.app .side{ scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.12) transparent; }
+/* шрифты: ровное сглаживание в Safari/Firefox на macOS */
+body{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
