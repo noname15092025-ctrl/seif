@@ -363,7 +363,7 @@ $("b-restore-go").onclick = async e => {
       try {
         const d = await deriveSync(new Uint8Array(await C.exportKey("raw", key)));
         const best = await syncFetchLatest(d.id, d.auth);
-        if (best && best.vault) { await open(key, best.vault); box = best.vault; }
+        if (best && best.vault) { await open(key, best.vault); box = best.vault; const nm = await syncNameDecode(best.name, key); if (nm && !$("p-name").value) $("p-name").value = nm; }
       } catch {}
     }
     if (box) await open(key, box);
@@ -606,7 +606,7 @@ function expiryOf(x) {
 const EXPIRE_SOON_MS = 90 * 864e5;
 const expiringSoon = x => { const d = expiryOf(x); return d && d - Date.now() < EXPIRE_SOON_MS; };
 const live = () => entries.filter(x => !x.deletedAt);
-const pwEntries = () => live().filter(x => x.type !== "page" && x.type !== "task" && x.type !== "event" && x.type !== "calsub");
+const pwEntries = () => live().filter(x => x.type !== "page" && x.type !== "task" && x.type !== "event");
 const notesList = () => live().filter(x => x.type === "page");
 const tasksList = () => live().filter(x => x.type === "task");
 const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
@@ -647,6 +647,9 @@ async function syncFetchLatest(id, auth, urls) {
   const all = await Promise.all((urls || syncUrls()).map(u => fetchOne(u, id, auth)));
   return all.filter(Boolean).sort((a, b) => (b.v || 0) - (a.v || 0))[0] || null;
 }
+// Название профиля в облаке хранится зашифрованным: "e1:" + {iv,ct}. Старые записи без шифрования читаются как есть.
+async function syncNameEncode(name) { if (!vaultKey) return ""; return "e1:" + JSON.stringify(await seal(vaultKey, enc.encode(name || ""))); }
+async function syncNameDecode(v, key) { if (!v) return ""; if (!String(v).startsWith("e1:")) return String(v); try { return dec.decode(await open(key, JSON.parse(String(v).slice(3)))); } catch { return ""; } }
 async function syncPull(s) {
   const urls = syncUrls(); if (!urls.length || !s.syncId || !vaultKey) return { ok: false };
   const best = await syncFetchLatest(s.syncId, s.syncAuth, urls);
@@ -656,7 +659,7 @@ async function syncPull(s) {
   // Слияние по записям (merge.js): локальные правки, сделанные без сети, больше не теряются
   const lastSync = s.syncAt || s.syncV || 0;
   const m = mergeEntries(entries, fresh, lastSync);
-  entries = m.entries; s.syncV = best.v; s.syncAt = Date.now(); if (best.name) s.name = best.name;
+  entries = m.entries; s.syncV = best.v; s.syncAt = Date.now(); { const nm = await syncNameDecode(best.name, vaultKey); if (nm) s.name = nm; }
   if (m.needPush) { s.vault = await seal(vaultKey, enc.encode(JSON.stringify(entries))); store.set(s); schedulePush(); }
   else { s.vault = best.vault; store.set(s); }
   try { renderNav(); render(); } catch {}
@@ -687,7 +690,7 @@ async function syncConflictsDialog(conflicts) {
 async function syncPush(s) {
   const urls = syncUrls(); if (!urls.length || !s.syncId) return;
   const v = Date.now(); s.syncV = v; s.syncAt = v; store.set(s);
-  const body = JSON.stringify({ v, vault: s.vault, name: s.name });
+  const body = JSON.stringify({ v, vault: s.vault, name: await syncNameEncode(s.name) }); // название профиля — зашифровано
   let lastErr = null, ok = false;
   for (const url of urls) {
     try {
@@ -777,23 +780,40 @@ let detailBlobUrls = [];
 function attBlobUrl(a) { try { const url = URL.createObjectURL(new Blob([attBytes(a)], { type: a.t })); detailBlobUrls.push(url); return url; } catch { return ""; } }
 // Шаринг одной записи самодостаточной ссылкой: шифротекст и ключ живут в #-фрагменте,
 // сервер их никогда не видит и ничего не хранит (zero-knowledge, без бэкенда). Вложения не включаются.
-async function makeShareLink(x, expMs) {
+// once = одноразовая: шифротекст кладётся на сервер синхронизации и удаляется при первом открытии; ключ остаётся только в ссылке.
+async function makeShareLink(x, expMs, once) {
   const kb = rand(32);
   const sk = await C.importKey("raw", kb, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
   const payload = { t: x.title, ty: x.type, login: x.login || "", url: x.url || "", pass: x.pass || "", totp: x.totp || "", note: x.note || "", f: x.f || null, custom: x.custom || null, exp: expMs ? Date.now() + expMs : 0 };
   if (x.type === "event") payload.ev = { allDay: !!x.allDay, start: x.start, end: x.end, repeat: x.repeat || "none", until: x.until || "", meet: x.meet || "", location: x.location || "" };
   const box = await seal(sk, enc.encode(JSON.stringify(payload)));
-  const data = btoa(JSON.stringify({ k: b64(kb), iv: box.iv, ct: box.ct })).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  let obj = { k: b64(kb), iv: box.iv, ct: box.ct };
+  if (once) {
+    const st = store.get(), sid = b64(rand(18)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    if (!st.syncId || !st.syncAuth) throw new Error("nosync");
+    let w = "";
+    for (const u of syncUrls()) {
+      try { const r = await fetch(u + "/s?id=" + st.syncId + "&s=" + sid, { method: "PUT", headers: { Authorization: "Bearer " + st.syncAuth, "Content-Type": "application/json" }, body: JSON.stringify({ data: box, ttl: Math.round(expMs / 1000) }), referrerPolicy: "no-referrer" }); if (r.ok) { w = u; break; } } catch {}
+    }
+    if (!w) throw new Error("noserver");
+    obj = { o: 1, k: obj.k, w, s: sid };
+  }
+  const data = btoa(JSON.stringify(obj)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   return new URL("s.html", location.href).href + "#" + data;
 }
 async function shareFlow(x) {
   const exp = await modal(T("Срок действия ссылки:", "Link expires in:"), [["1 " + T("час", "hour"), 36e5], [T("1 день", "1 day"), 864e5], [T("7 дней", "7 days"), 7 * 864e5, "ghost"], [T("Отмена", "Cancel"), null, "ghost"]]);
   if (!exp) return;
-  const link = await makeShareLink(x, exp);
+  const once = await modal(T("Какую ссылку сделать?", "What kind of link?"), [[T("Одноразовая (сгорает после первого открытия)", "One-time (burns after first open)"), "once"], [T("Обычная (до конца срока)", "Regular (until it expires)"), "multi", "ghost"], [T("Отмена", "Cancel"), null, "ghost"]]);
+  if (!once) return;
+  let link;
+  try { link = await makeShareLink(x, exp, once === "once"); }
+  catch (e) { alertBox(e && e.message === "nosync" ? T("Для одноразовой ссылки нужна синхронизация: включите её в Настройках.", "One-time links need sync: turn it on in Settings.") : T("Не удалось сохранить ссылку на сервере. Возможно, воркер синхронизации нужно обновить (см. SYNC-SETUP.md).", "Could not store the link on the server. The sync worker may need updating (see SYNC-SETUP.md).")); return; }
+  if (once === "once") { try { await navigator.clipboard.writeText(link); toast(T("Ссылка скопирована", "Link copied")); } catch {} await alertBox(T("Одноразовая ссылка скопирована. Её можно открыть только один раз, потом она сгорит.", "One-time link copied. It can be opened only once, then it burns.") + "\n\n" + link); return; }
   try { await navigator.clipboard.writeText(link); toast(T("Ссылка скопирована", "Link copied")); } catch {}
   await alertBox(T("Ссылка скопирована. Любой, у кого есть ссылка, увидит эту запись до истечения срока. Отправьте её по защищённому каналу.", "Link copied. Anyone with the link can view this entry until it expires. Send it over a secure channel.") + "\n\n" + link);
 }
-// Открыть внешнюю ссылку в новой вкладке. Не через window.open: глобальная функция расшифровки// open() в этом файле перекрывает window.open, поэтому используем обычную ссылку.function openExternal(u) { const a = document.createElement("a"); a.href = u; a.target = "_blank"; a.rel = "noopener noreferrer"; document.body.appendChild(a); a.click(); a.remove(); }
+// Открыть внешнюю ссылку в новой вкладке. Не через window.open: глобальная функция расшифровки
 // open() в этом файле — функция расшифровки, она перекрывает window.open, поэтому используем обычную ссылку.
 function openExternal(u) { const a = document.createElement("a"); a.href = u; a.target = "_blank"; a.rel = "noopener noreferrer"; document.body.appendChild(a); a.click(); a.remove(); }
 function safeUrl(u) {

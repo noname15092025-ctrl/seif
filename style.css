@@ -2316,31 +2316,6 @@ body.cal-dragging{ user-select:none; cursor:grabbing; }
 .sc-o i{ font-style:normal; font-weight:500; font-size:11.5px; color:#9A9AA2; }
 .sc-o.on{ border-color:var(--lime) !important; background:rgba(200,226,122,.14) !important; }
 
-/* Подписки на календари */
-.cal-subs{ gap:6px; }
-.cs-row{ display:flex; align-items:center; gap:8px; padding:4px 2px; }
-.cs-row.off .cs-t{ opacity:.45; }
-.cs-vis{ width:16px; height:16px; min-width:16px; padding:0; border-radius:5px; border:0 !important; background:var(--ev) !important; box-shadow:none !important; }
-.cs-row.off .cs-vis{ background:transparent !important; outline:2px solid var(--ev); outline-offset:-2px; }
-.cs-t{ flex:1; min-width:0; display:flex; flex-direction:column; }
-.cs-t b{ font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.cs-t small{ font-size:11.5px; color:#8A8A90; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.cs-t small.err-t{ color:#E8A54B; white-space:normal; }
-.cs-b{ width:28px !important; height:28px; min-width:28px; padding:0 !important; border-radius:14px !important; background:transparent !important; border:0 !important; color:#9A9AA2 !important; font-size:14px; }
-.cs-b:hover{ background:rgba(255,255,255,.08) !important; color:#fff !important; }
-.cs-add{ margin-top:4px; }
-.cs-pop label{ display:block; font-size:13px; color:#B9B9C0; margin:10px 0 6px; }
-.cs-pop .cp-colors{ display:flex; gap:8px; margin:12px 0 4px; }
-.cs-help{ margin:12px 0 4px; font-size:13px; color:#B9B9C0; }
-.cs-help summary{ cursor:pointer; color:var(--lime); }
-.cs-help p{ margin:6px 0; line-height:1.5; }
-.cs-note{ font-size:12px; color:#8A8A90; line-height:1.5; margin:10px 0 0; }
-.cs-badge{ display:inline-flex; align-items:center; height:26px; padding:0 10px; border-radius:13px; background:var(--ev); color:var(--evt); font-size:12px; font-weight:700; }
-.ro-title{ margin:10px 0 8px; font-size:22px; }
-.ro-when{ display:flex; align-items:center; gap:10px; margin:6px 0; color:#D7D7DC; }
-.ro-note{ margin-top:12px; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.04); color:#C9C9CF; font-size:14px; line-height:1.5; max-height:200px; overflow:auto; }
-.cg-ev[data-occ^="sub~"], .cm-ev[data-occ^="sub~"], .cg-chip[data-occ^="sub~"]{ background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.10) 0 6px, transparent 6px 12px) !important; cursor:pointer; }
-
 /* Подключение устройства по QR */
 .dl-pop{ width:min(460px,100%); text-align:center; }
 .dl-steps{ text-align:left; margin:8px 0 12px; padding-left:20px; color:#D7D7DC; font-size:14px; line-height:1.6; }
@@ -2349,3 +2324,7 @@ body.cal-dragging{ user-select:none; cursor:grabbing; }
 .dl-timer{ margin:0 0 8px; color:#8A8A90; font-size:13px; }
 .dl-pop .cs-help{ text-align:left; } .dl-text{ word-break:break-all; font-size:11.5px; padding:8px 10px; border-radius:10px; background:#1A1A1D; color:#C9C9CF; margin:6px 0; }
 .dl-ask{ width:min(420px,100%); } .dl-ask .field{ margin-top:12px !important; } .dl-in{ font:700 26px ui-monospace, Menlo, monospace !important; letter-spacing:6px; text-align:center; }
+
+/* Ближайшие: длинные названия не вылезают за карточку */
+.cal-up-i{ min-width:0; overflow:hidden; } .cal-up-i > span:last-child{ flex:1; min-width:0; }
+.cal-up-i b{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .cal-up-i small{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }

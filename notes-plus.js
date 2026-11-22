@@ -341,10 +341,10 @@ function qaOpen(prefill) {
     const cmds = QA_CMDS().filter(c => !qq || c[0].toLowerCase().includes(qq)).map(c => ({ k: "cmd", c }));
     let found = [];
     if (!cmdMode && qq) {
-      found = live().filter(x => x.type !== "calsub").filter(x => [x.title, x.login, x.url, x.body, x.note, x.folder, x.location, (x.f || {}).num, ...(x.subs || []).map(s => s.t)].filter(Boolean).join(" ").toLowerCase().includes(qq))
+      found = live().filter(x => [x.title, x.login, x.url, x.body, x.note, x.folder, x.location, (x.f || {}).num, ...(x.subs || []).map(s => s.t)].filter(Boolean).join(" ").toLowerCase().includes(qq))
         .sort((a, b) => ((b.title || "").toLowerCase().startsWith(qq) ? 1 : 0) - ((a.title || "").toLowerCase().startsWith(qq) ? 1 : 0) || (b.used || b.updated || 0) - (a.used || a.updated || 0)).slice(0, 30).map(x => ({ k: "entry", x }));
     } else if (!cmdMode) {
-      found = live().filter(x => x.type !== "calsub").filter(x => x.type !== "task" || !x.done).sort((a, b) => Math.max(b.used || 0, b.updated || 0) - Math.max(a.used || 0, a.updated || 0)).slice(0, 6).map(x => ({ k: "entry", x }));
+      found = live().filter(x => x.type !== "task" || !x.done).sort((a, b) => Math.max(b.used || 0, b.updated || 0) - Math.max(a.used || 0, a.updated || 0)).slice(0, 6).map(x => ({ k: "entry", x }));
     }
     items = cmdMode ? cmds : found.concat(qq ? cmds.slice(0, 4) : []);
     sel = Math.min(sel, Math.max(0, items.length - 1));

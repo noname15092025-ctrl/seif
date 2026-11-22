@@ -80,7 +80,7 @@ function evOccurrences(e, from, to) {
 function occInRange(from, to) {
   const q = ($("search").value || "").trim().toLowerCase();
   const all = [];
-  calAllEvents().forEach(e => { if (q && ![e.title, e.location, e.note].join(" ").toLowerCase().includes(q)) return; all.push(...evOccurrences(e, from, to)); });
+  eventsList().forEach(e => { if (q && ![e.title, e.location, e.note].join(" ").toLowerCase().includes(q)) return; all.push(...evOccurrences(e, from, to)); });
   return all.sort((a, b) => a.s - b.s || (b.en - b.s) - (a.en - a.s));
 }
 const occKey = o => o.e.id + "|" + o.s.getTime();
@@ -114,7 +114,7 @@ function renderCalendar() {
       <h1 class="cal-title">${esc(title)}</h1>
       <div class="cal-segs">${seg("day", "День", "Day")}${seg("week", "Неделя", "Week")}${seg("month", "Месяц", "Month")}</div>
     </div>
-    <div class="cal-wrap"><aside class="cal-side">${calMiniHtml()}${calUpcomingHtml()}${calSubsHtml()}<div class="cal-io"><label class="cal-io-b">${ci("upload")}${T("Импорт .ics", "Import .ics")}<input type="file" accept=".ics,text/calendar" hidden data-cal-import></label><button type="button" class="cal-io-b" data-cal-export>${ci("download")}${T("Экспорт .ics", "Export .ics")}</button></div><p class="cal-io-hint">${T("Из Google Календаря: Настройки → Импорт и экспорт → Экспорт, распакуйте архив и выберите файл .ics.", "From Google Calendar: Settings → Import &amp; export → Export, unzip and pick the .ics file.")}</p></aside><div class="cal-main">${grid}</div></div>
+    <div class="cal-wrap"><aside class="cal-side">${calMiniHtml()}${calUpcomingHtml()}<div class="cal-io"><label class="cal-io-b">${ci("upload")}${T("Импорт .ics", "Import .ics")}<input type="file" accept=".ics,text/calendar" hidden data-cal-import></label><button type="button" class="cal-io-b" data-cal-export>${ci("download")}${T("Экспорт .ics", "Export .ics")}</button></div><p class="cal-io-hint">${T("Из Google Календаря: Настройки → Импорт и экспорт → Экспорт, распакуйте архив и выберите файл .ics.", "From Google Calendar: Settings → Import &amp; export → Export, unzip and pick the .ics file.")}</p></aside><div class="cal-main">${grid}</div></div>
   </div>`;
   calLayout();
   const nb = $("cg-body"); if (nb && keepScroll != null) nb.scrollTop = keepScroll; // перерисовка не сбрасывает прокрутку
@@ -210,7 +210,6 @@ function calNew(start, allDay) {
   calOpenPop({ id: null, title: "", allDay: !!allDay, start: allDay ? cYmd(s) : cYmd(s) + "T" + cHm(s), end: allDay ? cYmd(s) : cYmd(en) + "T" + cHm(en), repeat: "none", color: 0, remind: allDay ? -1 : 10 });
 }
 function calOpenPop(e, occ) {
-  if (e.readonly) return calShowReadonly(e, occ);
   const isNew = !e.id;
   const recurring = !isNew && (e.repeat || "none") !== "none";
   let [S, E] = evBounds(e);
@@ -365,7 +364,7 @@ function calApplyDelete(x, occS, S0, scope) {
 
 /* ---------- клики по календарю ---------- */
 function calFindOcc(key) {
-  const [id, ts] = key.split("|"); const e = entries.find(x => x.id === id) || calSubEventById(id); if (!e) return null;
+  const [id, ts] = key.split("|"); const e = entries.find(x => x.id === id); if (!e) return null;
   const [S, E] = evBounds(e), s = new Date(+ts); return { e, s, en: new Date(s.getTime() + (E - S)) };
 }
 function calClick(ev) {
@@ -374,7 +373,6 @@ function calClick(ev) {
   const o = t.closest("[data-occ]"); if (o) { const f = calFindOcc(o.dataset.occ); if (f) calOpenPop(f.e, f); return true; }
   const v = t.closest("[data-cal-view]"); if (v) { calView = v.dataset.calView; try { localStorage.setItem("vault.calview", calView); } catch {} calMini = null; renderCalendar(); return true; }
   const tk = t.closest("[data-cal-task]"); if (tk) { const x = entries.find(y => y.id === tk.dataset.calTask); if (x) { x.done = !x.done; x.updated = Date.now(); persist(); renderNav(); renderCalendar(); toast(x.done ? T("Задача выполнена", "Task done") : T("Задача снова активна", "Task reopened")); } return true; }
-  if (calSubsClick(t)) return true;
   if (t.closest("[data-cal-export]")) { calExportIcs(); return true; }
   if (t.closest("[data-cal-today]")) { calDate = cDayStart(new Date()); calMini = null; calScrolled = false; renderCalendar(); return true; }
   const st = t.closest("[data-cal-step]"); if (st) {
@@ -409,7 +407,7 @@ function calRemindTick() {
     }
   }));
 }
-function occInRangeAll(from, to) { const all = []; calAllEvents().forEach(e => all.push(...evOccurrences(e, from, to))); return all; }
+function occInRangeAll(from, to) { const all = []; eventsList().forEach(e => all.push(...evOccurrences(e, from, to))); return all; }
 setInterval(calRemindTick, 30000);
 
 // Количество событий сегодня — для счётчика в меню
@@ -419,7 +417,7 @@ function calTodayCount() { const d = cDayStart(new Date()); return occInRangeAll
 let calDragged = false;
 function calDragStart(ev) {
   if (ev.button !== 0 || ev.pointerType !== "mouse") return; // на телефоне палец прокручивает сетку
-  const el = ev.currentTarget, f = calFindOcc(el.dataset.occ); if (!f || f.e.readonly) return; // события из подписок только для чтения
+  const el = ev.currentTarget, f = calFindOcc(el.dataset.occ); if (!f) return;
   const resize = !!ev.target.closest("[data-rs]");
   const cols = [...document.querySelectorAll(".cg-col")], col0 = cols.indexOf(el.parentElement);
   const colW = el.parentElement.getBoundingClientRect().width;
@@ -700,7 +698,7 @@ function qaParse(input, now) {
 
 /* ---------- напоминания: до 5 на событие, скрытие названий ---------- */
 // Список «за сколько минут» (старые события хранили одно значение в remind)
-function evReminds(e) { if (e.readonly) return []; const a = Array.isArray(e.reminds) ? e.reminds : (e.remind != null && e.remind >= 0 ? [e.remind] : []); return [...new Set(a.filter(v => v >= 0))].slice(0, 5); }
+function evReminds(e) { const a = Array.isArray(e.reminds) ? e.reminds : (e.remind != null && e.remind >= 0 ? [e.remind] : []); return [...new Set(a.filter(v => v >= 0))].slice(0, 5); }
 // Когда сработает: для «весь день» — в 9:00 дня события минус смещение (за 1 день → 9:00 накануне)
 function evRemindAt(o, r) { return o.e.allDay ? new Date(o.s.getTime() + 9 * 36e5 - (r >= 1440 ? r : 0) * 6e4) : new Date(o.s.getTime() - r * 6e4); }
 const calHideTitles = () => { try { return localStorage.getItem("vault.notif.hide") === "1"; } catch { return false; } };
@@ -712,129 +710,3 @@ function calNotifText(o, r) {
 // Настройки: «Скрывать названия событий в уведомлениях»
 (() => { const cb = document.getElementById("set-notif-hide"); if (!cb) return; cb.checked = calHideTitles();
   cb.onchange = () => { try { localStorage.setItem("vault.notif.hide", cb.checked ? "1" : "0"); } catch {} if (typeof calScheduleNative === "function") calScheduleNative(); }; })();
-
-/* ======================================================================
-   Подписки на календари по ссылке (Google «Секретный адрес в формате iCal», iCloud, Outlook, webcal://)
-   Список подписок хранится в сейфе (запись типа "calsub", шифруется и синхронизируется).
-   Сами события загружаются через воркер синхронизации (/ics) — только для чтения, без напоминаний,
-   хранятся в памяти и обновляются при открытии календаря и раз в час.
-   ====================================================================== */
-const calSubsList = () => live().filter(x => x.type === "calsub");
-const calSubCache = new Map(); // id подписки → { at, events, err, loading }
-const CAL_SUB_TTL = 36e5;
-function calAllEvents() {
-  const out = eventsList().slice();
-  calSubsList().forEach(s => { if (s.hidden) return; const c = calSubCache.get(s.id); if (c && c.events) out.push(...c.events); });
-  return out;
-}
-function calSubEventById(id) { for (const c of calSubCache.values()) { const e = (c.events || []).find(x => x.id === id); if (e) return e; } return null; }
-async function calSubFetch(sub) {
-  const s = store.get(); if (!s || !s.syncId || !s.syncAuth) throw new Error(T("для подписок нужна синхронизация — войдите в сейф заново", "subscriptions need sync — sign in again"));
-  let lastErr = "";
-  for (const base of syncUrls()) {
-    try {
-      const r = await fetch(base + "/ics?id=" + encodeURIComponent(s.syncId) + "&u=" + encodeURIComponent(sub.url), { headers: { Authorization: "Bearer " + s.syncAuth }, cache: "no-store", referrerPolicy: "no-referrer" });
-      const text = await r.text();
-      if (r.ok && /BEGIN:VCALENDAR/.test(text.slice(0, 4000))) return text;
-      lastErr = r.status === 403 ? T("сервер не подтвердил доступ", "access denied") : r.status === 415 ? T("по ссылке не календарь", "the link is not a calendar") : r.status === 502 ? T("календарь по ссылке недоступен", "the calendar is unreachable")
-        : r.ok ? T("сервер синхронизации ещё не умеет подписки — его нужно обновить", "the sync server does not support subscriptions yet — it needs an update") : "HTTP " + r.status;
-    } catch { lastErr = T("нет соединения", "no connection"); }
-  }
-  throw new Error(lastErr);
-}
-async function calSubRefresh(sub, force) {
-  const c = calSubCache.get(sub.id) || {}; if (c.loading || (!force && c.at && Date.now() - c.at < CAL_SUB_TTL)) return false;
-  c.loading = true; calSubCache.set(sub.id, c);
-  try {
-    const b = icsBuild(icsParse(await calSubFetch(sub)));
-    c.events = b.events.map((d, i) => ({ ...d, type: "event", id: "sub~" + sub.id + "~" + i, readonly: true, sub: sub.id, subTitle: sub.title, color: sub.color || 1, reminds: [], remind: -1 }));
-    c.err = ""; c.at = Date.now();
-  } catch (e) { c.err = e.message || String(e); c.at = Date.now(); }
-  c.loading = false; return true;
-}
-async function calSubsRefreshAll(force) {
-  const subs = calSubsList().filter(s => !s.hidden); if (!subs.length) return;
-  const changed = await Promise.all(subs.map(s => calSubRefresh(s, force)));
-  if (changed.some(Boolean) && view === "calendar") renderCalendar();
-}
-setInterval(() => { if (typeof vaultKey !== "undefined" && vaultKey) calSubsRefreshAll(false); }, 10 * 6e4);
-function calSubsHtml() {
-  const subs = calSubsList(); setTimeout(() => calSubsRefreshAll(false), 0);
-  return `<div class="cal-up cal-subs"><p class="cal-up-h">${T("Календари по ссылке", "Subscribed calendars")}</p>
-    ${subs.map(s => { const c = calSubCache.get(s.id) || {}; const st = c.loading ? T("обновляю…", "updating…") : c.err ? "⚠ " + c.err : c.events ? (c.events.length + T(" соб.", " events")) : "";
-      return `<div class="cs-row${s.hidden ? " off" : ""}"><button type="button" class="cs-vis c-${s.color || 1}" data-sub-vis="${esc(s.id)}" title="${s.hidden ? T("Показать", "Show") : T("Скрыть", "Hide")}"></button>
-        <span class="cs-t"><b>${esc(s.title)}</b><small class="${c.err ? "err-t" : ""}">${esc(st)}</small></span>
-        <button type="button" class="ib cs-b" data-sub-ref="${esc(s.id)}" title="${T("Обновить", "Refresh")}">⟳</button><button type="button" class="ib cs-b" data-sub-del="${esc(s.id)}" title="${T("Отписаться", "Unsubscribe")}">✕</button></div>`; }).join("")}
-    <button type="button" class="cal-io-b cs-add" data-sub-add>${ci("upload")}${T("Подписаться по ссылке", "Subscribe by link")}</button></div>`;
-}
-function calSubsClick(t) {
-  if (t.closest("[data-sub-add]")) { calSubAddDialog(); return true; }
-  const vis = t.closest("[data-sub-vis]"); if (vis) { const s = entries.find(x => x.id === vis.dataset.subVis); if (s) { s.hidden = !s.hidden; s.updated = Date.now(); persist(); renderCalendar(); } return true; }
-  const ref = t.closest("[data-sub-ref]"); if (ref) { const s = entries.find(x => x.id === ref.dataset.subRef); if (s) { calSubRefresh(s, true).then(() => renderCalendar()); renderCalendar(); } return true; }
-  const del = t.closest("[data-sub-del]"); if (del) {
-    const s = entries.find(x => x.id === del.dataset.subDel); if (!s) return true;
-    confirmBox(T("Отписаться от календаря «", "Unsubscribe from “") + s.title + T("»? Его события пропадут из SHUT (в самом календаре ничего не изменится).", "”? Its events will disappear from SHUT (nothing changes in the calendar itself)."), T("Отписаться", "Unsubscribe"), true)
-      .then(async ok => { if (!ok) return; s.deletedAt = Date.now(); calSubCache.delete(s.id); await persist(); renderCalendar(); });
-    return true;
-  }
-  return false;
-}
-function calSubAddDialog() {
-  const ov = document.createElement("div"); ov.className = "cal-pop-ov";
-  const colors = Array.from({ length: CAL_COLORS }, (_, i) => `<button type="button" class="cp-color c-${i}${i === 5 ? " on" : ""}" data-cp-color="${i}" aria-label="${i + 1}"></button>`).join("");
-  ov.innerHTML = `<div class="cal-pop cs-pop" role="dialog" aria-modal="true">
-    <div class="cp-top"><b class="nh-h">${T("Подписаться на календарь", "Subscribe to a calendar")}</b><button type="button" class="cp-x" data-cs-close aria-label="${T("Закрыть", "Close")}">✕</button></div>
-    <label for="cs-url">${T("Ссылка на календарь (.ics или webcal://)", "Calendar link (.ics or webcal://)")}</label>
-    <input id="cs-url" class="field" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics">
-    <label for="cs-title">${T("Название", "Name")}</label><input id="cs-title" class="field" maxlength="60" placeholder="${T("Например: Рабочий", "For example: Work")}">
-    <div class="cp-colors">${colors}</div>
-    <details class="cs-help"><summary>${T("Где взять ссылку", "Where to get the link")}</summary>
-      <p><b>Google</b>: ${T("Настройки → слева выберите календарь → «Интеграция календаря» → «Секретный адрес в формате iCal».", "Settings → pick the calendar → “Integrate calendar” → “Secret address in iCal format”.")}</p>
-      <p><b>iCloud</b>: ${T("Календарь → «Поделиться» → «Публичный календарь» → скопировать ссылку.", "Calendar → Share → Public Calendar → copy link.")}</p>
-      <p><b>Outlook</b>: ${T("Параметры → Календарь → Общие календари → «Опубликовать календарь» → ссылка ICS.", "Settings → Calendar → Shared calendars → Publish a calendar → ICS link.")}</p></details>
-    <p class="cs-note">${T("Календарь загружается через сервер синхронизации SHUT: он видит ссылку и события этого календаря в момент загрузки, но ничего не хранит. Сама ссылка хранится в вашем сейфе зашифрованной. События подписок — только для чтения, без напоминаний; обновляются раз в час.", "The calendar is fetched via the SHUT sync server: it sees the link and the events of that calendar while fetching, but stores nothing. The link itself is kept encrypted in your vault. Subscribed events are read-only, without reminders; refreshed hourly.")}</p>
-    <div class="err" id="cs-err"></div>
-    <div class="cp-actions"><span></span><button type="button" class="ghost" data-cs-close>${T("Отмена", "Cancel")}</button><button type="button" class="cp-save" data-cs-ok>${T("Подписаться", "Subscribe")}</button></div></div>`;
-  document.body.appendChild(ov);
-  let color = 5; const g = id => ov.querySelector("#" + id);
-  setTimeout(() => g("cs-url").focus(), 30);
-  ov.onclick = async e => {
-    if (e.target === ov || e.target.closest("[data-cs-close]")) return ov.remove();
-    const c = e.target.closest("[data-cp-color]"); if (c) { color = +c.dataset.cpColor; ov.querySelectorAll(".cp-color").forEach(x => x.classList.toggle("on", x === c)); return; }
-    const okb = e.target.closest("[data-cs-ok]"); if (!okb) return;
-    const url = g("cs-url").value.trim().replace(/^webcal:\/\//i, "https://");
-    if (!/^https?:\/\/\S+\.\S+/i.test(url)) { g("cs-err").textContent = T("Вставьте ссылку, начинающуюся с https:// или webcal://", "Paste a link starting with https:// or webcal://"); return; }
-    if (calSubsList().some(s => s.url === url)) { g("cs-err").textContent = T("Вы уже подписаны на этот календарь", "You are already subscribed to this calendar"); return; }
-    const title = g("cs-title").value.trim() || (/google\.com/.test(url) ? "Google" : /icloud\.com/.test(url) ? "iCloud" : /outlook|office/.test(url) ? "Outlook" : T("Календарь", "Calendar"));
-    busy(okb, true, T("Проверяю…", "Checking…"));
-    const now = Date.now(), sub = { type: "calsub", id: b64(rand(9)), title, url, color, created: now, updated: now };
-    await calSubRefresh(sub, true);
-    const c2 = calSubCache.get(sub.id);
-    if (c2.err) { busy(okb, false, ""); g("cs-err").textContent = T("Не получилось: ", "Failed: ") + c2.err; calSubCache.delete(sub.id); return; }
-    entries.push(sub); await persist(); ov.remove(); renderCalendar(); toast(T("Подписка добавлена: ", "Subscribed: ") + c2.events.length + T(" соб.", " events"));
-  };
-}
-// Просмотр события из подписки (только чтение)
-function calShowReadonly(e, occ) {
-  const o = occ && occ.s ? { e, s: occ.s, en: occ.en || evBounds(e)[1] } : { e, s: evBounds(e)[0], en: evBounds(e)[1] };
-  const ov = document.createElement("div"); ov.className = "cal-pop-ov";
-  const day = o.s.toLocaleDateString(cLoc(), { weekday: "long", day: "numeric", month: "long" });
-  ov.innerHTML = `<div class="cal-pop ro-pop" role="dialog" aria-modal="true">
-    <div class="cp-top"><span class="cs-badge c-${e.color || 1}">${esc(e.subTitle || T("Подписка", "Subscription"))}</span><button type="button" class="cp-x" data-ro-close aria-label="${T("Закрыть", "Close")}">✕</button></div>
-    <h2 class="ro-title">${esc(e.title)}</h2>
-    <p class="ro-when">${ci("clock")}<span>${esc(day)}, ${esc(evTimeText(o))}</span></p>
-    ${e.location ? `<p class="ro-when">${ci("pin")}<span>${esc(e.location)}</span></p>` : ""}
-    ${e.meet ? `<a class="cp-join" href="${esc(e.meet)}" target="_blank" rel="noopener noreferrer">${ci("video")} ${T("Подключиться к встрече", "Join meeting")}</a>` : ""}
-    ${e.note ? `<div class="ro-note">${esc(e.note).replace(/\n/g, "<br>")}</div>` : ""}
-    <p class="cs-note">${T("Событие из подписки — изменить его можно только в исходном календаре.", "Subscribed event — edit it in the original calendar.")}</p>
-    <div class="cp-actions"><span></span><button type="button" class="ghost" data-ro-copy>${T("Скопировать в мой календарь", "Copy to my calendar")}</button><button type="button" class="cp-save" data-ro-close>${T("Закрыть", "Close")}</button></div></div>`;
-  document.body.appendChild(ov);
-  ov.onclick = async ev => {
-    if (ev.target === ov || ev.target.closest("[data-ro-close]")) return ov.remove();
-    if (ev.target.closest("[data-ro-copy]")) {
-      const { id, readonly, sub, subTitle, type, ...d } = e;
-      entries.push(calMakeEvent({ ...d, repeat: "none", until: "", ex: [], start: cFmt(o.s, e.allDay), end: cFmt(e.allDay ? cAddDays(o.en, -1) : o.en, e.allDay), uid: "", color: 0 }));
-      await persist(); ov.remove(); renderCalendar(); toast(T("Скопировано в ваш календарь", "Copied to your calendar"));
-    }
-  };
-}

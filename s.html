@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src https://*.workers.dev; base-uri 'none'; form-action 'none'">
 <title>SHUT — общая запись</title>
 <style>
   :root{ --bg:#0B0B0C; --card:#1C1C1E; --line:#2A2A2E; --lime:#C8E27A; --text:#F0F0EE; --muted:#8E8E93; }
@@ -73,13 +73,25 @@ async function main(){
   if(!frag){ msg("Ссылка неполная. Откройте полную ссылку целиком."); return; }
   let obj;
   try{ obj = JSON.parse(atob(fromUrl64(frag))); }catch(e){ msg("Не удалось прочитать ссылку."); return; }
+  if(obj.o){ // одноразовая: шифротекст лежит на сервере и удаляется при первом открытии
+    if(!/^https:\/\/[a-z0-9.-]+\.workers\.dev$/i.test(obj.w||"")){ msg("Не удалось прочитать ссылку."); return; }
+    root.innerHTML = '<div class="card"><h1>Одноразовая ссылка</h1><p class="type">Запись можно открыть только один раз. После открытия ссылка сгорит — сохраните нужное сразу.</p><button id="once-go" class="join">Открыть (только один раз)</button></div>';
+    await new Promise(r => $("once-go").onclick = r);
+    msg("Загружаю…");
+    try{
+      const r = await fetch(obj.w + "/s?s=" + encodeURIComponent(obj.s), {cache:"no-store", referrerPolicy:"no-referrer"});
+      if(!r.ok){ msg(r.status===404 ? "Ссылка уже открыта или истекла." : "Сервер недоступен, попробуйте позже."); return; }
+      const d = await r.json(); obj.iv = d.data.iv; obj.ct = d.data.ct;
+    }catch(e){ msg("Сервер недоступен, попробуйте позже."); return; }
+    try{ history.replaceState(null, "", location.pathname); }catch(_){}
+  }
   try{
     const key = await crypto.subtle.importKey("raw", unb64(obj.k), {name:"AES-GCM"}, false, ["decrypt"]);
     const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:unb64(obj.iv)}, key, unb64(obj.ct));
     const p = JSON.parse(dec.decode(pt));
     if(p.exp && Date.now() > p.exp){ msg("Срок действия ссылки истёк."); return; }
     let h = '<div class="warn">Эту запись вам отправили по ссылке. Любой, у кого есть ссылка, видит то же самое. Не пересылайте её дальше.</div><div class="card">';
-    h += '<h1>'+esc(p.t||"Без названия")+'</h1><p class="type">'+esc(TYPE[p.ty]||p.ty||"")+(p.exp?' · до '+new Date(p.exp).toLocaleString():'')+'</p>';
+    h += '<h1>'+esc(p.t||"Без названия")+'</h1><p class="type">'+esc(TYPE[p.ty]||p.ty||"")+(obj.o?' · одноразовая, ссылка уже сгорела':(p.exp?' · до '+new Date(p.exp).toLocaleString():''))+'</p>';
     if(p.login) h += row(p.ty==="card"?"Владелец":"Логин", p.login);
     if(p.url) h += row("Сайт", p.url, {link:true});
     if(p.pass) h += row(p.ty==="card"?"PIN":"Пароль", p.pass, {secret:true, mono:true});

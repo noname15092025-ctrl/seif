@@ -104,7 +104,7 @@ async function dlRestoreFromRaw(raw) {
   const key = await C.importKey("raw", raw, { name: "AES-GCM" }, true, ["encrypt", "decrypt"]), id = await vaultId(key);
   let box = null; const local = store.all().find(p => p.id === id); if (local) box = local.vault;
   if (syncUrls().length) {
-    try { const d = await deriveSync(raw); const best = await syncFetchLatest(d.id, d.auth); if (best && best.vault) { await open(key, best.vault); box = best.vault; } } catch {}
+    try { const d = await deriveSync(raw); const best = await syncFetchLatest(d.id, d.auth); if (best && best.vault) { await open(key, best.vault); box = best.vault; const nm = await syncNameDecode(best.name, key); if (nm && !$("p-name").value) $("p-name").value = nm; } } catch {}
   }
   if (!box) { alertBox(T("Ключ принят, но сейф в облаке не найден. Включите синхронизацию на старом устройстве (Настройки → «Синхронизировать сейчас») и попробуйте снова.", "The key is accepted but the vault was not found in the cloud. Turn on sync on the old device (Settings → “Sync now”) and try again.")); return; }
   key._vaultBox = box; pendingKey = key;
