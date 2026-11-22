@@ -1258,55 +1258,19 @@ function renderHome() {
     ${homeUpcomingHtml()}${recentBlock}`;
 }
 
-/* ---- Markdown (безопасный: экранируем, затем расставляем свои теги) ---- */
-function mdInline(s) {
-  s = s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  s = s.replace(/`([^`]+)`/g, (m, c) => `<code>${c}</code>`);
-  s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-  s = s.replace(/(^|[^*\w])\*([^*\n]+)\*/g, "$1<em>$2</em>");
-  s = s.replace(/~~([^~]+)~~/g, "<del>$1</del>");
-  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, t, u) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>`);
-  return s;
-}
-function mdToHtml(src) {
-  const escC = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const lines = (src || "").replace(/\r/g, "").split("\n");
-  let html = "", i = 0, listTag = null, cbIndex = 0;
-  const closeList = () => { if (listTag) { html += `</${listTag}>`; listTag = null; } };
-  while (i < lines.length) {
-    const ln = lines[i];
-    if (/^```/.test(ln)) { let code = ""; i++; while (i < lines.length && !/^```/.test(lines[i])) { code += lines[i] + "\n"; i++; } i++; closeList(); html += `<pre><code>${escC(code)}</code></pre>`; continue; }
-    if (/^(-{3,}|\*{3,})\s*$/.test(ln)) { closeList(); html += "<hr>"; i++; continue; }
-    const h = ln.match(/^(#{1,6})\s+(.*)$/);
-    if (h) { closeList(); html += `<h${h[1].length}>${mdInline(h[2])}</h${h[1].length}>`; i++; continue; }
-    const cb = ln.match(/^\s*[-*]\s+\[([ xX])\]\s+(.*)$/);
-    if (cb) { if (listTag !== "ul") { closeList(); html += '<ul class="md-check">'; listTag = "ul"; } const d = cb[1].toLowerCase() === "x"; html += `<li class="md-task${d ? " done" : ""}"><span class="md-box" data-cb="${cbIndex++}">${d ? "✓" : ""}</span><span>${mdInline(cb[2])}</span></li>`; i++; continue; }
-    const ul = ln.match(/^\s*[-*]\s+(.*)$/);
-    if (ul) { if (listTag !== "ul") { closeList(); html += "<ul>"; listTag = "ul"; } html += `<li>${mdInline(ul[1])}</li>`; i++; continue; }
-    const ol = ln.match(/^\s*\d+\.\s+(.*)$/);
-    if (ol) { if (listTag !== "ol") { closeList(); html += "<ol>"; listTag = "ol"; } html += `<li>${mdInline(ol[1])}</li>`; i++; continue; }
-    const q = ln.match(/^>\s?(.*)$/);
-    if (q) { closeList(); html += `<blockquote>${mdInline(q[1])}</blockquote>`; i++; continue; }
-    if (/^\s*$/.test(ln)) { closeList(); i++; continue; }
-    closeList(); let para = ln; i++;
-    while (i < lines.length && !/^\s*$/.test(lines[i]) && !/^(#{1,6}\s|```|>\s?|\s*[-*]\s|\s*\d+\.\s|(-{3,}|\*{3,})\s*$)/.test(lines[i])) { para += "\n" + lines[i]; i++; }
-    html += `<p>${mdInline(para).replace(/\n/g, "<br>")}</p>`;
-  }
-  closeList();
-  return html;
-}
-
+/* Markdown для заметок — в md.js (mdToHtml, mdInline, mdTasks, mdToggleTask, mdTags, mdLinks) */
 /* Заметки — тип "page": заголовок + текст (Markdown), автосохранение, режимы правки/просмотра */
 let noteMode = "preview";
 function renderNotes() {
   const all = notesList(), q = $("search").value.toLowerCase();
-  const list = all.filter(x => (x.title + " " + (x.body || "")).toLowerCase().includes(q)).sort((a, b) => b.updated - a.updated);
+  const list = notesFilter(all.filter(x => (x.title + " " + (x.body || "") + " " + (x.folder || "")).toLowerCase().includes(q))).sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.updated - a.updated);
   if (!list.some(x => x.id === selectedId)) selectedId = null;
   // запись выбирается кликом — модалка не открывается автоматически
   const cnt = all.length + " " + T(plural(all.length, "заметка", "заметки", "заметок"), all.length === 1 ? "note" : "notes");
   $("list-count").textContent = cnt;
   const toggle = `<div class="rec-toggle sm"><button class="rec-seg${notesViewMode === "list" ? " on" : ""}" data-notesmode="list">${T("Список", "List")}</button><button class="rec-seg${notesViewMode === "tiles" ? " on" : ""}" data-notesmode="tiles">${T("Плитка", "Tiles")}</button></div>`;
   wsHero(T("Заметки", "Notes"), all.length ? cnt : T("Зашифрованы на устройстве", "Encrypted on device"), toggle);
+  notesChipsRender(all);
   const preview = x => esc((x.body || "").replace(/[#*`>\-\[\]]/g, "").replace(/\s+/g, " ").trim().slice(0, 70)) || T("Пустая заметка", "Empty note");
   $("list").classList.toggle("tiles-mode", notesViewMode === "tiles");
   if (!list.length) { $("list").innerHTML = `<div class="empty">${all.length ? T("Ничего не найдено", "Nothing found") : T("Заметок пока нет. Нажмите «+ Заметка».", "No notes yet. Click “+ Note”.")}</div>`; renderNoteEditor(); return; }
@@ -1315,22 +1279,24 @@ function renderNotes() {
   } else {
     $("list").innerHTML = list.map(x => `
     <div class="note-row${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
-      <b>${esc(x.title || T("Без названия", "Untitled"))}</b>
-      <small>${preview(x)}</small>
+      <b>${x.pinned ? "📌 " : ""}${esc(x.title || T("Без названия", "Untitled"))}</b>
+      <small>${preview(x)}</small>${noteRowMeta(x)}
     </div>`).join("");
   }
   renderNoteEditor();
 }
 async function newNote() {
   const now = Date.now(), id = b64(rand(9));
-  entries.push({ type: "page", id, title: "", body: "", created: now, updated: now });
+  entries.push({ type: "page", id, title: "", body: "", created: now, updated: now, folder: notesFolderSel && notesFolderSel !== "*" ? notesFolderSel : "" });
   selectedId = id; noteMode = "edit"; await persist(); renderNav(); renderNotes();
   $("v-vault").classList.add("show-detail"); setTimeout(() => $("note-title") && $("note-title").focus(), 60);
 }
 async function saveNoteCore() {
   const x = notesList().find(y => y.id === selectedId); if (!x) return;
-  if ($("note-title")) x.title = $("note-title").value;
-  if ($("note-body")) x.body = $("note-body").value;
+  const nt = $("note-title") ? $("note-title").value : x.title, nb = $("note-body") ? $("note-body").value : x.body;
+  if (nt === x.title && nb === x.body) return; // ничего не поменялось
+  notePushHistory(x);
+  x.title = nt; x.body = nb;
   x.updated = Date.now(); await persist();
   const b = $("list").querySelector(`.note-row[data-id="${CSS.escape(selectedId)}"] b`); if (b) b.textContent = x.title || T("Без названия", "Untitled");
   const st = $("note-saved"); if (st) st.textContent = T("Сохранено", "Saved");
@@ -1346,19 +1312,21 @@ function renderNoteEditor() {
     <div class="note-bar">
       <button class="ib back" data-note-back aria-label="${T("Назад", "Back")}"><svg class="ic"><use href="#i-back"/></svg></button>
       <div class="note-modes"><button class="seg${edit ? " on" : ""}" data-note-mode="edit">${T("✏ Правка", "✏ Edit")}</button><button class="seg${edit ? "" : " on"}" data-note-mode="preview">${T("👁 Просмотр", "👁 Preview")}</button></div>
-      <button class="seg-done" data-note-done>${T("Готово", "Done")}</button><button class="ib danger-text" data-note-del>${T("Удалить", "Delete")}</button>
+      <button class="seg-done" data-note-done>${T("Готово", "Done")}</button>${noteBarExtra(x)}<button class="ib danger-text" data-note-del>${T("Удалить", "Delete")}</button>
     </div>
     <input id="note-title" class="note-title" maxlength="120" placeholder="${T("Без названия", "Untitled")}">
+    ${noteMetaRow(x)}
     ${edit ? `<textarea id="note-body" class="note-body" placeholder="${T("Пишите здесь… Поддерживается Markdown: # заголовок, **жирный**, - список, - [ ] задача", "Write here… Markdown supported: # heading, **bold**, - list, - [ ] task")}" spellcheck="true"></textarea>`
-      : `<div class="note-view md" id="note-view">${mdToHtml(x.body) || `<p class="muted">${T("Пусто. Нажмите «Правка».", "Empty. Click “Edit”.")}</p>`}</div>`}
+      : `<div class="note-view md" id="note-view">${mdToHtml(x.body, { noteExists: noteByTitle }) || `<p class="muted">${T("Пусто. Нажмите «Правка».", "Empty. Click “Edit”.")}</p>`}</div>`}
     <div class="note-att">
       ${(x.att || []).map((a, i) => `<div class="att-row"><span class="att-ic">${a.t && a.t.startsWith("image/") ? "🖼" : "📎"}</span><span class="att-n">${esc(a.n)}</span><span class="att-s">${fmtSize(a.s)}</span><button class="ib" type="button" data-note-att-dl="${i}" title="${T("Скачать", "Download")}"><svg class="ic"><use href="#i-copy"/></svg></button><button class="ib att-del" type="button" data-note-att-del="${i}" aria-label="×">✕</button></div>`).join("")}
       <label class="ghost cf-add att-add"><span>${T("+ Прикрепить файл", "+ Attach file")}</span><input type="file" id="note-att-input" multiple hidden></label>
     </div>
+    ${noteBacklinksHtml(x)}
     <div class="note-foot"><span class="muted small" id="note-saved">${T("Изменено ", "Edited ") + new Date(x.updated).toLocaleString()}</span></div>
   </div>`;
   $("note-title").value = x.title; $("note-title").oninput = saveNote;
-  if (edit) { $("note-body").value = x.body || ""; $("note-body").oninput = saveNote; }
+  if (edit) { $("note-body").value = x.body || ""; $("note-body").oninput = saveNote; noteEditorBind($("note-body")); }
   const ai = $("note-att-input"); if (ai) ai.onchange = async ev => {
     for (const f of [...ev.target.files]) {
       if (f.size > ATT_MAX) { toast(T("Файл больше 1 МБ: ", "File over 1 MB: ") + f.name); continue; }
@@ -1370,6 +1338,7 @@ function renderNoteEditor() {
 }
 $("note-editor").addEventListener("click", async e => {
   if (e.target.closest("[data-new-note]")) return newNote();
+  if (await noteEditorClick(e)) return; // ссылки [[…]], теги, спойлеры, история, экспорт, папка
   const adl = e.target.closest("[data-note-att-dl]"); if (adl) { const x = notesList().find(y => y.id === selectedId); if (x && x.att) attDownload(x.att[+adl.dataset.noteAttDl]); return; }
   const adel = e.target.closest("[data-note-att-del]"); if (adel) { const x = notesList().find(y => y.id === selectedId); if (x && x.att) { x.att.splice(+adel.dataset.noteAttDel, 1); x.updated = Date.now(); await persist(); renderNoteEditor(); } return; }
   if (e.target.closest("[data-note-back],[data-note-done]")) { await saveNoteCore(); $("v-vault").classList.remove("show-detail"); return; }
@@ -1377,8 +1346,8 @@ $("note-editor").addEventListener("click", async e => {
   const box = e.target.closest(".md-box"); // клик по чекбоксу в режиме просмотра — переключает в тексте
   if (box) {
     const x = notesList().find(y => y.id === selectedId); if (!x) return;
-    let n = +box.dataset.cb, k = -1;
-    x.body = x.body.replace(/^(\s*[-*]\s+\[)([ xX])(\]\s+)/gm, (m, a, c, b2) => { k++; return k === n ? a + (c.toLowerCase() === "x" ? " " : "x") + b2 : m; });
+    if (box.dataset.cb == null || box.dataset.cb === "") return;
+    notePushHistory(x); x.body = mdToggleTask(x.body, +box.dataset.cb);
     x.updated = Date.now(); await persist(); renderNoteEditor(); return;
   }
   if (e.target.closest("[data-note-del]")) {
@@ -1412,11 +1381,11 @@ function renderTasks() {
       return `<div class="task-row${x.done ? " done" : ""}" data-id="${esc(x.id)}">
         <button class="task-check" data-task-toggle aria-label="${T("Готово", "Done")}">${x.done ? "✓" : ""}</button>
         <button class="task-pri ${p.c}" data-task-pri title="${T("Приоритет", "Priority")}: ${p.l || T("нет", "none")}">⚑</button>
-        <span class="task-text">${esc(x.title)}</span>
+        <span class="task-text">${esc(x.title)}</span>${taskSubsBadge(x)}
         <button class="task-cal" data-task-cal title="${T("Срок", "Due date")}">${x.due ? `<span class="task-due${overdue ? " overdue" : ""}">${new Date(x.due + "T12:00").toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "short" })}</span>` : `<svg class="ic"><use href="#i-cal"/></svg>`}</button>
         <input type="date" class="task-date" value="${esc(x.due || "")}">
         <button class="ib task-del" data-task-del aria-label="×">✕</button>
-      </div>`;
+      </div>${taskSubsHtml(x)}`;
       })();
     }).join("") : `<div class="empty">${all.length ? T("Ничего не найдено", "Nothing found") : T("Задач пока нет. Напишите задачу и нажмите Enter.", "No tasks yet. Type one and press Enter.")}</div>`);
   const inp = $("task-new");
@@ -1431,6 +1400,7 @@ function renderTasks() {
     const x = tasksList().find(t => t.id === di.closest(".task-row").dataset.id); if (!x) return;
     x.due = di.value; x.updated = Date.now(); await persist(); renderTasks();
   });
+  if (taskFilter !== "done") $("list").insertAdjacentHTML("beforeend", noteTasksSection());
 }
 function startRenameTask(row, x) {
   const span = row.querySelector(".task-text");

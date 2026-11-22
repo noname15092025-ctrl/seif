@@ -35,6 +35,7 @@ const b64 = u8 => btoa(String.fromCharCode(...u8));
 const safeUrl = u => { u = (u || "").trim(); if (!u) return ""; if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = "https://" + u; try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : ""; } catch { return ""; } };
 let vaultKey = null;
 </script>
+<script src="md.js"></script>
 <script src="loyalty.js"></script>
 <script src="calendar.js"></script>
 <script src="vendor/zxing.min.js"></script>
@@ -122,6 +123,52 @@ let vaultKey = null;
   eq("Экспорт → импорт: ссылка на встречу", back.url, "https://meet.jit.si/SHUT-x");
   eq("Экспорт → импорт: напоминание", back.remind, 10);
   ok("Экспорт: строки не длиннее 75 символов", (await blob.text()).split("\r\n").every(l => l.length <= 75));
+
+  /* ---------- Markdown заметок ---------- */
+  section("Заметки: Markdown");
+  const H = (s, o) => mdToHtml(s, o);
+  ok("Выделение ==текст==", H("a ==b== c").includes("<mark>b</mark>"));
+  ok("Спойлер ||текст||", H("||тайна||").includes('class="md-spoiler"'));
+  ok("Ссылка [[Заметка]]", H("см. [[План]]").includes('data-wiki="План"'));
+  ok("Ссылка на несуществующую заметку помечается", H("[[Нет такой]]", { noteExists: () => false }).includes("md-wiki missing"));
+  ok("Подпись ссылки [[Заметка|текст]]", />текст<\/a>/.test(H("[[План|текст]]")));
+  ok("Сноски: номер и список внизу", (() => { const h = H("Факт[^a] и ещё[^b].\n\n[^a]: Источник 1\n[^b]: Источник 2"); return h.includes('data-fn="1"') && h.includes('data-fn="2"') && h.includes("md-fns") && h.includes("Источник 2"); })());
+  ok("HTML в тексте экранируется", !H("<script>alert(1)<\/script> <img src=x onerror=1>").includes("<script") && !H("<img src=x>").includes("<img"));
+  ok("Опасная ссылка javascript: не превращается в ссылку", !H("[x](javascript:alert(1))").includes("href=\"javascript"));
+  ok("Теги #работа", H("задача #работа").includes('data-tag="работа"'));
+  eq("Теги собираются (без заголовков и кода)", mdTags("# Заголовок\nтекст #Дом и #работа\n```\n#нет\n```"), ["дом", "работа"]);
+  eq("Ссылки собираются", mdLinks("[[A]] и [[b|подпись]] и [[A]]"), ["a", "b"]);
+  ok("Callout > [!ВАЖНО]", H("> [!ВАЖНО] Проверить\n> текст").includes("md-co-warn"));
+  ok("Вложенный список", (() => { const h = H("- a\n  - b\n    - c\n- d"); return (h.match(/<ul>/g) || []).length === 3; })());
+  section("Заметки: таблицы и формулы");
+  const tbl = "| Товар | Цена | Кол-во | Сумма |\n|---|---:|---:|---:|\n| Хлеб | 2,5 | 2 | =B1*C1 |\n| Молоко | 3 | 1 | =B2*C2 |\n| Итого | | | =SUM(ABOVE) |";
+  const th = H(tbl);
+  ok("Таблица рисуется", th.includes("<table") && (th.match(/<tr>/g) || []).length === 4);
+  const calc = [...th.matchAll(/class="md-calc"[^>]*>([^<]+)</g)].map(m => m[1]);
+  eq("Формулы: =B1*C1, =B2*C2, =SUM(ABOVE)", calc, ["5", "3", "8"]);
+  eq("Формула: SUM диапазона", mdFormula("SUM(A1:A3)", [["1"], ["2"], ["3"], [""]], 3, 0, 0), 6);
+  eq("Формула: AVG и ROUND", mdFormula("ROUND(AVG(A1:A3), 1)", [["1"], ["2"], ["2"], [""]], 3, 0, 0), 1.7);
+  eq("Формула: скобки и приоритет", mdFormula("(2+3)*4-6/2", [[""]], 0, 0, 0), 17);
+  ok("Циклическая формула → ошибка, а не зависание", H("| a |\n|---|\n| =A1 |").includes("md-calc err"));
+  section("Заметки: задачи");
+  const body = "План:\n- [ ] Купить\n  - [x] Хлеб\n  - [ ] Молоко\n```\n- [ ] не задача\n```\n> - [ ] и не эта\n- [ ] Позвонить";
+  eq("Задачи из текста (без кода и цитат)", mdTasks(body).map(t => [t.index, t.level, t.done, t.text]), [[0, 0, false, "Купить"], [1, 1, true, "Хлеб"], [2, 1, false, "Молоко"], [3, 0, false, "Позвонить"]]);
+  ok("Номера чекбоксов в просмотре совпадают с задачами", (() => { const h = H(body); return [...h.matchAll(/data-cb="(\d+)"/g)].map(m => +m[1]).join() === "0,1,2,3"; })());
+  ok("Отметка 3-й задачи меняет именно «Молоко»", mdToggleTask(body, 2).includes("  - [x] Молоко") && mdToggleTask(body, 2).includes("- [ ] не задача"));
+  section("Быстрое добавление: разбор фразы");
+  const now = new Date(2026, 10, 21, 22, 0); // сб 21.11.2026 22:00
+  const P = s => { const p = qaParse(s, now); return [p.kind, p.title, p.date ? cYmd(p.date) : null, p.time ? p.time.join(":") : null, p.dur, p.remind, p.repeat]; };
+  eq("Событие: день недели, время, длительность, напоминание", P("Стоматолог пт 15:00 на час напомнить за 30 мин"), ["event", "Стоматолог", "2026-11-27", "15:0", 60, 30, "none"]);
+  eq("Задача со сроком «завтра»", P("задача купить молоко завтра"), ["task", "купить молоко", "2026-11-22", null, null, null, "none"]);
+  eq("Без даты и времени — задача", P("позвонить маме"), ["task", "позвонить маме", null, null, null, null, "none"]);
+  eq("Заметка", P("заметка Идеи для отпуска"), ["note", "Идеи для отпуска", null, null, null, null, "none"]);
+  eq("Повтор по будням", P("Планёрка по будням 10:00"), ["event", "Планёрка", "2026-11-21", "10:0", null, null, "weekdays"]);
+  eq("Дата 25.11 — дата, а не время", P("Отчёт 25.11"), ["task", "Отчёт", "2026-11-25", null, null, null, "none"]);
+  eq("«25 декабря в 19» и 2 часа", P("Ужин 25 декабря в 19 на 2 часа"), ["event", "Ужин", "2026-12-25", "19:0", 120, null, "none"]);
+  eq("Время уже прошло сегодня — переносится на завтра", P("Созвон 21:00"), ["event", "Созвон", "2026-11-22", "21:0", null, null, "none"]);
+  eq("«на 90 минут», «напомнить за 2 часа»", P("Врач завтра 9:30 на 90 минут напомнить за 2 часа"), ["event", "Врач", "2026-11-22", "9:30", 90, 120, "none"]);
+  ok("По будням: первое событие — понедельник, суббота пропускается", (() => { const p = qaParse("Планёрка по будням 10:00", now); const ev = { allDay: false, start: cFmt(new Date(p.date.getFullYear(), p.date.getMonth(), p.date.getDate(), 10, 0), false), end: cFmt(new Date(p.date.getFullYear(), p.date.getMonth(), p.date.getDate(), 11, 0), false), repeat: "weekdays" }; return cYmd(evOccurrences(ev, now, cAddDays(now, 7))[0].s) === "2026-11-23"; })());
+  eq("English: dentist fri 3pm remind 1 hour", P("Dentist fri 3pm remind 1 hour"), ["event", "Dentist", "2026-11-27", "15:0", null, 60, "none"]);
 
   const s2 = $("sum"); s2.className = "sum " + (fail ? "bad" : "ok");
   s2.textContent = fail ? `Провалено: ${fail} из ${pass + fail}` : `Все тесты пройдены: ${pass}`;

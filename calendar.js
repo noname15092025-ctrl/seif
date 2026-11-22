@@ -619,3 +619,53 @@ function calScheduleNative() {
   }, 800);
 }
 function calCancelNative() { if (typeof isNative !== "function" || !isNative()) return; const LN = capPlugin("LocalNotifications"); if (LN) LN.getPending().then(p => p.notifications && p.notifications.length && LN.cancel({ notifications: p.notifications.map(n => ({ id: n.id })) })).catch(() => {}); }
+
+/* ---------- разбор фразы для быстрого добавления (Ctrl+K), используется в notes-plus.js ---------- */
+const QA_WD = { "пн": 1, "понедельник": 1, "вт": 2, "вторник": 2, "ср": 3, "среда": 3, "среду": 3, "чт": 4, "четверг": 4, "пт": 5, "пятница": 5, "пятницу": 5, "сб": 6, "суббота": 6, "субботу": 6, "вс": 0, "воскресенье": 0,
+  "mon": 1, "monday": 1, "tue": 2, "tuesday": 2, "wed": 3, "wednesday": 3, "thu": 4, "thursday": 4, "fri": 5, "friday": 5, "sat": 6, "saturday": 6, "sun": 0, "sunday": 0 };
+const QA_MON = ["янв", "фев", "мар", "апр", "мая|май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+const QA_MON_EN = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+function qaParse(input, now) {
+  now = now || new Date();
+  let s = " " + input.trim() + " ", kind = "", date = null, time = null, dur = null, remind = null, repeat = "none";
+  const cut = re => { const m = re.exec(s); if (m) s = s.slice(0, m.index) + " " + s.slice(m.index + m[0].length); return m; };
+  let m;
+  if ((m = cut(/^\s*(заметка|заметку|note)[:\s]/i))) kind = "note";
+  else if ((m = cut(/^\s*(задача|задачу|task|todo)[:\s]/i))) kind = "task";
+  else if ((m = cut(/^\s*(событие|встреча|event)[:\s]/i))) kind = "event";
+  if (kind !== "note") {
+    if ((m = cut(/\s(напомнить|напоминание|remind(?:\s+me)?)\s+(?:за\s+|in\s+)?(\d+)?\s*(мин[а-яё]*|min[a-z]*|m|час[а-яё]*|ч|hours?|h|д(?:ень|ня|ней)|days?|d)(?:\s+до)?(?=\s)/i))) {
+      const n = +(m[2] || 1), u = m[3].toLowerCase(); remind = /^(час|ч|h)/.test(u) ? n * 60 : /^(д|d)/.test(u) ? n * 1440 : n;
+    }
+    if ((m = cut(/\s(каждый день|ежедневно|daily|every day)(?=\s)/i))) repeat = "daily";
+    else if ((m = cut(/\s(по будням|в будни|weekdays|every weekday)(?=\s)/i))) repeat = "weekdays";
+    else if ((m = cut(/\s(каждую неделю|еженедельно|weekly|every week)(?=\s)/i))) repeat = "weekly";
+    else if ((m = cut(/\s(каждый месяц|ежемесячно|monthly|every month)(?=\s)/i))) repeat = "monthly";
+    else if ((m = cut(/\s(каждый год|ежегодно|yearly|every year)(?=\s)/i))) repeat = "yearly";
+    if ((m = cut(/\s(?:на\s+|for\s+)?(\d+(?:[.,]\d+)?)\s*(час[а-яё]*|ч|hours?|h|мин[а-яё]*|min[a-z]*|m)(?=\s)/i))) { const n = +m[1].replace(",", "."), u = m[2].toLowerCase(); dur = /^(час|ч|h)/.test(u) ? Math.round(n * 60) : Math.round(n); }
+    else if ((m = cut(/\s(?:на\s+)?(полчаса|час|an hour|half an hour)(?=\s)/i))) dur = /пол|half/i.test(m[1]) ? 30 : 60;
+    const okT = (h, mi) => h < 24 && mi < 60;
+    if ((m = /\s(?:в\s+|at\s+)?([01]?\d|2[0-3]):([0-5]\d)\s*(am|pm)?(?=\s)/i.exec(s)) || (m = /\s(?:в|at)\s+([01]?\d|2[0-3])\.([0-5]\d)(?=\s)/i.exec(s))) {
+      s = s.slice(0, m.index) + " " + s.slice(m.index + m[0].length);
+      let h = +m[1]; if (m[3]) h = h % 12 + (/pm/i.test(m[3]) ? 12 : 0); if (okT(h, +m[2])) time = [h, +m[2]];
+    }
+    else if ((m = cut(/\s(?:в|at)\s+(\d{1,2})\s*(am|pm|утра|дня|вечера|ч)?(?=\s)/i))) { let h = +m[1]; if (/pm|дня|вечера/i.test(m[2] || "") && h < 12) h += 12; if (/am|утра/i.test(m[2] || "") && h === 12) h = 0; time = [h, 0]; }
+    else if ((m = cut(/\s(\d{1,2})\s*(am|pm)(?=\s)/i))) { let h = +m[1] % 12 + (/pm/i.test(m[2]) ? 12 : 0); time = [h, 0]; }
+    const d0 = new Date(now); d0.setHours(0, 0, 0, 0);
+    if ((m = cut(/\s(послезавтра|day after tomorrow)(?=\s)/i))) date = cAddDays(d0, 2);
+    else if ((m = cut(/\s(завтра|tomorrow)(?=\s)/i))) date = cAddDays(d0, 1);
+    else if ((m = cut(/\s(сегодня|today|tonight)(?=\s)/i))) date = d0;
+    else if ((m = cut(/\s(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?(?=\s)/))) { let y = m[3] ? +m[3] : d0.getFullYear(); if (y < 100) y += 2000; date = new Date(y, +m[2] - 1, +m[1]); if (!m[3] && date < d0) date.setFullYear(y + 1); }
+    else if ((m = cut(new RegExp("\\s(\\d{1,2})\\s+(" + QA_MON.join("|") + "|" + QA_MON_EN.join("|") + ")[а-яa-z]*\\.?(?:\\s+(\\d{4}))?(?=\\s)", "i")))) {
+      const k = m[2].toLowerCase(); let mi = QA_MON.findIndex(p => new RegExp("^(" + p + ")").test(k)); if (mi < 0) mi = QA_MON_EN.findIndex(p => k.startsWith(p));
+      let y = m[3] ? +m[3] : d0.getFullYear(); date = new Date(y, mi, +m[1]); if (!m[3] && date < d0) date.setFullYear(y + 1);
+    }
+    else if ((m = cut(/\s(?:в|во|on|next)?\s*(пн|вт|ср|чт|пт|сб|вс|понедельник|вторник|среду|среда|четверг|пятницу|пятница|субботу|суббота|воскресенье|mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)(?=\s)/i))) {
+      const wd = QA_WD[m[1].toLowerCase()]; let add = (wd - d0.getDay() + 7) % 7; if (add === 0) add = 7; date = cAddDays(d0, add);
+    }
+  }
+  const title = s.replace(/\s+/g, " ").trim().replace(/^[,.:;\-–—]+|[,.:;\-–—]+$/g, "").trim();
+  if (!kind) kind = time || repeat !== "none" ? "event" : "task";
+  if (kind === "event" && !date) { date = new Date(now); date.setHours(0, 0, 0, 0); if (time && (time[0] * 60 + time[1]) <= now.getHours() * 60 + now.getMinutes() && repeat === "none") date = cAddDays(date, 1); }
+  return { kind, title, date, time, dur, remind, repeat };
+}
