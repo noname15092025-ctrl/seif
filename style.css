@@ -2007,7 +2007,11 @@ body{ -webkit-tap-highlight-color:transparent; }
 @media (max-width:600px){
   .dash-cats{ display:flex !important; overflow-x:auto; scroll-snap-type:x mandatory; margin:0 -16px; padding:2px 16px 6px; scrollbar-width:none; }
   .dash-cats::-webkit-scrollbar{ display:none; }
-  .dash-cat{ flex:0 0 38%; height:112px !important; scroll-snap-align:start; }
+  /* ровно 3 карточки на экране, остальные листаются по одной (без обрезанной 4-й) */
+  .dash-cats{ gap:10px !important; scroll-padding:0 16px; }
+  .dash-cat{ flex:0 0 calc((100% - 20px) / 3); height:112px !important; scroll-snap-align:start; }
+  /* узкие карточки: без кнопки-стрелки (нажимается вся карточка), название на всю ширину */
+  .dash-cat-go{ display:none !important; } .dash-cat-top{ right:12px !important; }
 }
 
 /* Задачи: подсветка срока ровно по плашке */
@@ -2398,7 +2402,9 @@ html.is-app #b-new-entry{ position:fixed !important; right:18px; bottom:calc(82p
   width:58px !important; height:58px !important; min-width:0 !important; padding:0 !important; border-radius:20px !important;
   font-size:0 !important; background:var(--lime) !important; border:0 !important; color:#141414 !important;
   box-shadow:0 10px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06) inset; transition:transform .12s; }
-html.is-app #b-new-entry::before{ content:"+"; font-size:32px; font-weight:400; line-height:1; margin-top:-3px; }
+/* плюс из двух полосок — ровно по центру при любом шрифте */
+html.is-app #b-new-entry::before, html.is-app #b-new-entry::after{ content:""; position:absolute; left:50%; top:50%; width:22px; height:2.5px; margin:-1.25px 0 0 -11px; border-radius:2px; background:#141414; }
+html.is-app #b-new-entry::after{ transform:rotate(90deg); }
 html.is-app #b-new-entry:active{ transform:scale(.9); }
 html.is-app .app.nav-open #b-new-entry, html.is-app .app.show-detail #b-new-entry{ display:none !important; }
 
@@ -2423,3 +2429,5 @@ html.is-app .qa{ animation:app-sheet .3s cubic-bezier(.2,.9,.25,1); }
 /* карточка записи въезжает справа, как экран в приложении */
 html.is-app .app.show-detail .detail{ animation:app-push .28s cubic-bezier(.2,.9,.25,1); }
 @keyframes app-push{ from{ transform:translateX(30%); opacity:.4; } to{ transform:none; opacity:1; } }
+/* Списки (заметки, задачи, записи) на телефоне: ширина по контейнеру, а не 100% + отступы — иначе блок съезжает вправо */
+@media (max-width:760px){ .app #list{ width:auto !important; max-width:none !important; box-sizing:border-box; } }
