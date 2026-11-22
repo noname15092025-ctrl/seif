@@ -1,6 +1,6 @@
 // Дописывает в Android-проект (android/) то, что Capacitor не добавляет сам.
 // Запускается автоматически в `npm run android:sync` и в сборке GitHub Actions. Повторный запуск ничего не ломает.
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, cp } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,9 +29,35 @@ for (const p of PERMS) {
   xml = xml.replace("</manifest>", `    ${p}\n</manifest>`);
   added.push(name.split(".").pop());
 }
+// Ссылки shut://tasks|calendar|notes открывают приложение (их использует виджет на главном экране)
+if (!xml.includes('android:scheme="shut"')) {
+  xml = xml.replace("</activity>", `    <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="shut" />
+            </intent-filter>
+        </activity>`);
+  added.push("shut://");
+}
+// Виджет на главном экране
+if (!xml.includes(".ShutWidget")) {
+  xml = xml.replace("</application>", `    <receiver android:name=".ShutWidget" android:label="SHUT" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/shut_widget_info" />
+        </receiver>
+    </application>`);
+  added.push("widget");
+}
 // Не класть данные приложения в облачные резервные копии Google: ключ из Keystore на другом телефоне всё равно не откроется
 if (xml.includes('android:allowBackup="true"')) { xml = xml.replace('android:allowBackup="true"', 'android:allowBackup="false"'); added.push("allowBackup=false"); }
 await writeFile(manifestPath, xml);
+
+/* ---------- файлы виджета (native/android-widget → android/app/src/main) ---------- */
+await cp(join(root, "native", "android-widget", "java"), join(app, "src", "main", "java"), { recursive: true });
+await cp(join(root, "native", "android-widget", "res"), join(app, "src", "main", "res"), { recursive: true });
 
 /* ---------- значок уведомлений (белый щит) ---------- */
 const drawable = join(app, "src", "main", "res", "drawable");

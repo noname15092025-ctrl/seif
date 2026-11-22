@@ -104,3 +104,21 @@ npm run ios:sync           # build:www + cap sync ios + патч Info.plist
 - `scripts/build-www.mjs` — собирает `www/` только из нужных файлов (без .git, инструкций и кода воркеров).
 - `scripts/ios-patch.mjs` — дописывает в `Info.plist` строку `NSFaceIDUsageDescription` (без неё iOS не даст включить Face ID) и стиль статус-бара.
 - `.gitignore` — исключает `node_modules/`, `www/` и папку `ios/`. Её целиком генерирует `npm run ios:setup`.
+
+---
+
+## Виджет на главном экране
+
+Виджет SHUT — три кнопки: **Задачи**, **Календарь**, **Заметки**. Нажатие открывает приложение на нужном разделе (если сейф заблокирован — сразу после входа). Виджет не видит данных сейфа и ничего не показывает из него: пароли и записи на главный экран не попадают.
+
+Код виджета лежит в `native/ios-widget/ShutWidget.swift`. Xcode не умеет добавлять виджет командой, поэтому один раз руками:
+
+1. Выполните `npm run ios:sync` (он прописывает в Info.plist ссылки `shut://`).
+2. В Xcode: **File → New → Target… → Widget Extension** → Next.
+3. Product Name: `ShutWidget`. Снимите галочки **Include Live Activity** и **Include Configuration App Intent** → Finish → на вопрос «Activate scheme?» — **Activate**.
+4. В появившейся папке `ShutWidget` откройте `ShutWidget.swift` и замените всё его содержимое кодом из `native/ios-widget/ShutWidget.swift`.
+5. Удалите из этой папки `ShutWidgetBundle.swift` (если он создался) — `@main` уже есть в нашем файле.
+6. Выберите цель **ShutWidgetExtension** → Signing & Capabilities → тот же **Team**, что у App. Минимальная версия iOS — 14.0 или выше.
+7. Снова выберите схему **App** и нажмите ▶️.
+
+На айфоне: долгое нажатие на пустом месте главного экрана → **«+»** (Изменить → Добавить виджет) → найдите **SHUT** → средний размер → **Добавить виджет**.

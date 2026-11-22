@@ -14,6 +14,8 @@ const KEYS = {
   NSFaceIDUsageDescription: "<string>Face ID открывает сейф без ввода мастер-пароля.</string>",
   // Светлый текст статус-бара на тёмном фоне.
   UIStatusBarStyle: "<string>UIStatusBarStyleLightContent</string>",
+  // Ссылки shut://tasks|calendar|notes открывают приложение (их использует виджет на главном экране).
+  CFBundleURLTypes: "<array>\n\t\t<dict>\n\t\t\t<key>CFBundleURLName</key>\n\t\t\t<string>app.shut.wallet</string>\n\t\t\t<key>CFBundleURLSchemes</key>\n\t\t\t<array>\n\t\t\t\t<string>shut</string>\n\t\t\t</array>\n\t\t</dict>\n\t</array>",
 };
 
 let xml = await readFile(plist, "utf8");

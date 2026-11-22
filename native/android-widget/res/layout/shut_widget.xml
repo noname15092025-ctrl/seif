@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Виджет SHUT: три кнопки, открывающие разделы приложения. Данных сейфа здесь нет. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:padding="8dp"
+    android:background="@drawable/shut_widget_bg">
+
+    <TextView
+        android:id="@+id/w_tasks"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="4dp"
+        android:gravity="center"
+        android:background="@drawable/shut_widget_btn"
+        android:text="✓\nЗадачи"
+        android:textColor="#ECECEE"
+        android:textSize="13sp"
+        android:lineSpacingExtra="2dp" />
+
+    <TextView
+        android:id="@+id/w_calendar"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="4dp"
+        android:gravity="center"
+        android:background="@drawable/shut_widget_btn"
+        android:text="▦\nКалендарь"
+        android:textColor="#ECECEE"
+        android:textSize="13sp"
+        android:lineSpacingExtra="2dp" />
+
+    <TextView
+        android:id="@+id/w_notes"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="4dp"
+        android:gravity="center"
+        android:background="@drawable/shut_widget_btn"
+        android:text="✎\nЗаметки"
+        android:textColor="#ECECEE"
+        android:textSize="13sp"
+        android:lineSpacingExtra="2dp" />
+</LinearLayout>

@@ -1223,6 +1223,7 @@ function openVaultView() {
   clearForm(); $("form-card").classList.add("hidden"); $("detail-view").classList.remove("hidden"); $("note-editor").classList.add("hidden"); $("v-vault").classList.remove("show-detail");
   if (purgeTrash()) persist();
   renderNav(); render(); show("vault"); resetIdle();
+  if (pendingDeepView) { const v = pendingDeepView; pendingDeepView = null; setView(v); } // открыли из виджета
 }
 
 /* ---------------- Заметки и Задачи (воркспейс в стиле Notion) ---------------- */
@@ -1889,6 +1890,21 @@ const NATIVE = isNative();
 const IS_ANDROID = (() => { try { return NATIVE && window.Capacitor.getPlatform() === "android"; } catch { return false; } })();
 // Название места хранения ключа для текстов: iPhone Keychain или Android Keystore
 const DEVICE_STORE = () => IS_ANDROID ? T("защищённом хранилище телефона (Android Keystore)", "the phone's secure Android Keystore") : T("защищённом хранилище iPhone (Keychain)", "the iPhone Keychain");
+// Виджеты на главном экране (Android и iPhone) открывают приложение ссылкой shut://tasks, shut://calendar, shut://notes.
+// Виджет не видит данных сейфа: он только открывает раздел. Если сейф заблокирован — раздел откроется сразу после входа.
+let pendingDeepView = null;
+function deepLinkView(url) { const m = /^shut:\/\/(?:open\/)?(tasks|calendar|notes)\b/i.exec(url || ""); return m ? m[1].toLowerCase() : null; }
+function goDeepView(v) {
+  if (vaultKey) { document.querySelectorAll(".cal-pop-ov, .qa-ov").forEach(o => o.remove()); $("v-vault").classList.remove("nav-open", "show-detail"); setView(v); }
+  else pendingDeepView = v;
+}
+if (NATIVE) {
+  const AppL = capPlugin("App");
+  if (AppL) {
+    AppL.addListener("appUrlOpen", e => { const v = deepLinkView(e && e.url); if (v) goDeepView(v); });
+    if (AppL.getLaunchUrl) AppL.getLaunchUrl().then(r => { const v = deepLinkView(r && r.url); if (v) goDeepView(v); }).catch(() => {});
+  }
+}
 // Android: системная кнопка «Назад» закрывает открытое окно, иначе сворачивает приложение
 if (IS_ANDROID) {
   const AppP = capPlugin("App");
