@@ -2328,3 +2328,6 @@ body.cal-dragging{ user-select:none; cursor:grabbing; }
 /* Ближайшие: длинные названия не вылезают за карточку */
 .cal-up-i{ min-width:0; overflow:hidden; } .cal-up-i > span:last-child{ flex:1; min-width:0; }
 .cal-up-i b{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .cal-up-i small{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* длинные ссылки в окнах переносятся, а не вылезают за рамку */
+#modal-text{ overflow-wrap:anywhere; word-break:break-word; }
