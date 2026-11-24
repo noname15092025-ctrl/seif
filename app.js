@@ -778,6 +778,18 @@ function attBytes(a) { const b64 = a.d.split(",")[1]; const bin = atob(b64); con
 function attDownload(a) { try { const url = URL.createObjectURL(new Blob([attBytes(a)], { type: a.t })); const el = document.createElement("a"); el.href = url; el.download = a.n; el.click(); setTimeout(() => URL.revokeObjectURL(url), 4000); } catch { toast(T("Не удалось открыть файл", "Could not open file")); } }
 let detailBlobUrls = [];
 function attBlobUrl(a) { try { const url = URL.createObjectURL(new Blob([attBytes(a)], { type: a.t })); detailBlobUrls.push(url); return url; } catch { return ""; } }
+// Просмотр картинки из вложений на весь экран. Закрывается крестиком, нажатием мимо, Esc или «Назад» на телефоне.
+function attView(a) {
+  if (!a) return;
+  let url = ""; try { url = URL.createObjectURL(new Blob([attBytes(a)], { type: a.t })); } catch { return; }
+  const ov = document.createElement("div"); ov.className = "cal-pop-ov att-viewer"; ov.tabIndex = -1;
+  ov.innerHTML = `<div class="av-top"><span class="av-n">${esc(a.n)}</span><button type="button" class="av-b" data-av-dl aria-label="${T("Скачать", "Download")}"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 19h14"/></svg></button><button type="button" class="av-b" data-av-x aria-label="${T("Закрыть", "Close")}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><img class="av-img" alt="" src="${url}">`;
+  document.body.appendChild(ov); ov.focus();
+  const close = () => { ov.remove(); URL.revokeObjectURL(url); document.removeEventListener("keydown", onKey); };
+  const onKey = e => { if (e.key === "Escape") { e.stopPropagation(); close(); } };
+  document.addEventListener("keydown", onKey);
+  ov.onclick = e => { if (e.target.closest("[data-av-dl]")) { attDownload(a); return; } if (e.target === ov || e.target.closest("[data-av-x]")) close(); };
+}
 // Шаринг одной записи самодостаточной ссылкой: шифротекст и ключ живут в #-фрагменте,
 // сервер их никогда не видит и ничего не хранит (zero-knowledge, без бэкенда). Вложения не включаются.
 // once = одноразовая: шифротекст кладётся на сервер синхронизации и удаляется при первом открытии; ключ остаётся только в ссылке.
@@ -1367,7 +1379,7 @@ function renderNoteEditor() {
     ${edit ? `<textarea id="note-body" class="note-body" placeholder="${T("Пишите здесь… Поддерживается Markdown: # заголовок, **жирный**, - список, - [ ] задача", "Write here… Markdown supported: # heading, **bold**, - list, - [ ] task")}" spellcheck="true"></textarea>`
       : `<div class="note-view md" id="note-view">${mdToHtml(x.body, { noteExists: noteByTitle }) || `<p class="muted">${T("Пусто. Нажмите «Правка».", "Empty. Click “Edit”.")}</p>`}</div>`}
     <div class="note-att">
-      ${(x.att || []).map((a, i) => `<div class="att-row"><span class="att-ic">${a.t && a.t.startsWith("image/") ? "🖼" : "📎"}</span><span class="att-n">${esc(a.n)}</span><span class="att-s">${fmtSize(a.s)}</span><button class="ib" type="button" data-note-att-dl="${i}" title="${T("Скачать", "Download")}"><svg class="ic"><use href="#i-copy"/></svg></button><button class="ib att-del" type="button" data-note-att-del="${i}" aria-label="×">✕</button></div>`).join("")}
+      ${(x.att || []).map((a, i) => { const img = a.t && a.t.startsWith("image/") && a.t !== "image/svg+xml"; return `<div class="att-row${img ? " att-img" : ""}">${img ? `<img class="att-thumb" src="${attBlobUrl(a)}" alt="" data-note-att-view="${i}">` : `<span class="att-ic">📎</span>`}<span class="att-n"${img ? ` data-note-att-view="${i}"` : ""}>${esc(a.n)}</span><span class="att-s">${fmtSize(a.s)}</span><button class="ib" type="button" data-note-att-dl="${i}" title="${T("Скачать", "Download")}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="ib att-del" type="button" data-note-att-del="${i}" aria-label="×">✕</button></div>`; }).join("")}
       <label class="ghost cf-add att-add"><span>${T("+ Прикрепить файл", "+ Attach file")}</span><input type="file" id="note-att-input" multiple hidden></label>
     </div>
     ${noteBacklinksHtml(x)}
@@ -1387,6 +1399,7 @@ function renderNoteEditor() {
 $("note-editor").addEventListener("click", async e => {
   if (e.target.closest("[data-new-note]")) return newNote();
   if (await noteEditorClick(e)) return; // ссылки [[…]], теги, спойлеры, история, экспорт, папка
+  const av = e.target.closest("[data-note-att-view]"); if (av) { const x = notesList().find(y => y.id === selectedId); if (x && x.att) attView(x.att[+av.dataset.noteAttView]); return; }
   const adl = e.target.closest("[data-note-att-dl]"); if (adl) { const x = notesList().find(y => y.id === selectedId); if (x && x.att) attDownload(x.att[+adl.dataset.noteAttDl]); return; }
   const adel = e.target.closest("[data-note-att-del]"); if (adel) { const x = notesList().find(y => y.id === selectedId); if (x && x.att) { x.att.splice(+adel.dataset.noteAttDel, 1); x.updated = Date.now(); await persist(); renderNoteEditor(); } return; }
   if (e.target.closest("[data-note-back],[data-note-done]")) { await saveNoteCore(); $("v-vault").classList.remove("show-detail"); return; }

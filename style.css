@@ -2681,7 +2681,7 @@ html.is-glass .landing .tile, html.is-glass .landing .compare, html.is-glass .la
 
 /* ======================= Редактор заметки: чистый вид ======================= */
 /* одна стеклянная панель, внутри — без рамок: заголовок, папка и текст как в приложении «Заметки» */
-html.is-glass #v-vault .detail > #note-editor{ background:rgba(20,20,24,.94) !important; border:1px solid rgba(255,255,255,.08) !important; border-radius:28px !important;
+html.is-glass #v-vault .detail > #note-editor{ background:#141418 !important; border:1px solid rgba(255,255,255,.08) !important; border-radius:28px !important;
   -webkit-backdrop-filter:blur(24px) saturate(1.5); backdrop-filter:blur(24px) saturate(1.5); padding:18px 22px 16px !important; box-shadow:0 24px 70px rgba(0,0,0,.4) !important; }
 html.is-glass #v-vault #note-editor .note-ed{ background:transparent !important; border:0 !important; padding:0 !important; box-shadow:none !important; display:flex; flex-direction:column; min-height:inherit; }
 /* верхняя панель: назад · Правка/Просмотр · Готово, ниже — мелкие действия */
@@ -2721,3 +2721,22 @@ html.is-glass #v-vault #note-editor .note-folder:focus, html.is-glass #v-vault #
   background:transparent !important; box-shadow:none !important; outline:none !important; -webkit-text-fill-color:#F4F4F6; }
 html.is-glass #v-vault #note-editor .note-title:-webkit-autofill{ -webkit-box-shadow:0 0 0 1000px transparent inset !important; transition:background-color 9999s; }
 html.is-glass #v-vault #note-editor .note-body:focus, html.is-glass #v-vault #note-editor .note-folder:focus{ -webkit-text-fill-color:inherit; }
+
+/* ---------- Вложения-картинки: миниатюра и просмотр на весь экран ---------- */
+.att-row.att-img{ align-items:center; }
+.att-thumb{ width:56px; height:56px; flex:none; object-fit:cover; border-radius:12px; cursor:zoom-in; background:#1C1C1F; border:1px solid rgba(255,255,255,.08); }
+.att-row.att-img .att-n{ cursor:zoom-in; }
+.att-row .ib svg.ic{ width:18px; height:18px; }
+.att-viewer{ z-index:300 !important; flex-direction:column; align-items:center !important; justify-content:center !important; padding:0 !important; background:rgba(0,0,0,.92) !important; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); animation:none !important; }
+.av-top{ position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:10px; padding:calc(12px + env(safe-area-inset-top)) 14px 12px 20px; background:linear-gradient(rgba(0,0,0,.6), transparent); }
+.av-n{ flex:1; min-width:0; color:#E6E6EA; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.av-b{ width:42px !important; height:42px !important; padding:0 !important; border-radius:50% !important; display:flex !important; align-items:center; justify-content:center; background:rgba(255,255,255,.12) !important; border:0 !important; color:#fff !important; }
+.av-b svg{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.av-img{ max-width:94vw; max-height:84vh; max-height:84dvh; object-fit:contain; border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+html.is-glass #note-editor .att-row{ display:flex !important; align-items:center; gap:12px; height:auto !important; min-height:52px; padding:8px 10px !important; border-radius:16px !important; background:rgba(255,255,255,.05) !important; border:1px solid rgba(255,255,255,.07) !important; margin:0 0 8px !important; }
+html.is-glass #note-editor .att-row .att-n{ flex:1 1 auto; min-width:0; display:block; color:#E6E6EA; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+html.is-glass #note-editor .att-row .att-s{ flex:none; color:#8A8A92; font-size:12px; }
+/* блок вложений — столбиком: каждая строка на всю ширину, кнопка «Прикрепить» ниже */
+html.is-glass #note-editor .note-att{ display:flex !important; flex-direction:column !important; align-items:stretch !important; gap:0 !important; }
+html.is-glass #note-editor .note-att .att-row{ width:100% !important; box-sizing:border-box; }
+html.is-glass #note-editor .note-att .att-add{ align-self:flex-start; }
