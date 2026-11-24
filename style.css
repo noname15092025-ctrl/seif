@@ -2546,3 +2546,89 @@ html.is-app .app-tab.on svg{ color:var(--lime); transform:none; }
 html.is-app #b-new-entry{ bottom:calc(92px + env(safe-area-inset-bottom)) !important; }
 html.is-app .app .list-pane, html.is-app .app .detail{ padding-bottom:calc(110px + env(safe-area-inset-bottom)) !important; }
 html.is-app .toast{ bottom:calc(96px + env(safe-area-inset-bottom)) !important; }
+
+/* ---------- Карточка задачи (шторка) ---------- */
+.ts-pop .cp-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.ts-done{ height:38px !important; padding:0 16px !important; border-radius:19px !important; font-size:14px !important; background:rgba(255,255,255,.06) !important; border:1px solid #3A3A40 !important; color:#ECECEE !important; }
+.ts-done.on{ background:var(--lime) !important; border-color:var(--lime) !important; color:#141414 !important; }
+.ts-title{ width:100%; box-sizing:border-box; resize:none; border:0 !important; background:transparent !important; color:#F4F4F6; font:inherit; font-size:22px; font-weight:700; line-height:1.25; padding:4px 2px 8px; outline:none; }
+.ts-l{ display:block; margin:14px 2px 8px; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#8A8A92; }
+.ts-row{ display:flex; gap:8px; align-items:center; } .ts-row .field{ margin:0 !important; flex:1; height:46px !important; }
+.ts-clear{ height:46px !important; padding:0 14px !important; font-size:13px !important; white-space:nowrap; }
+.ts-pri{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.ts-p{ height:40px !important; padding:0 !important; font-size:13px !important; border-radius:14px !important; background:#26262A !important; border:1px solid #34343B !important; color:#C9C9CF !important; }
+.ts-p.on{ border-color:var(--lime) !important; color:#fff !important; background:#2E3420 !important; }
+.ts-p.p1.on{ border-color:#6EA8FE !important; } .ts-p.p2.on{ border-color:#E8A54B !important; } .ts-p.p3.on{ border-color:#E5484D !important; }
+.ts-subs{ display:flex; flex-direction:column; gap:6px; }
+.ts-sub{ display:flex !important; align-items:center; gap:10px; height:auto !important; min-height:42px; padding:8px 12px !important; border-radius:12px !important; background:#26262A !important; border:0 !important; color:#ECECEE !important; text-align:left; font-size:14px !important; font-weight:500 !important; justify-content:flex-start !important; }
+.ts-sub i{ width:20px; height:20px; flex:none; border-radius:6px; border:1.5px solid #4A4A52; display:flex; align-items:center; justify-content:center; font-style:normal; font-size:13px; color:#141414; }
+.ts-sub.on i{ background:var(--lime); border-color:var(--lime); } .ts-sub.on span{ text-decoration:line-through; color:#8A8A92; }
+.ts-foot{ display:flex; justify-content:space-between; gap:10px; margin-top:20px; }
+.ts-foot button{ height:48px !important; padding:0 22px !important; border-radius:24px !important; }
+.ts-del{ color:#FF7A7A !important; }
+html.is-app .task-row{ cursor:pointer; }
+.ts-pop .ts-title{ font-size:22px !important; font-weight:700 !important; height:auto !important; }
+/* ---------- Карточка просмотра события ---------- */
+.es-pop .cp-top{ display:flex; justify-content:space-between; margin-bottom:4px; }
+.es-head{ display:flex; align-items:flex-start; gap:12px; margin:0 2px 14px; }
+.es-head h2{ margin:0; font-size:22px; line-height:1.25; font-weight:700; color:#F4F4F6; overflow-wrap:anywhere; }
+.es-dot{ flex:none; width:14px; height:14px; margin-top:7px; border-radius:5px; background:var(--ev); }
+.es-row{ display:flex; gap:12px; align-items:flex-start; padding:10px 2px; border-top:1px solid #2E2E34; font-size:15px; color:#E2E2E6; overflow-wrap:anywhere; }
+.es-ic{ flex:none; width:22px; text-align:center; }
+.es-meet{ width:100%; height:48px !important; margin:12px 0 4px; border-radius:24px !important; background:#2E3420 !important; border:1px solid rgba(200,226,122,.4) !important; color:var(--lime) !important; font-size:15px !important; }
+.es-note{ margin-top:10px; padding:12px 14px; border-radius:14px; background:#26262A; color:#D6D6DA; font-size:14px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; }
+
+/* ---------- Меню в приложении: выдвижная панель в стиле телефона ---------- */
+html.is-app .app .side{ width:min(330px, 88vw) !important; background:#121214 !important; border:0 !important; border-right:1px solid #24242A !important;
+  border-radius:0 28px 28px 0 !important; padding:calc(18px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom)) !important; box-shadow:20px 0 60px rgba(0,0,0,.6) !important; }
+html.is-app .app .side::before, html.is-app .app .side::after{ display:none !important; }
+html.is-app .app .nav-backdrop{ background:rgba(0,0,0,.55) !important; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+/* разделы Обзор / Заметки / Задачи / Календарь уже есть во вкладках внизу */
+html.is-app .side .nav-item.ws{ display:none !important; }
+html.is-app .side .nav-item{ display:flex !important; align-items:center; justify-content:space-between !important; text-align:left !important; gap:10px;
+  min-height:48px; padding:0 14px !important; margin:0 !important; border-radius:14px !important; font-size:15px !important; font-weight:500 !important; color:#E8E8EC !important; background:transparent !important; }
+html.is-app .side .nav-item.active{ background:#26262A !important; color:#fff !important; }
+html.is-app .side .nav-item:active{ background:#222226 !important; }
+html.is-app .side .nav-sec{ margin-top:10px !important; }
+/* инструменты — отдельной карточкой со стрелками, как в настройках телефона */
+html.is-app .side-tools{ margin-top:16px !important; padding:4px !important; border-radius:20px !important; background:#1C1C1F !important; border:1px solid #2A2A30 !important; }
+html.is-app .side-tools .nav-item{ border-radius:16px !important; }
+html.is-app .side-tools .nav-item + .nav-item{ border-top:1px solid #26262B; border-radius:0 !important; }
+html.is-app .side-tools .nav-item::after{ content:"›"; font-size:20px; color:#6E6E76; line-height:1; }
+
+/* ======================= «Стекло» по всему приложению =======================
+   Вместо плотного серого — полупрозрачные поверхности с размытием, как у нижней капсулы.
+   Фон с мягким цветным свечением, чтобы прозрачность была заметна. */
+html.is-app, html.is-app body, html.is-app .app, html.is-app .app .list-pane{ background-color:#08080A !important; }
+html.is-app body{ background-image:radial-gradient(90% 45% at 10% 0%, rgba(200,226,122,.13), transparent 65%), radial-gradient(80% 45% at 100% 55%, rgba(108,155,242,.08), transparent 65%), radial-gradient(70% 40% at 0% 100%, rgba(200,226,122,.07), transparent 65%) !important;
+  background-attachment:fixed !important; }
+html.is-app .app, html.is-app .app .list-pane, html.is-app .app .detail{ background:transparent !important; }
+/* верхняя панель без размытия: размытие у родителя «ломает» закреплённую кнопку «+» внутри неё */
+html.is-app .app .list-top{ background:rgba(8,8,10,.86) !important; }
+
+
+html.is-app .dash-hero, html.is-app .dash-score, html.is-app .dash-stat, html.is-app .dash-recent, html.is-app .dash-rec,
+html.is-app .home-up-i, html.is-app .task-row, html.is-app .note-row, html.is-app .app:not(.ws-home):not(.ws-cal):not(.ws-tasks):not(.ws-notes) #list.rows,
+html.is-app .rec-stat:not(.k-all):not(.k-warn), html.is-app .ws-chip:not(.on):not(.active), html.is-app .chip:not(.on):not(.active), html.is-app .cal-segs, html.is-app .cal-today,
+html.is-app #b-menu, html.is-app .app-search-btn, html.is-app .cal-bar .cal-nav, html.is-app .cats-more, html.is-app .task-add .field,
+html.is-app .app .field, html.is-app #sort, html.is-app .note-ed, html.is-app #note-editor, html.is-app #detail-view, html.is-app .d-card{
+  background:rgba(255,255,255,.055) !important; border:1px solid rgba(255,255,255,.09) !important; border-top-color:rgba(255,255,255,.14) !important;
+  -webkit-backdrop-filter:blur(18px) saturate(1.4); backdrop-filter:blur(18px) saturate(1.4); box-shadow:none !important; }
+/* вложенные элементы внутри стеклянных блоков — без второго слоя фона */
+html.is-app .app #list.rows .rrow{ background:transparent !important; border:0 !important; -webkit-backdrop-filter:none; backdrop-filter:none; }
+html.is-app .dash-hero .dash-score, html.is-app .dash-hero .dash-stat{ background:rgba(255,255,255,.05) !important; -webkit-backdrop-filter:none; backdrop-filter:none; }
+
+/* шторки, окна, быстрый поиск и меню — тоже стекло, только плотнее, чтобы текст читался */
+html.is-app .cal-pop, html.is-app .modal-box, html.is-app .qa, html.is-app .dp-pop, html.is-app .app .side{
+  background:rgba(28,28,32,.72) !important; border:1px solid rgba(255,255,255,.10) !important; border-top-color:rgba(255,255,255,.18) !important;
+  -webkit-backdrop-filter:blur(28px) saturate(1.6) !important; backdrop-filter:blur(28px) saturate(1.6) !important; }
+html.is-app .cal-pop .field, html.is-app .ts-p, html.is-app .ts-sub, html.is-app .es-note, html.is-app .side-tools{
+  background:rgba(255,255,255,.06) !important; border-color:rgba(255,255,255,.09) !important; }
+html.is-app .cal-pop-ov, html.is-app .modal, html.is-app .qa-ov{ background:rgba(0,0,0,.35) !important; }
+/* линейные иконки: тонкие, без «мультяшности» */
+.es-ic{ display:flex; align-items:center; justify-content:center; color:#9A9AA2; }
+.es-ic svg{ width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+html.is-app .app-tab svg{ width:22px !important; height:22px !important; stroke-width:1.5 !important; }
+html.is-app .app-tab span{ font-weight:500 !important; letter-spacing:.2px; }
+html.is-app #b-menu svg, html.is-app .app-search-btn svg{ stroke-width:1.6 !important; }
+html.is-app .app.ws-home #list.rows, html.is-app .app.ws-cal #list.rows{ background:transparent !important; border:0 !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; padding:0 !important; }

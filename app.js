@@ -1914,7 +1914,8 @@ if (IS_ANDROID) {
     const ov = [...document.querySelectorAll(".cal-pop-ov, .qa-ov, .modal:not(.hidden), #modal:not(.hidden)")].pop();
     if (ov) { ov.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); if (document.body.contains(ov) && ov.classList.contains("cal-pop-ov")) ov.click(); return; }
     const vv = $("v-vault");
-    if (vv && vv.classList.contains("show-detail")) { vv.classList.remove("show-detail"); return; }
+    if (vv && vv.classList.contains("show-detail")) { const bk = [...vv.querySelectorAll("[data-note-back], [data-detail-back]")].find(b => b.offsetParent); if (bk) bk.click(); else vv.classList.remove("show-detail"); return; }
+    { const pb = [...document.querySelectorAll("[data-back-vault], [data-guide-back]")].find(b => b.offsetParent); if (pb) { pb.click(); return; } } // генератор, настройки и другие страницы
     if (vv && vv.classList.contains("nav-open")) { vv.classList.remove("nav-open"); return; }
     AppP.minimizeApp().catch(() => {});
   });
