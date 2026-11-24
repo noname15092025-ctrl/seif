@@ -59,6 +59,29 @@ await writeFile(manifestPath, xml);
 await cp(join(root, "native", "android-widget", "java"), join(app, "src", "main", "java"), { recursive: true });
 await cp(join(root, "native", "android-widget", "res"), join(app, "src", "main", "res"), { recursive: true });
 
+/* ---------- MainActivity: размер шрифта не зависит от системной настройки телефона ----------
+   Иначе при увеличенном шрифте в Android весь интерфейс «распирает»: строки не влезают, кнопки переносятся. */
+const mainAct = join(app, "src", "main", "java", "app", "shut", "wallet", "MainActivity.java");
+if (existsSync(mainAct)) {
+  let ma = await readFile(mainAct, "utf8");
+  if (!ma.includes("setTextZoom")) {
+    ma = `package app.shut.wallet;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onResume() {
+        super.onResume();
+        try { getBridge().getWebView().getSettings().setTextZoom(100); } catch (Exception ignored) { }
+    }
+}
+`;
+    await writeFile(mainAct, ma);
+    added.push("textZoom=100");
+  }
+}
+
 /* ---------- значок уведомлений (белый щит) ---------- */
 const drawable = join(app, "src", "main", "res", "drawable");
 await mkdir(drawable, { recursive: true });

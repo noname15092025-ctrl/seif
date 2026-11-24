@@ -1778,7 +1778,9 @@ document.addEventListener("visibilitychange", () => {
 let installEvt = null;
 addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; document.querySelectorAll("[data-install]").forEach(b => b.hidden = false); });
 document.querySelectorAll("[data-install]").forEach(b => b.onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; document.querySelectorAll("[data-install]").forEach(x => x.hidden = true); });
-if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+// В приложении (Capacitor) файлы и так лежат внутри — кэш-воркер не нужен и может показывать старую версию после обновления
+if ("serviceWorker" in navigator && (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) { navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {}); try { caches.keys().then(ks => ks.forEach(k => caches.delete(k))); } catch {} }
+else if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
 /* ---------------- Запуск ---------------- */
 applyTheme();
