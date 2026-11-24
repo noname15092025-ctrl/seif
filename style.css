@@ -2507,3 +2507,42 @@ html.is-app #v-start .hero-left{ flex:0 0 auto !important; margin-top:auto; }
 html.is-app .list-sub{ display:flex !important; align-items:center; justify-content:space-between; gap:10px; flex-wrap:nowrap !important; padding:0 6px !important; }
 html.is-app #list-count{ white-space:nowrap; font-size:13px; }
 html.is-app #sort{ width:auto !important; flex:0 0 auto; height:36px !important; font-size:13px !important; }
+/* Сейф: 4 плитки-фильтра помещаются в ширину экрана целиком, без прокрутки */
+html.is-app .rec-stats{ display:grid !important; grid-template-columns:repeat(4,minmax(0,1fr)) !important; overflow:visible !important; gap:6px !important; }
+html.is-app .rec-stat{ min-width:0 !important; height:64px !important; padding:9px 10px !important; border-radius:16px !important; }
+html.is-app .rec-stat-n{ font-size:11.5px !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+html.is-app .rec-stat-dot{ display:none !important; }
+html.is-app .rec-stat-v, html.is-app .rec-stat > span:last-child{ font-size:22px !important; line-height:1.1; }
+
+/* ---------- Календарь в приложении: компактная шапка, полоска дней, сетка без лишних рамок ---------- */
+html.is-app .app.ws-cal .app-title{ display:none !important; }
+html.is-app .cal-bar{ display:grid !important; grid-template-columns:1fr auto auto; grid-template-areas:"title prev next" "segs segs today"; align-items:center; gap:10px 6px !important; margin:2px 0 12px !important; padding:0 4px !important; }
+html.is-app .cal-bar .cal-title{ grid-area:title; margin:0 !important; font-size:22px !important; line-height:1.15 !important; font-weight:700 !important; letter-spacing:-.3px; }
+html.is-app .cal-bar [data-cal-step="-1"]{ grid-area:prev; } html.is-app .cal-bar [data-cal-step="1"]{ grid-area:next; }
+html.is-app .cal-bar .cal-nav{ width:38px !important; height:38px !important; border-radius:50% !important; background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.08) !important; font-size:20px !important; padding:0 !important; }
+html.is-app .cal-bar .cal-segs{ grid-area:segs; display:grid !important; grid-template-columns:repeat(3,1fr); margin:0 !important; }
+html.is-app .cal-bar .cal-seg{ height:36px !important; font-size:13px !important; padding:0 6px !important; }
+html.is-app .cal-bar .cal-today{ grid-area:today; height:36px !important; font-size:13px !important; padding:0 14px !important; }
+/* полоска дней недели */
+html.is-app .app-week{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:0 0 12px; padding:0 2px; }
+html.is-app .aw-d{ height:58px !important; display:flex !important; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:0 !important;
+  border-radius:16px !important; background:transparent !important; border:0 !important; color:#ECECEE !important; box-shadow:none !important; }
+html.is-app .aw-d span{ font-size:11px; font-weight:600; color:#8A8A92; text-transform:uppercase; letter-spacing:.3px; }
+html.is-app .aw-d b{ font-size:17px; font-weight:600; }
+html.is-app .aw-d.today b{ color:var(--lime); }
+html.is-app .aw-d.on{ background:var(--lime) !important; } html.is-app .aw-d.on span, html.is-app .aw-d.on b{ color:#141414 !important; }
+/* сетка дня: без внешней рамки и без дублирующей шапки дня (она есть в полоске) */
+html.is-app .cal-main{ border:0 !important; background:transparent !important; border-radius:0 !important; }
+html.is-app .cg.cg-n1 .cg-headrow{ display:none !important; }
+
+/* ---------- Нижняя навигация: плавающая полупрозрачная капсула ---------- */
+html.is-app .app-tabs{ left:12px !important; right:12px !important; bottom:calc(10px + env(safe-area-inset-bottom)) !important; padding:6px !important;
+  border-radius:34px !important; background:rgba(38,38,42,.62) !important; border:1px solid rgba(255,255,255,.10) !important; border-top-color:rgba(255,255,255,.16) !important;
+  -webkit-backdrop-filter:blur(22px) saturate(1.6); backdrop-filter:blur(22px) saturate(1.6); box-shadow:0 14px 40px rgba(0,0,0,.55); }
+html.is-app .app-tab{ height:56px !important; border-radius:28px !important; color:#C9C9CF !important; font-size:11px !important; transition:background-color .2s, color .2s, transform .12s; }
+html.is-app .app-tab.on{ background:rgba(0,0,0,.42) !important; color:#fff !important; }
+html.is-app .app-tab.on svg{ color:var(--lime); transform:none; }
+/* круглая «+» и списки — выше капсулы */
+html.is-app #b-new-entry{ bottom:calc(92px + env(safe-area-inset-bottom)) !important; }
+html.is-app .app .list-pane, html.is-app .app .detail{ padding-bottom:calc(110px + env(safe-area-inset-bottom)) !important; }
+html.is-app .toast{ bottom:calc(96px + env(safe-area-inset-bottom)) !important; }

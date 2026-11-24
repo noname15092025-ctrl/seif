@@ -70,6 +70,32 @@
   setTitle(typeof view !== "undefined" ? view : "home");
   sync(typeof view !== "undefined" ? view : "home");
 
+  // Календарь: полоска дней недели над сеткой (как в календаре телефона) и листание свайпом
+  if (typeof renderCalendar === "function") {
+    const origCal = renderCalendar;
+    renderCalendar = function () { origCal.apply(this, arguments); try { weekStrip(); } catch {} };
+  }
+  function weekStrip() {
+    if (calView !== "day") return;
+    const bar = document.querySelector(".cal-bar"); if (!bar) return;
+    const d0 = cDayStart(calDate), mon = cAddDays(d0, -((d0.getDay() + 6) % 7)), today = cDayStart(new Date());
+    let h = '<div class="app-week">';
+    for (let i = 0; i < 7; i++) {
+      const d = cAddDays(mon, i);
+      h += `<button type="button" class="aw-d${+d === +d0 ? " on" : ""}${+d === +today ? " today" : ""}" data-aw="${i}"><span>${d.toLocaleDateString(cLoc(), { weekday: "short" }).replace(".", "")}</span><b>${d.getDate()}</b></button>`;
+    }
+    const tt = bar.querySelector(".cal-title"); if (tt) { const s = d0.toLocaleDateString(cLoc(), { day: "numeric", month: "long" }); tt.textContent = +d0 === +today ? T("Сегодня, ", "Today, ") + s : s; }
+    bar.insertAdjacentHTML("afterend", h + "</div>");
+    bar.nextElementSibling.onclick = e => { const b = e.target.closest("[data-aw]"); if (!b) return; tap(); calDate = cAddDays(mon, +b.dataset.aw); renderCalendar(); };
+  }
+  let sx = 0, sy = 0;
+  $("list").addEventListener("touchstart", e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, { passive: true });
+  $("list").addEventListener("touchend", e => {
+    if (view !== "calendar" || document.querySelector(".cal-pop-ov")) return;
+    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) { const b = document.querySelector(`[data-cal-step="${dx < 0 ? 1 : -1}"]`); if (b) b.click(); }
+  }, { passive: true });
+
   // отклик на нажатие для кнопок верхней панели
   ["b-new-entry", "b-menu"].forEach(id => { const el = $(id); if (el) el.addEventListener("click", tap); });
 })();
