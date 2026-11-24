@@ -2751,3 +2751,11 @@ html.is-glass #note-editor .note-att .att-add{ align-self:flex-start; }
 .nb-btn.on .ci{ stroke:var(--lime); fill:rgba(200,226,122,.25); }
 .lc-scan{ display:inline-flex !important; align-items:center; gap:8px; }
 .lc-scan .ci{ width:18px; height:18px; stroke:currentColor; }
+
+/* Календарь всегда на всю ширину: блок не должен «схлопываться» до ширины содержимого
+   (иначе сетка месяца сжимается в узкую полоску рядом с мини-календарём) */
+.app.ws-cal #list{ width:100% !important; max-width:none !important; align-self:stretch !important; box-sizing:border-box; }
+.app.ws-cal #list > .cal{ width:100% !important; min-width:0; }
+.cal-wrap{ width:100%; min-width:0; }
+.cal-main{ min-width:0; }
+@media (min-width:981px){ .cal-wrap{ grid-template-columns:240px minmax(0,1fr) !important; } }
