@@ -2666,7 +2666,7 @@ html.is-glass .landing .tile.t-dark, html.is-glass .landing .tile.t-mut, html.is
 html.is-glass .center-page .panel{ background-color:rgba(30,30,34,.55) !important; }
 /* карточки профилей, поля, второстепенные кнопки */
 html.is-glass .profiles > *, html.is-glass .center-page .field, html.is-glass .landing .pill.ghost, html.is-glass .landing .pill.outline,
-html.is-glass .landing .dark-btn, html.is-glass .center-page .pill.ghost, html.is-glass .landing .crow{
+html.is-glass .landing .dark-btn, html.is-glass .center-page .pill.ghost{
   background-color:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.10) !important; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
 html.is-glass .profiles > .on, html.is-glass .profiles > .active, html.is-glass .profiles > [aria-pressed="true"]{ background-color:rgba(200,226,122,.14) !important; border-color:rgba(200,226,122,.45) !important; }
 /* «Создать сейф» — главная кнопка лаймовая */
@@ -2675,3 +2675,6 @@ html.is-glass .landing #b-new{ background:var(--lime) !important; color:#141414 
 html.is-glass .art-panel{ overflow:hidden; }
 /* кнопка «Войти» в шапке — лаймовая, как раньше (стекло сделало её невидимой) */
 html.is-glass #b-signin{ background:var(--lime) !important; color:#141414 !important; border:0 !important; -webkit-backdrop-filter:none; backdrop-filter:none; }
+/* стартовая страница: без светлых обводок у блоков и плиток */
+html.is-glass .landing .tile, html.is-glass .landing .compare, html.is-glass .landing .sec-block, html.is-glass .landing .hero-art{
+  border:0 !important; outline:0 !important; box-shadow:0 20px 60px rgba(0,0,0,.30) !important; }
