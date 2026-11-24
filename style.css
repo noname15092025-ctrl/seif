@@ -2611,7 +2611,7 @@ html.is-glass .dash-hero, html.is-glass .dash-score, html.is-glass .dash-stat, h
 html.is-glass .home-up-i, html.is-glass .task-row, html.is-glass .note-row, html.is-glass .app:not(.ws-home):not(.ws-cal):not(.ws-tasks):not(.ws-notes) #list.rows,
 html.is-glass .rec-stat:not(.k-all):not(.k-warn), html.is-glass .ws-chip:not(.on):not(.active), html.is-glass .chip:not(.on):not(.active), html.is-glass .cal-segs, html.is-glass .cal-today,
 html.is-glass #b-menu, html.is-glass .app-search-btn, html.is-glass .cal-bar .cal-nav, html.is-glass .cats-more, html.is-glass .task-add .field,
-html.is-glass .app .field, html.is-glass #sort, html.is-glass .note-ed, html.is-glass #note-editor, html.is-glass #detail-view, html.is-glass .d-card{
+html.is-glass .app .field:not(.note-title):not(.note-body):not(.note-folder), html.is-glass #sort, html.is-glass #detail-view, html.is-glass .d-card{
   background:rgba(255,255,255,.055) !important; border:1px solid rgba(255,255,255,.09) !important; border-top-color:rgba(255,255,255,.14) !important;
   -webkit-backdrop-filter:blur(18px) saturate(1.4); backdrop-filter:blur(18px) saturate(1.4); box-shadow:none !important; }
 /* вложенные элементы внутри стеклянных блоков — без второго слоя фона */
@@ -2678,3 +2678,40 @@ html.is-glass #b-signin{ background:var(--lime) !important; color:#141414 !impor
 /* стартовая страница: без светлых обводок у блоков и плиток */
 html.is-glass .landing .tile, html.is-glass .landing .compare, html.is-glass .landing .sec-block, html.is-glass .landing .hero-art{
   border:0 !important; outline:0 !important; box-shadow:0 20px 60px rgba(0,0,0,.30) !important; }
+
+/* ======================= Редактор заметки: чистый вид ======================= */
+/* одна стеклянная панель, внутри — без рамок: заголовок, папка и текст как в приложении «Заметки» */
+html.is-glass #v-vault .detail > #note-editor{ background:rgba(20,20,24,.94) !important; border:1px solid rgba(255,255,255,.08) !important; border-radius:28px !important;
+  -webkit-backdrop-filter:blur(24px) saturate(1.5); backdrop-filter:blur(24px) saturate(1.5); padding:18px 22px 16px !important; box-shadow:0 24px 70px rgba(0,0,0,.4) !important; }
+html.is-glass #v-vault #note-editor .note-ed{ background:transparent !important; border:0 !important; padding:0 !important; box-shadow:none !important; display:flex; flex-direction:column; min-height:inherit; }
+/* верхняя панель: назад · Правка/Просмотр · Готово, ниже — мелкие действия */
+html.is-glass #v-vault #note-editor .note-bar{ display:flex !important; flex-wrap:wrap; align-items:center; gap:8px !important; margin:0 0 6px !important; padding:0 !important; border:0 !important; background:transparent !important; }
+html.is-glass #v-vault #note-editor .note-bar > .back{ order:0; width:40px; height:40px; border-radius:50% !important; background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.08) !important; }
+html.is-glass #v-vault #note-editor .note-bar > .note-modes{ order:1; display:flex; padding:3px; gap:2px; border-radius:14px; background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.08) !important; margin:0 !important; }
+html.is-glass #v-vault #note-editor .note-modes .seg{ height:34px !important; padding:0 14px !important; border-radius:11px !important; font-size:13px !important; background:transparent !important; border:0 !important; color:#A7A7AD !important; }
+html.is-glass #v-vault #note-editor .note-modes .seg.on{ background:rgba(255,255,255,.12) !important; color:#fff !important; }
+html.is-glass #v-vault #note-editor .note-bar > .seg-done{ order:2; margin-left:auto !important; height:40px !important; padding:0 20px !important; border-radius:20px !important; background:var(--lime) !important; color:#141414 !important; border:0 !important; font-size:14px !important; }
+html.is-glass #v-vault #note-editor .note-bar > .nb-break{ order:3; flex-basis:100% !important; height:0 !important; padding:0 !important; border:0 !important; background:none !important; }
+html.is-glass #v-vault #note-editor .note-bar > :not(.back):not(.note-modes):not(.seg-done):not(.nb-break):not([data-note-del]){ order:4; height:32px !important; min-width:0; padding:0 12px !important; border-radius:10px !important; font-size:12.5px !important;
+  background:transparent !important; border:1px solid rgba(255,255,255,.08) !important; color:#B8B8BE !important; }
+html.is-glass #v-vault #note-editor .note-bar > .danger-text{ margin-left:auto !important; border-color:transparent !important; color:#FF7A7A !important; }
+/* заголовок — крупный текст без поля */
+html.is-glass #v-vault #note-editor .note-title{ background:transparent !important; border:0 !important; box-shadow:none !important; outline:none !important; padding:14px 0 6px !important; margin:0 !important;
+  height:auto !important; font-size:30px !important; font-weight:700 !important; letter-spacing:-.4px; color:#F4F4F6 !important; border-radius:0 !important; }
+html.is-glass #v-vault #note-editor .note-title::placeholder{ color:#55555C; }
+/* папка — тонкая строка под заголовком */
+html.is-glass #v-vault #note-editor .note-meta{ display:flex !important; align-items:center; gap:8px; margin:0 0 6px !important; padding:0 0 12px !important; border:0 !important; border-bottom:1px solid rgba(255,255,255,.07) !important; background:transparent !important; }
+html.is-glass #v-vault #note-editor .note-meta-l{ display:flex; color:#8A8A92; } html.is-glass #v-vault #note-editor .note-meta-l svg{ width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linejoin:round; }
+html.is-glass #v-vault #note-editor .note-folder{ flex:1; background:transparent !important; border:0 !important; box-shadow:none !important; outline:none !important; padding:0 !important; height:28px !important; font-size:13.5px !important; color:#C9C9CF !important; }
+/* текст — без рамки, на всю ширину */
+html.is-glass #v-vault #note-editor .note-body, html.is-glass #v-vault #note-editor .note-view{ flex:1; background:transparent !important; border:0 !important; box-shadow:none !important; outline:none !important; border-radius:0 !important;
+  padding:12px 0 !important; margin:0 !important; min-height:46vh; font-size:16px !important; line-height:1.65 !important; color:#E6E6EA !important; resize:none; }
+html.is-glass #v-vault #note-editor .note-body::placeholder{ color:#5E5E66; }
+/* вложения и низ */
+html.is-glass #v-vault #note-editor .note-att{ margin:6px 0 0 !important; padding:10px 0 0 !important; border-top:1px solid rgba(255,255,255,.07) !important; }
+html.is-glass #v-vault #note-editor .note-att .att-add{ height:36px !important; padding:0 14px !important; border-radius:12px !important; font-size:13px !important; background:transparent !important; border:1px dashed rgba(255,255,255,.14) !important; color:#B8B8BE !important; }
+html.is-glass #v-vault #note-editor .note-foot{ margin-top:8px !important; padding:0 !important; border:0 !important; background:transparent !important; }
+html.is-glass #v-vault #note-editor .note-foot .small{ font-size:12px !important; color:#6E6E76 !important; }
+html.is-app #v-vault .detail > #note-editor{ border-radius:0 !important; border:0 !important; min-height:100dvh; padding-top:calc(14px + env(safe-area-inset-top)) !important; }
+html.is-glass #v-vault #note-editor .note-bar > .danger-text.danger-text{ margin-left:auto !important; border-color:transparent !important; color:#FF7A7A !important; }
+html.is-glass #v-vault #note-editor .note-bar > button[data-note-del]{ order:5; margin-left:auto !important; height:32px !important; padding:0 12px !important; font-size:12.5px !important; background:transparent !important; color:#FF7A7A !important; border:0 !important; }

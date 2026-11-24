@@ -1359,7 +1359,7 @@ function renderNoteEditor() {
   ed.innerHTML = `<div class="note-ed">
     <div class="note-bar">
       <button class="ib back" data-note-back aria-label="${T("Назад", "Back")}"><svg class="ic"><use href="#i-back"/></svg></button>
-      <div class="note-modes"><button class="seg${edit ? " on" : ""}" data-note-mode="edit">${T("✏ Правка", "✏ Edit")}</button><button class="seg${edit ? "" : " on"}" data-note-mode="preview">${T("👁 Просмотр", "👁 Preview")}</button></div>
+      <div class="note-modes"><button class="seg${edit ? " on" : ""}" data-note-mode="edit">${T("Правка", "Edit")}</button><button class="seg${edit ? "" : " on"}" data-note-mode="preview">${T("Просмотр", "Preview")}</button></div>
       <button class="seg-done" data-note-done>${T("Готово", "Done")}</button>${noteBarExtra(x)}<button class="ib danger-text" data-note-del>${T("Удалить", "Delete")}</button>
     </div>
     <input id="note-title" class="note-title" maxlength="120" placeholder="${T("Без названия", "Untitled")}">

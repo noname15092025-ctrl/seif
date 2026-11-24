@@ -53,7 +53,7 @@ function noteBarExtra(x) {
     `<button class="ib nb-btn" data-note-export title="${T("Экспорт", "Export")}">${T("Экспорт", "Export")}</button>`;
 }
 function noteMetaRow(x) {
-  return `<div class="note-meta"><span class="note-meta-l">📁</span><input id="note-folder" class="note-folder" list="note-folders" maxlength="80" placeholder="${T("Без папки — введите название, например «Работа/Проекты»", "No folder — type a name, e.g. “Work/Projects”")}" value="${esc(x.folder || "")}">
+  return `<div class="note-meta"><span class="note-meta-l"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg></span><input id="note-folder" class="note-folder" list="note-folders" maxlength="80" placeholder="${T("Без папки — введите название, например «Работа/Проекты»", "No folder — type a name, e.g. “Work/Projects”")}" value="${esc(x.folder || "")}">
     <datalist id="note-folders">${noteFolders().map(f => `<option value="${esc(f)}">`).join("")}</datalist></div>`;
 }
 $("note-editor").addEventListener("change", async e => {
