@@ -2599,36 +2599,54 @@ html.is-app .side-tools .nav-item::after{ content:"›"; font-size:20px; color:#
 /* ======================= «Стекло» по всему приложению =======================
    Вместо плотного серого — полупрозрачные поверхности с размытием, как у нижней капсулы.
    Фон с мягким цветным свечением, чтобы прозрачность была заметна. */
-html.is-app, html.is-app body, html.is-app .app, html.is-app .app .list-pane{ background-color:#08080A !important; }
-html.is-app body{ background-image:radial-gradient(90% 45% at 10% 0%, rgba(200,226,122,.13), transparent 65%), radial-gradient(80% 45% at 100% 55%, rgba(108,155,242,.08), transparent 65%), radial-gradient(70% 40% at 0% 100%, rgba(200,226,122,.07), transparent 65%) !important;
+html.is-glass, html.is-glass body, html.is-glass .app, html.is-glass .app .list-pane{ background-color:#08080A !important; }
+html.is-glass body{ background-image:radial-gradient(90% 45% at 10% 0%, rgba(200,226,122,.13), transparent 65%), radial-gradient(80% 45% at 100% 55%, rgba(108,155,242,.08), transparent 65%), radial-gradient(70% 40% at 0% 100%, rgba(200,226,122,.07), transparent 65%) !important;
   background-attachment:fixed !important; }
-html.is-app .app, html.is-app .app .list-pane, html.is-app .app .detail{ background:transparent !important; }
+html.is-glass .app, html.is-glass .app .list-pane, html.is-glass .app .detail{ background:transparent !important; }
 /* верхняя панель без размытия: размытие у родителя «ломает» закреплённую кнопку «+» внутри неё */
-html.is-app .app .list-top{ background:rgba(8,8,10,.86) !important; }
+html.is-glass .app .list-top{ background:rgba(8,8,10,.86) !important; }
 
 
-html.is-app .dash-hero, html.is-app .dash-score, html.is-app .dash-stat, html.is-app .dash-recent, html.is-app .dash-rec,
-html.is-app .home-up-i, html.is-app .task-row, html.is-app .note-row, html.is-app .app:not(.ws-home):not(.ws-cal):not(.ws-tasks):not(.ws-notes) #list.rows,
-html.is-app .rec-stat:not(.k-all):not(.k-warn), html.is-app .ws-chip:not(.on):not(.active), html.is-app .chip:not(.on):not(.active), html.is-app .cal-segs, html.is-app .cal-today,
-html.is-app #b-menu, html.is-app .app-search-btn, html.is-app .cal-bar .cal-nav, html.is-app .cats-more, html.is-app .task-add .field,
-html.is-app .app .field, html.is-app #sort, html.is-app .note-ed, html.is-app #note-editor, html.is-app #detail-view, html.is-app .d-card{
+html.is-glass .dash-hero, html.is-glass .dash-score, html.is-glass .dash-stat, html.is-glass .dash-recent, html.is-glass .dash-rec,
+html.is-glass .home-up-i, html.is-glass .task-row, html.is-glass .note-row, html.is-glass .app:not(.ws-home):not(.ws-cal):not(.ws-tasks):not(.ws-notes) #list.rows,
+html.is-glass .rec-stat:not(.k-all):not(.k-warn), html.is-glass .ws-chip:not(.on):not(.active), html.is-glass .chip:not(.on):not(.active), html.is-glass .cal-segs, html.is-glass .cal-today,
+html.is-glass #b-menu, html.is-glass .app-search-btn, html.is-glass .cal-bar .cal-nav, html.is-glass .cats-more, html.is-glass .task-add .field,
+html.is-glass .app .field, html.is-glass #sort, html.is-glass .note-ed, html.is-glass #note-editor, html.is-glass #detail-view, html.is-glass .d-card{
   background:rgba(255,255,255,.055) !important; border:1px solid rgba(255,255,255,.09) !important; border-top-color:rgba(255,255,255,.14) !important;
   -webkit-backdrop-filter:blur(18px) saturate(1.4); backdrop-filter:blur(18px) saturate(1.4); box-shadow:none !important; }
 /* вложенные элементы внутри стеклянных блоков — без второго слоя фона */
-html.is-app .app #list.rows .rrow{ background:transparent !important; border:0 !important; -webkit-backdrop-filter:none; backdrop-filter:none; }
-html.is-app .dash-hero .dash-score, html.is-app .dash-hero .dash-stat{ background:rgba(255,255,255,.05) !important; -webkit-backdrop-filter:none; backdrop-filter:none; }
+html.is-glass .app #list.rows .rrow{ background:transparent !important; border:0 !important; -webkit-backdrop-filter:none; backdrop-filter:none; }
+html.is-glass .dash-hero .dash-score, html.is-glass .dash-hero .dash-stat{ background:rgba(255,255,255,.05) !important; -webkit-backdrop-filter:none; backdrop-filter:none; }
 
 /* шторки, окна, быстрый поиск и меню — тоже стекло, только плотнее, чтобы текст читался */
-html.is-app .cal-pop, html.is-app .modal-box, html.is-app .qa, html.is-app .dp-pop, html.is-app .app .side{
+html.is-glass .cal-pop, html.is-glass .modal-box, html.is-glass .qa, html.is-glass .dp-pop, html.is-glass .app .side{
   background:rgba(28,28,32,.72) !important; border:1px solid rgba(255,255,255,.10) !important; border-top-color:rgba(255,255,255,.18) !important;
   -webkit-backdrop-filter:blur(28px) saturate(1.6) !important; backdrop-filter:blur(28px) saturate(1.6) !important; }
-html.is-app .cal-pop .field, html.is-app .ts-p, html.is-app .ts-sub, html.is-app .es-note, html.is-app .side-tools{
+html.is-glass .cal-pop .field, html.is-glass .ts-p, html.is-glass .ts-sub, html.is-glass .es-note, html.is-glass .side-tools{
   background:rgba(255,255,255,.06) !important; border-color:rgba(255,255,255,.09) !important; }
-html.is-app .cal-pop-ov, html.is-app .modal, html.is-app .qa-ov{ background:rgba(0,0,0,.35) !important; }
+html.is-glass .cal-pop-ov, html.is-glass .modal, html.is-glass .qa-ov{ background:rgba(0,0,0,.35) !important; }
 /* линейные иконки: тонкие, без «мультяшности» */
 .es-ic{ display:flex; align-items:center; justify-content:center; color:#9A9AA2; }
 .es-ic svg{ width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
 html.is-app .app-tab svg{ width:22px !important; height:22px !important; stroke-width:1.5 !important; }
 html.is-app .app-tab span{ font-weight:500 !important; letter-spacing:.2px; }
-html.is-app #b-menu svg, html.is-app .app-search-btn svg{ stroke-width:1.6 !important; }
-html.is-app .app.ws-home #list.rows, html.is-app .app.ws-cal #list.rows{ background:transparent !important; border:0 !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; padding:0 !important; }
+html.is-glass #b-menu svg, html.is-glass .app-search-btn svg{ stroke-width:1.6 !important; }
+html.is-glass .app.ws-home #list.rows, html.is-glass .app.ws-cal #list.rows{ background:transparent !important; border:0 !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; padding:0 !important; }
+/* элементы режима приложения не показываются в компьютерной версии */
+html:not(.is-app) .app-search-btn, html:not(.is-app) .app-title{ display:none !important; }
+
+/* ---------- Компьютер: стеклянное боковое меню и тонкие детали ---------- */
+html.is-glass:not(.is-app) .app .side{ border-radius:26px !important; }
+html.is-glass:not(.is-app) .side .nav-item{ border-radius:12px !important; }
+html.is-glass:not(.is-app) .side .nav-item.active{ background:rgba(255,255,255,.08) !important; color:#fff !important; }
+html.is-glass:not(.is-app) .side-tools{ margin-top:14px !important; padding:4px !important; border-radius:18px !important; border:1px solid rgba(255,255,255,.08) !important; }
+html.is-glass:not(.is-app) .side-tools .nav-item{ display:flex !important; justify-content:space-between !important; }
+html.is-glass:not(.is-app) .side-tools .nav-item::after{ content:"›"; font-size:18px; color:#6E6E76; }
+html.is-glass:not(.is-app) #b-qa, html.is-glass:not(.is-app) .list-top #search{ background:rgba(255,255,255,.055) !important; border:1px solid rgba(255,255,255,.09) !important; }
+/* карточки задачи и события на компьютере — по центру экрана */
+html.is-glass:not(.is-app) .ts-pop, html.is-glass:not(.is-app) .es-pop{ width:min(520px, 100%) !important; border-radius:28px !important; }
+html.is-glass:not(.is-app) .es-pop .cp-top::before{ content:none; }
+html.is-glass:not(.is-app) .task-row{ cursor:pointer; }
+html.is-glass .app .side::before, html.is-glass .app .side::after{ display:none !important; }
+html.is-glass:not(.is-app) .side .nav-item{ display:flex !important; align-items:center; justify-content:space-between !important; text-align:left !important; }
+html.is-glass:not(.is-app) .side .nav-item.ws{ justify-content:flex-start !important; gap:12px; }

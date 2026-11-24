@@ -17,6 +17,7 @@
   const H = document.documentElement;
   const applyMode = () => H.classList.toggle("is-app", native || mq.matches);
   H.classList.toggle("is-native", native);
+  H.classList.add("is-glass"); // стеклянный стиль — и в приложении, и на сайте (на компьютере тоже)
   applyMode();
   if (!native && mq.addEventListener) mq.addEventListener("change", applyMode); // повернули/растянули окно — переключаемся
   const on = () => H.classList.contains("is-app");
@@ -107,7 +108,7 @@
   // Задачи: нажатие на задачу открывает карточку-шторку (название, срок, приоритет, подзадачи).
   // Закрывается крестиком, нажатием мимо или системной кнопкой «Назад»; изменения сохраняются при закрытии.
   $("list").addEventListener("click", e => {
-    if (!on() || view !== "tasks") return;
+    if (view !== "tasks") return;
     const row = e.target.closest(".task-row"); if (!row || e.target.closest("button, input, a")) return;
     const x = tasksList().find(t => t.id === row.dataset.id); if (!x) return;
     e.stopPropagation(); e.preventDefault(); tap(); taskSheet(x);
@@ -163,7 +164,7 @@
   if (typeof calOpenPop === "function") {
     const origPop = calOpenPop;
     calOpenPop = function (e, occ, ...rest) {
-      if (!on() || !e || !e.id) return origPop.call(this, e, occ, ...rest); // новое событие — сразу редактор
+      if (!e || !e.id) return origPop.call(this, e, occ, ...rest); // новое событие — сразу редактор
       eventSheet(e, occ, () => origPop.call(this, e, occ, ...rest));
     };
   }
