@@ -2715,3 +2715,9 @@ html.is-glass #v-vault #note-editor .note-foot .small{ font-size:12px !important
 html.is-app #v-vault .detail > #note-editor{ border-radius:0 !important; border:0 !important; min-height:100dvh; padding-top:calc(14px + env(safe-area-inset-top)) !important; }
 html.is-glass #v-vault #note-editor .note-bar > .danger-text.danger-text{ margin-left:auto !important; border-color:transparent !important; color:#FF7A7A !important; }
 html.is-glass #v-vault #note-editor .note-bar > button[data-note-del]{ order:5; margin-left:auto !important; height:32px !important; padding:0 12px !important; font-size:12.5px !important; background:transparent !important; color:#FF7A7A !important; border:0 !important; }
+/* заголовок заметки при вводе: без светлой заливки (автозаполнение/фокус браузера) */
+html.is-glass #v-vault #note-editor .note-title:focus, html.is-glass #v-vault #note-editor .note-title:-webkit-autofill,
+html.is-glass #v-vault #note-editor .note-folder:focus, html.is-glass #v-vault #note-editor .note-body:focus{
+  background:transparent !important; box-shadow:none !important; outline:none !important; -webkit-text-fill-color:#F4F4F6; }
+html.is-glass #v-vault #note-editor .note-title:-webkit-autofill{ -webkit-box-shadow:0 0 0 1000px transparent inset !important; transition:background-color 9999s; }
+html.is-glass #v-vault #note-editor .note-body:focus, html.is-glass #v-vault #note-editor .note-folder:focus{ -webkit-text-fill-color:inherit; }

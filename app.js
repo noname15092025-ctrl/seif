@@ -1362,7 +1362,7 @@ function renderNoteEditor() {
       <div class="note-modes"><button class="seg${edit ? " on" : ""}" data-note-mode="edit">${T("Правка", "Edit")}</button><button class="seg${edit ? "" : " on"}" data-note-mode="preview">${T("Просмотр", "Preview")}</button></div>
       <button class="seg-done" data-note-done>${T("Готово", "Done")}</button>${noteBarExtra(x)}<button class="ib danger-text" data-note-del>${T("Удалить", "Delete")}</button>
     </div>
-    <input id="note-title" class="note-title" maxlength="120" placeholder="${T("Без названия", "Untitled")}">
+    <input id="note-title" class="note-title" maxlength="120" autocomplete="off" spellcheck="false" placeholder="${T("Без названия", "Untitled")}">
     ${noteMetaRow(x)}
     ${edit ? `<textarea id="note-body" class="note-body" placeholder="${T("Пишите здесь… Поддерживается Markdown: # заголовок, **жирный**, - список, - [ ] задача", "Write here… Markdown supported: # heading, **bold**, - list, - [ ] task")}" spellcheck="true"></textarea>`
       : `<div class="note-view md" id="note-view">${mdToHtml(x.body, { noteExists: noteByTitle }) || `<p class="muted">${T("Пусто. Нажмите «Правка».", "Empty. Click “Edit”.")}</p>`}</div>`}
