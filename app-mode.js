@@ -1,8 +1,10 @@
 "use strict";
 /* ======================================================================
    SHUT · Режим мобильного приложения (Android / iPhone).
-   Включается только внутри приложения (Capacitor), на сайте ничего не меняет.
-   Для проверки в браузере: index.html?app=1
+   Включается внутри приложения (Capacitor) и на сайте с телефона (экран уже 761px).
+   На компьютере сайт прежний. Стартовый экран «как в приложении» — только в самом приложении
+   (класс is-native), на сайте остаётся обычная стартовая страница.
+   Для проверки приложения в браузере: index.html?app=1
    - нижняя панель вкладок: Главная · Сейф · Задачи · Календарь · Заметки;
    - вместо «+ Добавить» — круглая кнопка над панелью;
    - меню (генератор, аудит, настройки, блокировка) — по кнопке-аватару слева сверху;
@@ -10,8 +12,14 @@
    ====================================================================== */
 (() => {
   const forced = /[?&]app=1\b/.test(location.search);
-  if (!((typeof NATIVE !== "undefined" && NATIVE) || forced)) return;
-  document.documentElement.classList.add("is-app");
+  const native = (typeof NATIVE !== "undefined" && NATIVE) || forced;
+  const mq = window.matchMedia ? matchMedia("(max-width: 760px)") : { matches: false };
+  const H = document.documentElement;
+  const applyMode = () => H.classList.toggle("is-app", native || mq.matches);
+  H.classList.toggle("is-native", native);
+  applyMode();
+  if (!native && mq.addEventListener) mq.addEventListener("change", applyMode); // повернули/растянули окно — переключаемся
+  const on = () => H.classList.contains("is-app");
 
   const vv = $("v-vault"); if (!vv) return;
   const ico = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
@@ -76,7 +84,7 @@
     renderCalendar = function () { origCal.apply(this, arguments); try { weekStrip(); } catch {} };
   }
   function weekStrip() {
-    if (calView !== "day") return;
+    if (!on() || calView !== "day") return;
     const bar = document.querySelector(".cal-bar"); if (!bar) return;
     const d0 = cDayStart(calDate), mon = cAddDays(d0, -((d0.getDay() + 6) % 7)), today = cDayStart(new Date());
     let h = '<div class="app-week">';
@@ -91,7 +99,7 @@
   let sx = 0, sy = 0;
   $("list").addEventListener("touchstart", e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, { passive: true });
   $("list").addEventListener("touchend", e => {
-    if (view !== "calendar" || document.querySelector(".cal-pop-ov")) return;
+    if (!on() || view !== "calendar" || document.querySelector(".cal-pop-ov")) return;
     const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
     if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) { const b = document.querySelector(`[data-cal-step="${dx < 0 ? 1 : -1}"]`); if (b) b.click(); }
   }, { passive: true });
@@ -99,7 +107,7 @@
   // Задачи: нажатие на задачу открывает карточку-шторку (название, срок, приоритет, подзадачи).
   // Закрывается крестиком, нажатием мимо или системной кнопкой «Назад»; изменения сохраняются при закрытии.
   $("list").addEventListener("click", e => {
-    if (view !== "tasks") return;
+    if (!on() || view !== "tasks") return;
     const row = e.target.closest(".task-row"); if (!row || e.target.closest("button, input, a")) return;
     const x = tasksList().find(t => t.id === row.dataset.id); if (!x) return;
     e.stopPropagation(); e.preventDefault(); tap(); taskSheet(x);
@@ -155,7 +163,7 @@
   if (typeof calOpenPop === "function") {
     const origPop = calOpenPop;
     calOpenPop = function (e, occ, ...rest) {
-      if (!e || !e.id) return origPop.call(this, e, occ, ...rest); // новое событие — сразу редактор
+      if (!on() || !e || !e.id) return origPop.call(this, e, occ, ...rest); // новое событие — сразу редактор
       eventSheet(e, occ, () => origPop.call(this, e, occ, ...rest));
     };
   }

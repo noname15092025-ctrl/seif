@@ -2372,7 +2372,7 @@ html, body{ overflow-x:hidden; }
    Класс html.is-app ставит app-mode.js только внутри приложения. На сайте не действует. */
 .app-tabs{ display:none; }
 html.is-app, html.is-app body{ overscroll-behavior-y:none; }
-html.is-app body{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+html.is-native body{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
 html.is-app input, html.is-app textarea, html.is-app [contenteditable], html.is-app .md, html.is-app .mono{ -webkit-user-select:text; user-select:text; }
 
 /* нижняя панель вкладок */
@@ -2468,24 +2468,24 @@ html.is-app .app.ws-cal #list{ margin-top:0 !important; padding-top:0 !important
 
 /* ---------- Режим приложения, шаг 3: стартовый экран как в приложении ---------- */
 /* вместо длинной страницы-рекламы — один экран: логотип, заголовок, три кнопки внизу */
-html.is-app #v-start > *:not(.l-head):not(.hero){ display:none !important; }
-html.is-app #v-start{ min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; padding:calc(14px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) !important; box-sizing:border-box; }
-html.is-app #v-start.hidden{ display:none !important; }
-html.is-app #v-start .l-head{ padding:0 !important; margin:0 !important; position:static !important; background:transparent !important; }
-html.is-app #v-start .l-nav, html.is-app #v-start [data-theme-toggle], html.is-app #b-signin{ display:none !important; }
-html.is-app #v-start .hero{ flex:1; display:flex !important; flex-direction:column; justify-content:flex-end; padding:0 !important; margin:0 !important; min-height:0 !important; background:transparent !important; }
-html.is-app #v-start .hero-left{ display:flex; flex-direction:column; flex:1; justify-content:flex-end; }
-html.is-app #v-start .hero-art{ display:none !important; }
-html.is-app #v-start .badge{ align-self:flex-start; font-size:12px !important; margin:0 0 14px !important; }
-html.is-app #v-start .hero-h{ font-size:40px !important; line-height:1.02 !important; letter-spacing:-.04em !important; margin:0 0 12px !important; }
-html.is-app #v-start .hero-h .hl{ border-radius:14px !important; padding:0 10px 3px !important; }
-html.is-app #v-start .hero-sub{ font-size:15px !important; line-height:1.45 !important; margin:0 0 22px !important; color:#A7A7AD !important; }
-html.is-app #v-start .hero-btns{ display:flex !important; flex-direction:column; gap:10px; width:100%; }
-html.is-app #v-start .hero-btns .pill{ width:100% !important; height:54px !important; font-size:16px !important; margin:0 !important; justify-content:center; }
-html.is-app #v-start #b-new{ background:var(--lime) !important; color:#141414 !important; border:0 !important; }
+html.is-native #v-start > *:not(.l-head):not(.hero){ display:none !important; }
+html.is-native #v-start{ min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; padding:calc(14px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) !important; box-sizing:border-box; }
+html.is-native #v-start.hidden{ display:none !important; }
+html.is-native #v-start .l-head{ padding:0 !important; margin:0 !important; position:static !important; background:transparent !important; }
+html.is-native #v-start .l-nav, html.is-native #v-start [data-theme-toggle], html.is-native #b-signin{ display:none !important; }
+html.is-native #v-start .hero{ flex:1; display:flex !important; flex-direction:column; justify-content:flex-end; padding:0 !important; margin:0 !important; min-height:0 !important; background:transparent !important; }
+html.is-native #v-start .hero-left{ display:flex; flex-direction:column; flex:1; justify-content:flex-end; }
+html.is-native #v-start .hero-art{ display:none !important; }
+html.is-native #v-start .badge{ align-self:flex-start; font-size:12px !important; margin:0 0 14px !important; }
+html.is-native #v-start .hero-h{ font-size:40px !important; line-height:1.02 !important; letter-spacing:-.04em !important; margin:0 0 12px !important; }
+html.is-native #v-start .hero-h .hl{ border-radius:14px !important; padding:0 10px 3px !important; }
+html.is-native #v-start .hero-sub{ font-size:15px !important; line-height:1.45 !important; margin:0 0 22px !important; color:#A7A7AD !important; }
+html.is-native #v-start .hero-btns{ display:flex !important; flex-direction:column; gap:10px; width:100%; }
+html.is-native #v-start .hero-btns .pill{ width:100% !important; height:54px !important; font-size:16px !important; margin:0 !important; justify-content:center; }
+html.is-native #v-start #b-new{ background:var(--lime) !important; color:#141414 !important; border:0 !important; }
 
 /* экраны входа/создания — без «сайтовых» полей по краям */
-html.is-app .center-page{ padding:calc(20px + env(safe-area-inset-top)) 18px calc(20px + env(safe-area-inset-bottom)) !important; }
+html.is-native .center-page{ padding:calc(20px + env(safe-area-inset-top)) 18px calc(20px + env(safe-area-inset-bottom)) !important; }
 
 /* открытая запись или заметка — отдельный экран: без нижних вкладок */
 html.is-app .app.show-detail .app-tabs{ display:none !important; }
@@ -2499,10 +2499,10 @@ html.is-app .app.app-search-on .list-top{ flex-wrap:wrap !important; }
 html.is-app .app.app-search-on #search{ position:static !important; order:9; flex:1 0 100%; margin:4px 0 0 !important; height:46px !important; }
 html.is-app .app.app-search-on .app-title{ margin-top:6px !important; }
 /* значок приложения в центре свободного места над текстом */
-html.is-app #v-start .hero::before{ content:""; display:block; width:112px; height:112px; margin:auto auto 0; border-radius:32px;
+html.is-native #v-start .hero::before{ content:""; display:block; width:112px; height:112px; margin:auto auto 0; border-radius:32px;
   background:url("shield.svg") center/58px no-repeat, radial-gradient(circle at 50% 40%, #3B4A1C, #161A0E 70%); border:1px solid rgba(200,226,122,.25);
   box-shadow:0 0 80px rgba(200,226,122,.18); }
-html.is-app #v-start .hero-left{ flex:0 0 auto !important; margin-top:auto; }
+html.is-native #v-start .hero-left{ flex:0 0 auto !important; margin-top:auto; }
 /* строка «8 записей · сортировка» — в одну строку */
 html.is-app .list-sub{ display:flex !important; align-items:center; justify-content:space-between; gap:10px; flex-wrap:nowrap !important; padding:0 6px !important; }
 html.is-app #list-count{ white-space:nowrap; font-size:13px; }
