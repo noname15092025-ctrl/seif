@@ -2660,7 +2660,7 @@ html.is-glass .landing, html.is-glass .center-page, html.is-glass .l-head{ backg
 
 /* общие «стеклянные» поверхности */
 html.is-glass .center-page .panel, html.is-glass .l-nav,
-html.is-glass .landing .tile, html.is-glass .compare, html.is-glass .sec-block, html.is-glass .landing .badge, html.is-glass .l-foot{
+html.is-glass .landing .tile.t-dark, html.is-glass .landing .tile.t-mut, html.is-glass .compare, html.is-glass .landing .badge{
   background-color:rgba(255,255,255,.05) !important; border:1px solid rgba(255,255,255,.09) !important; border-top-color:rgba(255,255,255,.15) !important;
   -webkit-backdrop-filter:blur(22px) saturate(1.5); backdrop-filter:blur(22px) saturate(1.5); box-shadow:0 20px 60px rgba(0,0,0,.35) !important; }
 html.is-glass .center-page .panel{ background-color:rgba(30,30,34,.55) !important; }
