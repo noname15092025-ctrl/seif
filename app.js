@@ -763,7 +763,7 @@ const ATT_MAX = 1024 * 1024;
 function fmtSize(n) { return n < 1024 ? n + " B" : n < 1048576 ? (n / 1024).toFixed(0) + " KB" : (n / 1048576).toFixed(1) + " MB"; }
 function renderAttList() {
   const el = $("att-list"); if (!el) return;
-  el.innerHTML = formAtt.map((a, i) => `<div class="att-row"><span class="att-ic">${a.t && a.t.startsWith("image/") ? "🖼" : "📎"}</span><span class="att-n">${esc(a.n)}</span><span class="att-s">${fmtSize(a.s)}</span><button class="ib att-del" type="button" data-att-del="${i}" aria-label="×">✕</button></div>`).join("");
+  el.innerHTML = formAtt.map((a, i) => `<div class="att-row"><span class="att-ic">${ci(a.t && a.t.startsWith("image/") ? "image" : "clip")}</span><span class="att-n">${esc(a.n)}</span><span class="att-s">${fmtSize(a.s)}</span><button class="ib att-del" type="button" data-att-del="${i}" aria-label="×">✕</button></div>`).join("");
 }
 if ($("e-att")) $("e-att").onchange = async e => {
   for (const f of [...e.target.files]) {
@@ -1150,7 +1150,7 @@ function renderDetail() {
     h += `<p class="d-label">${T("Вложения", "Attachments")}</p>`;
     x.att.forEach((a, i) => {
       const isImg = a.t && a.t.startsWith("image/");
-      h += `<div class="d-field att-view">${isImg ? `<img class="att-img" src="${attBlobUrl(a)}" alt="${esc(a.n)}">` : `<span class="att-ic">📎</span>`}<span class="att-n">${esc(a.n)}</span><span class="att-s">${fmtSize(a.s)}</span>${ib("att:" + i, "i-copy", T("Скачать", "Download"))}</div>`;
+      h += `<div class="d-field att-view">${isImg ? `<img class="att-img" src="${attBlobUrl(a)}" alt="${esc(a.n)}">` : `<span class="att-ic">${ci("clip")}</span>`}<span class="att-n">${esc(a.n)}</span><span class="att-s">${fmtSize(a.s)}</span>${ib("att:" + i, "i-copy", T("Скачать", "Download"))}</div>`;
     });
   }
   if (x.history && x.history.length) h += `<details class="hist"><summary>${T("История паролей", "Password history")} (${x.history.length})</summary>` +
@@ -1339,7 +1339,7 @@ function renderNotes() {
   } else {
     $("list").innerHTML = list.map(x => `
     <div class="note-row${x.id === selectedId ? " active" : ""}" data-id="${esc(x.id)}">
-      <b>${x.pinned ? "📌 " : ""}${esc(x.title || T("Без названия", "Untitled"))}</b>
+      <b>${x.pinned ? `<span class="ico-in">${ci("pinmark")}</span>` : ""}${esc(x.title || T("Без названия", "Untitled"))}</b>
       <small>${preview(x)}</small>${noteRowMeta(x)}
     </div>`).join("");
   }
@@ -1379,7 +1379,7 @@ function renderNoteEditor() {
     ${edit ? `<textarea id="note-body" class="note-body" placeholder="${T("Пишите здесь… Поддерживается Markdown: # заголовок, **жирный**, - список, - [ ] задача", "Write here… Markdown supported: # heading, **bold**, - list, - [ ] task")}" spellcheck="true"></textarea>`
       : `<div class="note-view md" id="note-view">${mdToHtml(x.body, { noteExists: noteByTitle }) || `<p class="muted">${T("Пусто. Нажмите «Правка».", "Empty. Click “Edit”.")}</p>`}</div>`}
     <div class="note-att">
-      ${(x.att || []).map((a, i) => { const img = a.t && a.t.startsWith("image/") && a.t !== "image/svg+xml"; return `<div class="att-row${img ? " att-img" : ""}">${img ? `<img class="att-thumb" src="${attBlobUrl(a)}" alt="" data-note-att-view="${i}">` : `<span class="att-ic">📎</span>`}<span class="att-n"${img ? ` data-note-att-view="${i}"` : ""}>${esc(a.n)}</span><span class="att-s">${fmtSize(a.s)}</span><button class="ib" type="button" data-note-att-dl="${i}" title="${T("Скачать", "Download")}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="ib att-del" type="button" data-note-att-del="${i}" aria-label="×">✕</button></div>`; }).join("")}
+      ${(x.att || []).map((a, i) => { const img = a.t && a.t.startsWith("image/") && a.t !== "image/svg+xml"; return `<div class="att-row${img ? " att-img" : ""}">${img ? `<img class="att-thumb" src="${attBlobUrl(a)}" alt="" data-note-att-view="${i}">` : `<span class="att-ic">${ci("clip")}</span>`}<span class="att-n"${img ? ` data-note-att-view="${i}"` : ""}>${esc(a.n)}</span><span class="att-s">${fmtSize(a.s)}</span><button class="ib" type="button" data-note-att-dl="${i}" title="${T("Скачать", "Download")}"><svg class="ic" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="ib att-del" type="button" data-note-att-del="${i}" aria-label="×">✕</button></div>`; }).join("")}
       <label class="ghost cf-add att-add"><span>${T("+ Прикрепить файл", "+ Attach file")}</span><input type="file" id="note-att-input" multiple hidden></label>
     </div>
     ${noteBacklinksHtml(x)}
@@ -1441,7 +1441,7 @@ function renderTasks() {
       const p = pr[x.priority || 0], overdue = !x.done && x.due && new Date(x.due + "T23:59") < Date.now();
       return `<div class="task-row${x.done ? " done" : ""}" data-id="${esc(x.id)}">
         <button class="task-check" data-task-toggle aria-label="${T("Готово", "Done")}">${x.done ? "✓" : ""}</button>
-        <button class="task-pri ${p.c}" data-task-pri title="${T("Приоритет", "Priority")}: ${p.l || T("нет", "none")}">⚑</button>
+        <button class="task-pri ${p.c}" data-task-pri title="${T("Приоритет", "Priority")}: ${p.l || T("нет", "none")}">${ci("flag")}</button>
         <span class="task-text">${esc(x.title)}</span>${taskSubsBadge(x)}
         <button class="task-cal" data-task-cal title="${T("Срок", "Due date")}">${x.due ? `<span class="task-due${overdue ? " overdue" : ""}">${new Date(x.due + "T12:00").toLocaleDateString(lang === "en" ? "en-GB" : "ru-RU", { day: "numeric", month: "short" })}</span>` : `<svg class="ic"><use href="#i-cal"/></svg>`}</button>
         <input type="date" class="task-date" value="${esc(x.due || "")}">

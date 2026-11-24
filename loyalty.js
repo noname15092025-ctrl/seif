@@ -209,7 +209,7 @@ function loyaltyFormSetup() {
   const num = $("ex-num"); if (!num || num.dataset.ready) return;
   num.dataset.ready = "1"; num.setAttribute("inputmode", "numeric");
   const tools = document.createElement("div"); tools.className = "lc-tools";
-  tools.innerHTML = `<button type="button" class="ghost lc-scan" id="b-lc-scan">${T("📷 Сканировать штрихкод", "📷 Scan barcode")}</button><span class="lc-guess muted small" id="lc-guess"></span><div class="lc-preview" id="lc-preview"></div>`;
+  tools.innerHTML = `<button type="button" class="ghost lc-scan" id="b-lc-scan">${ci("camera")}${T("Сканировать штрихкод", "Scan barcode")}</button><span class="lc-guess muted small" id="lc-guess"></span><div class="lc-preview" id="lc-preview"></div>`;
   num.after(tools);
   const upd = () => {
     const v = num.value.replace(/\s/g, "");

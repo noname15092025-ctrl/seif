@@ -31,7 +31,7 @@ function notesChipsRender(all) {
   const fc = (v, label, n) => `<button type="button" class="nf-chip${notesFolderSel === v ? " on" : ""}" data-nfolder="${esc(v)}">${label}${n != null ? `<span>${n}</span>` : ""}</button>`;
   const cnt = v => all.filter(n => { const f = (n.folder || "").trim(); return v === "" ? !f : f === v || f.startsWith(v + "/"); }).length;
   head.insertAdjacentHTML("beforeend", `<div class="nf-bar">
-    ${folders.length ? `<div class="nf-row">${fc("*", T("Все папки", "All folders"))}${folders.map(f => fc(f, "📁 " + esc(f), cnt(f))).join("")}${fc("", T("Без папки", "No folder"), cnt(""))}</div>` : ""}
+    ${folders.length ? `<div class="nf-row">${fc("*", T("Все папки", "All folders"))}${folders.map(f => fc(f, `<span class="ico-in">${ci("folder")}</span>` + esc(f), cnt(f))).join("")}${fc("", T("Без папки", "No folder"), cnt(""))}</div>` : ""}
     ${tags.length ? `<div class="nf-row">${tags.map(t => `<button type="button" class="nf-chip tag${notesTagSel === t ? " on" : ""}" data-ntag="${esc(t)}">#${esc(t)}<span>${tagCount[t]}</span></button>`).join("")}</div>` : ""}
   </div>`);
 }
@@ -42,13 +42,13 @@ $("ws-head") && $("ws-head").addEventListener("click", e => {
 function noteRowMeta(x) {
   const tags = mdTags(x.body).slice(0, 3), f = (x.folder || "").trim();
   if (!f && !tags.length) return "";
-  return `<span class="note-meta-chips">${f ? `<i>📁 ${esc(f)}</i>` : ""}${tags.map(t => `<i>#${esc(t)}</i>`).join("")}</span>`;
+  return `<span class="note-meta-chips">${f ? `<i><span class="ico-in">${ci("folder")}</span>${esc(f)}</i>` : ""}${tags.map(t => `<i>#${esc(t)}</i>`).join("")}</span>`;
 }
 
 /* ---------- панель заметки: закрепить, история, экспорт; папка ---------- */
 function noteBarExtra(x) {
   const h = (x.hist || []).length;
-  return `<span class="nb-break"></span><button class="ib nb-btn${x.pinned ? " on" : ""}" data-note-pin title="${x.pinned ? T("Открепить", "Unpin") : T("Закрепить сверху", "Pin to top")}">📌</button>` +
+  return `<span class="nb-break"></span><button class="ib nb-btn${x.pinned ? " on" : ""}" data-note-pin title="${x.pinned ? T("Открепить", "Unpin") : T("Закрепить сверху", "Pin to top")}">${ci("pinmark")}</button>` +
     `<button class="ib nb-btn" data-note-hist title="${T("История версий", "Version history")}">${T("История", "History")}${h ? ` <span>${h}</span>` : ""}</button>` +
     `<button class="ib nb-btn" data-note-export title="${T("Экспорт", "Export")}">${T("Экспорт", "Export")}</button>`;
 }
@@ -328,7 +328,7 @@ function qaOpen(prefill) {
   const inp = qaEl.querySelector("#qa-input"), res = qaEl.querySelector("#qa-res");
   let items = [], sel = 0;
   const typeName = x => x.type === "page" ? T("Заметка", "Note") : x.type === "task" ? T("Задача", "Task") : TYPE_NAME(x.type);
-  const sub = x => x.type === "page" ? ((x.folder ? "📁 " + x.folder + " · " : "") + (x.body || "").replace(/[#*`>\[\]|=]/g, "").replace(/\s+/g, " ").trim().slice(0, 60)) : x.type === "task" ? (x.done ? T("выполнена", "done") : x.due ? T("срок ", "due ") + x.due : "") : x.type === "event" ? evWhenText(x) : subline(x);
+  const sub = x => x.type === "page" ? ((x.folder ? x.folder + " · " : "") + (x.body || "").replace(/[#*`>\[\]|=]/g, "").replace(/\s+/g, " ").trim().slice(0, 60)) : x.type === "task" ? (x.done ? T("выполнена", "done") : x.due ? T("срок ", "due ") + x.due : "") : x.type === "event" ? evWhenText(x) : subline(x);
   const draw = () => {
     const q = inp.value;
     if (q.startsWith("+")) {

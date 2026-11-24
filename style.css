@@ -2740,3 +2740,14 @@ html.is-glass #note-editor .att-row .att-s{ flex:none; color:#8A8A92; font-size:
 html.is-glass #note-editor .note-att{ display:flex !important; flex-direction:column !important; align-items:stretch !important; gap:0 !important; }
 html.is-glass #note-editor .note-att .att-row{ width:100% !important; box-sizing:border-box; }
 html.is-glass #note-editor .note-att .att-add{ align-self:flex-start; }
+
+/* ---------- Линейные иконки вместо эмодзи ---------- */
+.ico-in{ display:inline-flex; vertical-align:-2px; margin-right:5px; }
+.ico-in .ci{ width:15px; height:15px; stroke:currentColor; opacity:.85; }
+.att-ic{ display:inline-flex; align-items:center; justify-content:center; }
+.att-ic .ci{ width:18px; height:18px; stroke:#9A9AA2; }
+.task-pri .ci{ width:16px; height:16px; stroke:currentColor; }
+.nb-btn .ci{ width:16px; height:16px; stroke:currentColor; }
+.nb-btn.on .ci{ stroke:var(--lime); fill:rgba(200,226,122,.25); }
+.lc-scan{ display:inline-flex !important; align-items:center; gap:8px; }
+.lc-scan .ci{ width:18px; height:18px; stroke:currentColor; }
