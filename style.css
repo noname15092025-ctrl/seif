@@ -2607,11 +2607,11 @@ html.is-glass .app, html.is-glass .app .list-pane, html.is-glass .app .detail{ b
 html.is-glass .app .list-top{ background:rgba(8,8,10,.86) !important; }
 
 
-html.is-glass .dash-hero, html.is-glass .dash-score, html.is-glass .dash-stat, html.is-glass .dash-recent, html.is-glass .dash-rec,
-html.is-glass .home-up-i, html.is-glass .task-row, html.is-glass .note-row, html.is-glass .app:not(.ws-home):not(.ws-cal):not(.ws-tasks):not(.ws-notes) #list.rows,
+html.is-glass .dash-hero, html.is-glass .dash-score, html.is-glass .dash-stat, html.is-glass .dash-recent,
+html.is-glass .home-up-i, html.is-glass .task-row, html.is-glass .note-row,
 html.is-glass .rec-stat:not(.k-all):not(.k-warn), html.is-glass .ws-chip:not(.on):not(.active), html.is-glass .chip:not(.on):not(.active), html.is-glass .cal-segs, html.is-glass .cal-today,
 html.is-glass #b-menu, html.is-glass .app-search-btn, html.is-glass .cal-bar .cal-nav, html.is-glass .cats-more, html.is-glass .task-add .field,
-html.is-glass .app .field:not(.note-title):not(.note-body):not(.note-folder), html.is-glass #sort, html.is-glass #detail-view, html.is-glass .d-card{
+html.is-glass .app .field:not(.note-title):not(.note-body):not(.note-folder), html.is-glass #sort, html.is-glass .d-card{
   background:rgba(255,255,255,.055) !important; border:1px solid rgba(255,255,255,.09) !important; border-top-color:rgba(255,255,255,.14) !important;
   -webkit-backdrop-filter:blur(18px) saturate(1.4); backdrop-filter:blur(18px) saturate(1.4); box-shadow:none !important; }
 /* вложенные элементы внутри стеклянных блоков — без второго слоя фона */
@@ -2759,3 +2759,30 @@ html.is-glass #note-editor .note-att .att-add{ align-self:flex-start; }
 .cal-wrap{ width:100%; min-width:0; }
 .cal-main{ min-width:0; }
 @media (min-width:981px){ .cal-wrap{ grid-template-columns:240px minmax(0,1fr) !important; } }
+
+/* ---------- Правки по фото с телефона ---------- */
+/* 1. Открытая запись (в т.ч. скидочная карта) — плотный фон, сквозь него ничего не видно */
+html.is-glass #v-vault .detail > #detail-view, html.is-glass #v-vault .detail > #form-card{ background:#141418 !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+html.is-app #v-vault .detail{ background:#0E0E11 !important; }
+/* 2. «Недавние» на главной: строки без собственных рамок, только тонкие разделители */
+html.is-glass .dash-recent .dash-rec{ background:transparent !important; border:0 !important; border-bottom:1px solid rgba(255,255,255,.06) !important; box-shadow:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+html.is-glass .dash-recent .dash-rec:last-child{ border-bottom:0 !important; }
+/* 3. Список записей сейфа — одна карточка, без второй рамки снаружи */
+html.is-glass .app #list.rows{ background:transparent !important; border:0 !important; box-shadow:none !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; padding:0 !important; }
+/* 4. Поиск открывается в верхней строке — ровно между кнопкой меню и лупой, не переносится */
+html.is-app .app.app-search-on .list-top{ flex-wrap:nowrap !important; }
+html.is-app .app.app-search-on #search{ display:block !important; position:static !important; order:1; flex:1 1 auto !important; min-width:0 !important; width:auto !important;
+  height:42px !important; margin:0 !important; padding:0 16px !important; border-radius:21px !important; font-size:16px !important; }
+html.is-app .app .list-top #b-menu{ order:0; flex:none; } html.is-app .app .list-top .app-search-btn{ order:2; flex:none; margin-left:auto; }
+html.is-app .app.app-search-on .list-top .app-search-btn{ margin-left:0; }
+html.is-app .app.app-search-on .app-title{ margin-top:6px !important; }
+/* 5. «С возвращением» и другие крупные заголовки входа — в одну строку на любом экране */
+.center-page .p-title.big{ white-space:nowrap; font-size:clamp(26px, 8.2vw, 52px) !important; letter-spacing:-.03em; overflow:hidden; text-overflow:ellipsis; }
+@media (max-width:420px){ .center-page .panel{ padding-left:22px !important; padding-right:22px !important; } }
+/* поле пароля без жёлтой/голубой заливки автозаполнения браузера (Safari, Chrome) */
+.center-page .field:-webkit-autofill, .center-page .field:-webkit-autofill:focus, .center-page .field:-webkit-autofill:hover,
+.app .field:-webkit-autofill, .app .field:-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0 1000px #1E1E22 inset !important; box-shadow:0 0 0 1000px #1E1E22 inset !important; -webkit-text-fill-color:#F2F2F4 !important; caret-color:#F2F2F4; transition:background-color 9999s; }
+.center-page .p-sub{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:clamp(12px, 3.6vw, 15px) !important; }
+.center-page .p-links{ display:flex !important; flex-wrap:nowrap !important; justify-content:space-between; gap:8px !important; }
+.center-page .p-links a{ white-space:nowrap; font-size:clamp(11.5px, 3.3vw, 14px) !important; }
