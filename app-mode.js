@@ -119,7 +119,7 @@
     const ov = document.createElement("div"); ov.className = "cal-pop-ov";
     ov.innerHTML = `<div class="cal-pop ts-pop" role="dialog" aria-modal="true">
       <div class="cp-top"><button type="button" class="ts-done${x.done ? " on" : ""}" data-ts-done>${x.done ? T("✓ Выполнена", "✓ Done") : T("Отметить выполненной", "Mark as done")}</button><button type="button" class="cp-x" data-ts-x aria-label="${T("Закрыть", "Close")}">✕</button></div>
-      <textarea class="ts-title" rows="2" maxlength="200" placeholder="${T("Название задачи", "Task name")}">${esc(x.title || "")}</textarea>
+      <textarea class="ts-title" rows="1" maxlength="200" placeholder="${T("Название задачи", "Task name")}">${esc(x.title || "")}</textarea>
       <label class="ts-l">${T("Срок", "Due date")}</label>
       <div class="ts-row"><input type="date" class="field ts-due" value="${esc(x.due || "")}"><button type="button" class="ghost ts-clear" data-ts-nodue>${T("Без срока", "No date")}</button></div>
       <label class="ts-l">${T("Приоритет", "Priority")}</label>

@@ -2786,3 +2786,19 @@ html.is-app .app.app-search-on .app-title{ margin-top:6px !important; }
 .center-page .p-sub{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:clamp(12px, 3.6vw, 15px) !important; }
 .center-page .p-links{ display:flex !important; flex-wrap:nowrap !important; justify-content:space-between; gap:8px !important; }
 .center-page .p-links a{ white-space:nowrap; font-size:clamp(11.5px, 3.3vw, 14px) !important; }
+
+/* «Честное предупреждение» на телефоне: компактные отступы, текст по центру, умеренный размер */
+@media (max-width:760px){
+  .landing .sec-block{ padding:40px 22px 36px !important; border-radius:30px !important; text-align:center; margin:0 !important; }
+  .landing .sec-block .eyebrow.accent-eye{ font-size:11.5px; letter-spacing:.16em; margin:0 0 16px; }
+  .landing .sec-block .l-h2{ font-size:clamp(26px, 7.6vw, 36px) !important; line-height:1.12 !important; letter-spacing:-.02em; max-width:none !important; margin:0 auto !important; text-wrap:balance; }
+  .landing .sec-block .accent-btn{ margin:28px auto 0 !important; display:inline-flex; }
+}
+/* Окна на сайте — без «ручки» сверху (она нужна только в приложении) */
+html:not(.is-native) .cal-pop::before, html:not(.is-native) .modal-box::before{ display:none !important; content:none !important; }
+/* название задачи в карточке — высота по тексту, без пустого места под ним */
+.ts-pop .ts-title{ min-height:0 !important; field-sizing:content; }
+/* На сайте с телефона окна — не шторка снизу (её перекрывает панель Safari), а карточка по центру экрана */
+html.is-app:not(.is-native) .cal-pop-ov, html.is-app:not(.is-native) .modal{ align-items:center !important; padding:16px !important; }
+html.is-app:not(.is-native) .cal-pop, html.is-app:not(.is-native) .modal-box{ border-radius:28px !important; max-height:86vh; max-height:86dvh; padding-bottom:20px !important; animation:app-pop .22s cubic-bezier(.2,.9,.25,1) !important; }
+@keyframes app-pop{ from{ transform:scale(.96); opacity:0; } to{ transform:none; opacity:1; } }
