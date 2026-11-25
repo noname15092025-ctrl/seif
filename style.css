@@ -2802,3 +2802,20 @@ html:not(.is-native) .cal-pop::before, html:not(.is-native) .modal-box::before{ 
 html.is-app:not(.is-native) .cal-pop-ov, html.is-app:not(.is-native) .modal{ align-items:center !important; padding:16px !important; }
 html.is-app:not(.is-native) .cal-pop, html.is-app:not(.is-native) .modal-box{ border-radius:28px !important; max-height:86vh; max-height:86dvh; padding-bottom:20px !important; animation:app-pop .22s cubic-bezier(.2,.9,.25,1) !important; }
 @keyframes app-pop{ from{ transform:scale(.96); opacity:0; } to{ transform:none; opacity:1; } }
+
+/* ======================= Карточка записи на телефоне ======================= */
+/* шапка как у контакта в телефоне: «назад» слева сверху, ниже по центру значок, название и подпись */
+html.is-app #detail-view .d-head{ position:relative; display:flex !important; flex-direction:column; align-items:center; text-align:center; gap:10px !important; padding:52px 0 6px !important; margin:0 0 18px !important; }
+html.is-app #detail-view .d-head .back{ position:absolute; top:0; left:0; width:42px; height:42px; border-radius:50% !important; background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.08) !important; }
+html.is-app #detail-view .d-head .ava{ width:76px !important; height:76px !important; border-radius:24px !important; font-size:32px !important; margin:0 !important; }
+html.is-app #detail-view .d-head > div{ min-width:0; max-width:100%; }
+html.is-app #detail-view .d-title{ margin:0 !important; font-size:24px !important; line-height:1.2 !important; font-weight:700 !important; overflow-wrap:anywhere; }
+html.is-app #detail-view .d-meta{ display:block; margin-top:4px; font-size:13px !important; color:#8A8A92 !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* поля */
+html.is-app #detail-view .d-label{ margin:18px 4px 8px !important; font-size:11.5px !important; letter-spacing:.8px; }
+html.is-app #detail-view .d-field{ min-height:54px; border-radius:16px !important; padding:0 8px 0 16px !important; }
+html.is-app #detail-view .d-strength{ margin:12px 4px 0 !important; font-size:13px !important; }
+/* кнопки — ровная сетка 2×2 на всю ширину */
+html.is-app #detail-view .d-btns{ display:grid !important; grid-template-columns:1fr 1fr; gap:10px !important; margin-top:26px !important; }
+html.is-app #detail-view .d-btns button{ width:100% !important; height:50px !important; margin:0 !important; padding:0 10px !important; border-radius:16px !important; font-size:15px !important; justify-content:center; }
+html.is-app #detail-view .d-btns [data-act="edit"]{ background:var(--lime) !important; color:#141414 !important; border:0 !important; }
