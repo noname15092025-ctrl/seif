@@ -2833,3 +2833,26 @@ html.is-app #detail-view .d-btns [data-act="edit"]{ background:var(--lime) !impo
   .center-page .panel{ padding-left:18px !important; padding-right:18px !important; }
   .center-page .auth-side{ padding-left:0 !important; padding-right:0 !important; }
 }
+
+/* ======================= Полосы прокрутки в стиле сайта (везде) =======================
+   Тонкие, тёмные, без стрелок; при наведении чуть светлее. Firefox и новые Chrome/Edge — scrollbar-color,
+   Safari и старые Chrome — ::-webkit-scrollbar. */
+html, body, *{ scrollbar-width:thin; scrollbar-color:#3A3A42 transparent; }
+html:hover, *:hover{ scrollbar-color:#4A4A54 transparent; }
+::-webkit-scrollbar{ width:10px; height:10px; background:transparent; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:#3A3A42; border-radius:10px; border:3px solid transparent; background-clip:padding-box; }
+::-webkit-scrollbar-thumb:hover{ background:#55555E; background-clip:padding-box; border:3px solid transparent; }
+::-webkit-scrollbar-button, ::-webkit-scrollbar-corner{ display:none; width:0; height:0; background:transparent; }
+/* профиль в меню: имя и «Сменить профиль» в одну строку каждое, не рвутся на куски */
+.side-foot{ display:flex !important; align-items:center; gap:8px !important; }
+.side-foot .who{ flex:1 1 auto; min-width:0; line-height:1.3; }
+.side-foot .who #vault-name{ display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; }
+.side-foot .who br{ display:none; }
+.side-foot .who #b-switch{ display:block; white-space:nowrap; font-size:12px; }
+.side-foot .ib{ flex:none; }
+/* имя профиля целиком: значок и имя в первой строке, кнопки (тема, язык, замок) — второй строкой справа от значка */
+.side-foot{ flex-wrap:wrap !important; row-gap:8px !important; }
+.side-foot .avatar{ flex:none; }
+.side-foot .who{ flex:1 1 calc(100% - 60px) !important; }
+.side-foot .ib:first-of-type{ margin-left:auto; }

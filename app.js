@@ -1773,7 +1773,8 @@ function lock() {
   vaultKey = null; entries = []; selectedId = null; view = "vault"; breached = new Map(); totpKeys.clear();
   $("list").innerHTML = ""; $("detail-view").innerHTML = ""; $("search").value = ""; $("audit-body").innerHTML = ""; $("import-body").innerHTML = ""; importRows = [];
   clearForm();
-  if (NATIVE && store.all().length) gotoUnlock(true); else home(); // в приложении — сразу экран входа, без лендинга
+  // замок: сразу экран ввода мастер-пароля этого профиля (и на сайте, и в приложении), а не стартовая страница
+  if (store.all().length) gotoUnlock(true); else home();
 }
 $("b-logout").onclick = lock;
 $("b-wipe").onclick = async () => {
