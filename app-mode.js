@@ -71,10 +71,31 @@
   const setTitle = v => { title.textContent = NAMES[v] || ""; title.classList.toggle("hidden", !NAMES[v]); };
 
   // подсветка активной вкладки при любом переключении раздела (в том числе из меню и виджета)
+  // История переходов между разделами: системная кнопка «Назад» на Android возвращает на прошлый раздел,
+  // а из приложения выходит только с главной, когда возвращаться уже некуда.
+  const navHist = []; let shownView = typeof view !== "undefined" ? view : "home", goingBack = false;
   const origChrome = setViewChrome;
   setViewChrome = function (v) {
+    if (!goingBack && v !== shownView && shownView) { navHist.push(shownView); if (navHist.length > 30) navHist.shift(); }
+    shownView = v;
     origChrome(v); sync(v); setTitle(v);
     if (!$("search").value) vv.classList.remove("app-search-on");
+  };
+  // вызывается из обработчика «Назад» (app.js). true — шаг назад сделан, выходить из приложения не нужно
+  window.appNavBack = () => {
+    if (typeof vaultKey === "undefined" || !vaultKey || $("v-vault").classList.contains("hidden")) return false; // сейф закрыт — нечего листать
+    if (shownView === "home") { navHist.length = 0; return false; } // с главной — свернуть приложение
+    let prev = navHist.pop();
+    while (prev && prev === shownView) prev = navHist.pop();
+    if (!prev && shownView !== "home") prev = "home";
+    if (!prev) return false;
+    goingBack = true;
+    try {
+      if (prev === "vault") { view = "vault"; filter = "all"; selectedId = null; $("search").value = ""; setViewChrome("vault"); renderNav(); render(); }
+      else setView(prev);
+    } finally { goingBack = false; }
+    window.scrollTo(0, 0);
+    return true;
   };
   setTitle(typeof view !== "undefined" ? view : "home");
   sync(typeof view !== "undefined" ? view : "home");

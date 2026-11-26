@@ -1930,7 +1930,8 @@ if (IS_ANDROID) {
     if (vv && vv.classList.contains("show-detail")) { const bk = [...vv.querySelectorAll("[data-note-back], [data-detail-back]")].find(b => b.offsetParent); if (bk) bk.click(); else vv.classList.remove("show-detail"); return; }
     { const pb = [...document.querySelectorAll("[data-back-vault], [data-guide-back]")].find(b => b.offsetParent); if (pb) { pb.click(); return; } } // генератор, настройки и другие страницы
     if (vv && vv.classList.contains("nav-open")) { vv.classList.remove("nav-open"); return; }
-    AppP.minimizeApp().catch(() => {});
+    if (window.appNavBack && window.appNavBack()) return; // сначала — на предыдущий раздел
+    AppP.minimizeApp().catch(() => {}); // с главной, когда возвращаться некуда, — свернуть
   });
 }
 const KC = NATIVE ? capPlugin("ShutKeychain") : null;
