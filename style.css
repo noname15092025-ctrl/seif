@@ -2864,3 +2864,14 @@ html:hover, *:hover{ scrollbar-color:#4A4A54 transparent; }
 html[lang="en"] .side-foot #b-logout::after{ content:"Lock"; }
 .side-foot #b-logout .ic{ width:16px; height:16px; }
 .side-foot .ib:hover{ background:rgba(255,255,255,.1) !important; }
+/* профиль в меню, финальный вид: язык — маленькая метка в углу, «Заблокировать» — одна широкая кнопка снизу */
+.side-foot{ position:relative !important; }
+.side-foot .who{ padding-right:46px; }
+.side-foot [data-lang-toggle]{ position:absolute !important; top:12px; right:12px; flex:none !important; width:auto !important; min-width:0 !important; height:28px !important; padding:0 10px !important; border-radius:14px !important; font-size:12px !important; }
+.side-foot [data-theme-toggle]{ display:none !important; }
+.side-foot #b-logout{ flex:1 1 100% !important; height:40px !important; border-radius:13px !important; gap:8px; font-size:13.5px !important; }
+.side-foot #b-logout::after{ content:"Заблокировать сейф"; }
+html[lang="en"] .side-foot #b-logout::after{ content:"Lock vault"; }
+.side-foot .who{ display:flex !important; flex-direction:column; justify-content:center; gap:2px; align-self:center; }
+#v-vault .side .side-foot .who{ display:flex !important; flex-direction:column !important; justify-content:center !important; gap:2px !important; min-height:0 !important; height:auto !important; }
+#v-vault .side .side-foot .who br{ display:none !important; }
