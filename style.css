@@ -2856,3 +2856,11 @@ html:hover, *:hover{ scrollbar-color:#4A4A54 transparent; }
 .side-foot .avatar{ flex:none; }
 .side-foot .who{ flex:1 1 calc(100% - 60px) !important; }
 .side-foot .ib:first-of-type{ margin-left:auto; }
+/* кнопки под профилем — во всю ширину карточки: «EN» и «Заблокировать» одинаковой ширины */
+.side-foot .ib{ flex:1 1 0 !important; height:38px !important; min-width:0 !important; margin:0 !important; border-radius:12px !important; display:flex !important; align-items:center; justify-content:center; gap:6px;
+  background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.08) !important; font-size:13px !important; font-weight:600 !important; color:#E6E6EA !important; }
+.side-foot .ib:first-of-type{ margin-left:0 !important; }
+.side-foot #b-logout::after{ content:"Заблокировать"; }
+html[lang="en"] .side-foot #b-logout::after{ content:"Lock"; }
+.side-foot #b-logout .ic{ width:16px; height:16px; }
+.side-foot .ib:hover{ background:rgba(255,255,255,.1) !important; }
