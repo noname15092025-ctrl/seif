@@ -260,10 +260,14 @@
         if (m.type === "attributes" && m.target === vv && vv.classList.contains("show-detail") && !(m.oldValue || "").includes("show-detail")) push();
         else if (m.type === "attributes" && m.target !== vv && m.target.tagName === "SECTION" && !m.target.classList.contains("hidden") && (m.oldValue || "").includes("hidden") && m.target.querySelector("[data-back-vault]")) push();
         else if (m.type === "childList") m.addedNodes.forEach(n => { if (n.nodeType === 1 && n.matches(".cal-pop-ov, .qa-ov, .att-viewer")) push(); });
+        // экраны входа/создания/восстановления (сейф закрыт): тоже шаг в истории — «Назад» вернёт на стартовую
+        if (m.type === "attributes" && m.target.tagName === "SECTION" && m.target.classList.contains("center-page") && !m.target.classList.contains("hidden") && (m.oldValue || "").includes("hidden") && !backing && (typeof vaultKey === "undefined" || !vaultKey)) { depth++; history.pushState({ shut: depth, locked: 1 }, "", url); }
       }
     }).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["class"], attributeOldValue: true });
     window.addEventListener("popstate", () => {
       if (depth > 0) depth--;
+      // сейф закрыт и открыт экран входа/создания — «Назад» ведёт на стартовую страницу
+      if (typeof vaultKey === "undefined" || !vaultKey) { const st = $("v-start"); if (st && st.classList.contains("hidden")) { backing = true; try { landing(); } finally { backing = false; } } return; }
       if (!window.appBackStep()) { /* внутри SHUT шагать некуда — браузер просто остаётся на месте */ }
     });
   }
