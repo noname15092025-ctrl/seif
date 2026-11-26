@@ -2819,3 +2819,17 @@ html.is-app #detail-view .d-strength{ margin:12px 4px 0 !important; font-size:13
 html.is-app #detail-view .d-btns{ display:grid !important; grid-template-columns:1fr 1fr; gap:10px !important; margin-top:26px !important; }
 html.is-app #detail-view .d-btns button{ width:100% !important; height:50px !important; margin:0 !important; padding:0 10px !important; border-radius:16px !important; font-size:15px !important; justify-content:center; }
 html.is-app #detail-view .d-btns [data-act="edit"]{ background:var(--lime) !important; color:#141414 !important; border:0 !important; }
+
+/* «С возвращением» на любом экране: размер шрифта от ширины самой карточки, а не окна */
+.center-page .panel{ container-type:inline-size; }
+.center-page .p-title.big{ font-size:clamp(24px, 11.5cqi, 48px) !important; text-overflow:clip !important; }
+/* ссылки и подзаголовок входа тоже от ширины карточки — всегда внутри рамки */
+.center-page .p-links{ gap:6px !important; }
+.center-page .p-links a{ font-size:clamp(10px, 3.25cqi, 13.5px) !important; }
+.center-page .p-sub{ font-size:clamp(12px, 3.9cqi, 15px) !important; }
+/* узкие телефоны: меньше полей вокруг карточки входа, чтобы ссылки помещались в одну строку */
+@media (max-width:420px){
+  .center-page{ padding-left:12px !important; padding-right:12px !important; }
+  .center-page .panel{ padding-left:18px !important; padding-right:18px !important; }
+  .center-page .auth-side{ padding-left:0 !important; padding-right:0 !important; }
+}

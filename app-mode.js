@@ -219,6 +219,54 @@
     ov.addEventListener("keydown", ev => { if (ev.key === "Escape") close(); });
   }
 
+
+  /* ---------- Один шаг «назад»: и для кнопки Android, и для кнопки «Назад» браузера ----------
+     По порядку: закрыть окно → закрыть запись/заметку → закрыть страницу (настройки, генератор…) →
+     закрыть меню → вернуться на прошлый раздел. false — шагать некуда. */
+  let backing = false;
+  window.appBackStep = () => {
+    backing = true;
+    try {
+      const ov = [...document.querySelectorAll(".att-viewer, .cal-pop-ov, .qa-ov")].pop();
+      if (ov) {
+        const esc = new KeyboardEvent("keydown", { key: "Escape", bubbles: true });
+        ov.dispatchEvent(esc); document.dispatchEvent(esc);
+        if (document.body.contains(ov)) ov.click();
+        if (document.body.contains(ov)) ov.remove();
+        return true;
+      }
+      const md = $("modal"); if (md && !md.classList.contains("hidden")) { const b = [...md.querySelectorAll("#modal-btns button")].pop(); if (b) b.click(); return true; }
+      if (vv.classList.contains("show-detail")) { const bk = [...vv.querySelectorAll("[data-note-back], [data-detail-back]")].find(b => b.offsetParent); if (bk) bk.click(); else vv.classList.remove("show-detail"); return true; }
+      const pb = [...document.querySelectorAll("[data-back-vault], [data-guide-back]")].find(b => b.offsetParent); if (pb) { pb.click(); return true; }
+      if (vv.classList.contains("nav-open")) { vv.classList.remove("nav-open"); return true; }
+      return window.appNavBack ? window.appNavBack() : false;
+    } finally { backing = false; }
+  };
+
+  /* ---------- Сайт: кнопка «Назад» браузера (и жест «назад» в Safari/Chrome) ----------
+     Каждый «шаг вперёд» (раздел, открытая запись, окно, страница) кладёт запись в историю браузера,
+     «Назад» браузера делает один шаг назад внутри SHUT, а не уходит с сайта. */
+  if (!native && window.history && history.pushState) {
+    const url = location.pathname + location.search; // без «#…»: якорь стартовой страницы больше не прилипает
+    let depth = 0;
+    const push = () => { if (backing || typeof vaultKey === "undefined" || !vaultKey) return; depth++; history.pushState({ shut: depth }, "", url); };
+    // раздел
+    const chrome2 = setViewChrome;
+    let lastV = typeof view !== "undefined" ? view : "home";
+    setViewChrome = function (v) { const was = lastV; lastV = v; chrome2(v); if (!backing && was !== v && vv && !vv.classList.contains("hidden")) push(); };
+    // открытая запись/заметка, окна, страницы
+    new MutationObserver(ms => {
+      for (const m of ms) {
+        if (m.type === "attributes" && m.target === vv && vv.classList.contains("show-detail") && !(m.oldValue || "").includes("show-detail")) push();
+        else if (m.type === "attributes" && m.target !== vv && m.target.tagName === "SECTION" && !m.target.classList.contains("hidden") && (m.oldValue || "").includes("hidden") && m.target.querySelector("[data-back-vault]")) push();
+        else if (m.type === "childList") m.addedNodes.forEach(n => { if (n.nodeType === 1 && n.matches(".cal-pop-ov, .qa-ov, .att-viewer")) push(); });
+      }
+    }).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["class"], attributeOldValue: true });
+    window.addEventListener("popstate", () => {
+      if (depth > 0) depth--;
+      if (!window.appBackStep()) { /* внутри SHUT шагать некуда — браузер просто остаётся на месте */ }
+    });
+  }
   // отклик на нажатие для кнопок верхней панели
   ["b-new-entry", "b-menu"].forEach(id => { const el = $(id); if (el) el.addEventListener("click", tap); });
 })();
